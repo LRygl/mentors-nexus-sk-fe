@@ -8,17 +8,27 @@
 </script>
 
 <h1>Admin - Users Page</h1>
-
-<thead>
-<tr>
-	<th>Id</th>
-	<th>First Name</th>
-	<th>Last Name</th>
-</tr>
-</thead>
-
-<br>
-{#each users as user}
-		{user.firstName}
-{/each}
-
+{#if users && users.length > 0}
+<table>
+	<thead>
+	<tr>
+		<th>Id</th>
+		<th>First Name</th>
+		<th>Last Name</th>
+		<th>Email</th>
+	</tr>
+	</thead>
+	<tbody>
+	{#each users as user}
+		<tr>
+			<td>{user.id}</td>
+			<td>{user.firstName}</td>
+			<td>{user.lastName}</td>
+			<td>{user.email}</td>
+		</tr>
+	{/each}
+	</tbody>
+</table>
+{:else}
+	<p>No users available.</p>
+{/if}
