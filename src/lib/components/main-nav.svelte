@@ -8,3 +8,8 @@
 	<a class="nav-link active" href="/admin/ideas">IDEAS</a>
 
 </nav>
+
+
+<style>
+
+</style>
