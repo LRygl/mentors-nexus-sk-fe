@@ -5,10 +5,10 @@
 	<div>
 
 		<ul class="flex">
-			<li class="mr-6 hover:rounded-3xl p-3 hover:bg-amber-300"><a class="nav-link active" href="/">HOME</a></li>
-			<li class="mr-6"><a class="nav-link active" href="/admin/users">USERS</a></li>
-			<li class="mr-6"><a class="nav-link active" href="/admin/ideas">IDEAS</a></li>
-			<li class="mr-6">Active</li>
+			<li class="mr-6 hover:rounded-xl py-2 px-4 hover:bg-amber-300"><a class="nav-link active" href="/">HOME</a></li>
+			<li class="mr-6 hover:rounded-xl py-2 px-4 hover:bg-amber-300"><a class="nav-link active" href="/admin/users">USERS</a></li>
+			<li class="mr-6 hover:rounded-xl py-2 px-4 hover:bg-amber-300"><a class="nav-link active" href="/admin/ideas">IDEAS</a></li>
+			<li class="mr-6 hover:rounded-xl py-2 px-4 hover:bg-amber-300" >Active</li>
 
 		</ul>
 

@@ -1,7 +1,17 @@
 
-<script>
+<script lang="ts">
 	import { fade } from 'svelte/transition';
-	let visible = true;
+	let {
+		visible = true,
+		dismissable = true,
+		heading = '',
+		headingSeparator = '',
+		paragraph ='',
+		callToAction = true,
+		callToActionLabel='',
+		callToActionLink = '',
+	} = $props();
+
 
 	function toggleVisible(){
 		visible = !visible;
@@ -18,17 +28,23 @@
 		</div>
 		<div class="flex flex-wrap items-center gap-x-4 gap-y-2">
 			<p class="text-sm/6 text-gray-900">
-				<strong class="font-semibold">GeneriCon 2023</strong><svg viewBox="0 0 2 2" class="mx-2 inline size-0.5 fill-current" aria-hidden="true"><circle cx="1" cy="1" r="1" /></svg>Join us in Denver from June 7 – 9 to see what’s coming next.
+				<strong class="font-semibold">{heading}</strong> {headingSeparator} {paragraph}
 			</p>
-			<a href="#" class="flex-none rounded-full bg-gray-900 px-3.5 py-1 text-sm font-semibold text-white shadow-xs hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900">Register now <span aria-hidden="true">&rarr;</span></a>
+			{#if callToAction}
+				<a href="{callToActionLink}" onclick={toggleVisible} class="flex-none rounded-full bg-gray-900 px-3.5 py-1 text-sm font-semibold text-white shadow-xs hover:bg-gray-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gray-900">{callToActionLabel} <span aria-hidden="true">&rarr;</span></a>
+			{/if}
 		</div>
+
 		<div class="flex flex-1 justify-end">
-			<button type="button" on:click={toggleVisible} class="-m-3 p-3 focus-visible:outline-offset-[-4px]">
+			{#if dismissable}
+			<button type="button" onclick={toggleVisible} class="-m-3 p-3 focus-visible:outline-offset-[-4px]">
 				<span class="sr-only">Dismiss</span>
 				<svg class="size-5 text-gray-900" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true" data-slot="icon">
 					<path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
 				</svg>
 			</button>
+				{/if}
 		</div>
+
 	</div>
 {/if}
