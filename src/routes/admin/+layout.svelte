@@ -1,5 +1,6 @@
 <script lang="ts">
-
+ export const trailingSlash = 'never';
+ export const reset = true;
 </script>
 
 <div class="flex flex-col w-60 bg-orange-300 h-screen">
@@ -49,3 +50,5 @@
 		<button class="w-full py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 focus:outline-none">Logout</button>
 	</div>
 </div>
+
+<slot/>
