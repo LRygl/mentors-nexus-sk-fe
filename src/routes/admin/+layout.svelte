@@ -1,54 +1,80 @@
 <script lang="ts">
  export const trailingSlash = 'never';
  export const reset = true;
+
+ import AntDesignUpSquareFilled from '~icons/ant-design/up-square-filled';
+ import AntDesignLogoutOutlined from '~icons/ant-design/logout-outlined';
+ import AntDesignUserOutlined from '~icons/ant-design/user-outlined';
+ import AntDesignSettingOutlined from '~icons/ant-design/setting-outlined';
+ import AntDesignProjectOutlined from '~icons/ant-design/project-outlined';
+ import AntDesignUserSwitchOutlined from '~icons/ant-design/user-switch-outlined';
+ import AntDesignBulbOutlined from '~icons/ant-design/bulb-outlined';
+ import MaterialSymbolsLogoutRounded from '~icons/material-symbols/logout-rounded';
 </script>
 
-<div class="flex flex-col w-60 bg-orange-300 h-screen">
-	<div class="flex flex-col w-60 bg-orange-300">
-		<!-- Head Section with Logo and Tiny Text -->
-		<div class="relative flex mt-8 items-center justify-center px-4">
-			<!-- Application Logo -->
-			<img src="your-logo.png" alt="App Logo" class="w-24 h-12">
+
+
+<div class="flex flex-row">
+	<div class="flex flex-col w-2/13 bg-mentors-primary h-screen">
+		<div class="flex flex-col">
+			<!-- Head Section with Logo and Tiny Text -->
+			<div class="relative flex mt-8 items-center justify-center px-4">
+				<!-- Application Logo -->
+				<img src="your-logo.png" alt="App Logo" class="w-24 h-12">
+			</div>
 		</div>
+		<div class="block w-full mt-5 overflow-hidden">
+
+			<!-- Sidebar Item -->
+			<div class="flex flex-row items-center gap-x-4 px-5 h-14 mx-auto transition-all duration-300 ease-in-out border-b border-b-mentors-primary bg-mentors-primary-500 hover:bg-mentors-primary-600 relative">
+				<!-- Dashboard Icon -->
+				<div class="rounded-lg bg-mentors-primary p-2">
+					<AntDesignProjectOutlined class="text-white"/>
+				</div>
+				<a class="text-white text-sm relative z-10" href="/admin/dashboard">Dashboard</a>
+			</div>
+
+			<!-- Sidebar Item -->
+			<div class="flex flex-row items-center gap-x-4 px-5 h-14 mx-auto transition-all duration-300 ease-in-out border-b border-b-mentors-primary bg-mentors-primary-500 hover:bg-mentors-primary-600 relative">
+				<!-- Users Icon -->
+				<div class="rounded-lg bg-mentors-primary p-2">
+					<AntDesignUserSwitchOutlined class="text-white"/>
+				</div>
+				<a href="/admin/users" class="text-white text-sm relative z-10">Users</a>
+			</div>
+
+			<!-- Sidebar Item -->
+			<div class="flex flex-row items-center gap-x-4 px-5 h-14 mx-auto transition-all duration-300 ease-in-out border-b border-b-mentors-primary bg-mentors-primary-500 hover:bg-mentors-primary-600 relative">
+				<!-- SVG Home Icon -->
+				<div class="rounded-lg bg-mentors-primary p-2">
+					<AntDesignBulbOutlined class="text-white"/>
+				</div>
+				<a href="/admin/ideas" class="text-white text-sm relative z-10">Ideas</a>
+			</div>
+
+		</div>
+
+
+		<div class="mt-auto flex flex-row p-4 gap-6 text-white inline-block text-center">
+			<div class="grid grid-cols-3">
+
+
+				<div>a</div>
+				<div>b</div>
+				<div>c</div>
+				<div class="col-span-3 border p-2 rounded mt-3 flex items-center justify-center gap-2">
+					<MaterialSymbolsLogoutRounded class="w-5 h-5" />
+					<span>Logout</span>
+				</div>
+
+
+			</div>
+		</div>
+
+
 	</div>
-	<div class="block w-full mt-5 overflow-hidden">
-		<!-- Sidebar Item -->
-		<div class="flex flex-row items-center w-4/5 gap-x-4 px-5 h-12 mx-auto transition-all duration-300 ease-in-out bg-amber-500 hover:bg-amber-600 relative">
-			<!-- SVG Home Icon -->
-			<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-				<path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9m0 0l9 9m-9-9v18" />
-			</svg>
-			<a class="text-white text-sm relative z-10">Home</a>
-		</div>
+	<div class="w-11/13 pt-15 p-8 bg-gray-200">
+		<slot />
 
-		<!-- Sidebar Item -->
-		<div class="flex flex-row items-center w-4/5 gap-x-4 px-5 h-12 mx-auto transition-all duration-300 ease-in-out bg-amber-500 hover:bg-amber-600 relative">
-			<!-- SVG Home Icon -->
-			<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-				<path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9m0 0l9 9m-9-9v18" />
-			</svg>
-			<a class="text-white text-sm relative z-10">Home</a>
-		</div>
-
-		<!-- Sidebar Item -->
-		<div class="flex flex-row items-center w-4/5 gap-x-4 px-5 h-12 mx-auto transition-all duration-300 ease-in-out bg-amber-500 hover:bg-amber-600 relative">
-			<!-- SVG Home Icon -->
-			<svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-				<path stroke-linecap="round" stroke-linejoin="round" d="M3 12l9-9m0 0l9 9m-9-9v18" />
-			</svg>
-			<a class="text-white text-sm relative z-10">Home</a>
-		</div>
-
-	</div>
-	<!-- Section Heading -->
-	<div class="mt-5 pl-5 font-bold text-md text-amber-900">Section</div>
-
-	<!-- Bottom Row of Buttons -->
-	<div class="mt-auto flex flex-col space-y-3 p-4">
-		<button class="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none">Profile</button>
-		<button class="w-full py-2 px-4 bg-green-500 text-white rounded-lg hover:bg-green-600 focus:outline-none">Settings</button>
-		<button class="w-full py-2 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 focus:outline-none">Logout</button>
 	</div>
 </div>
-
-<slot/>

@@ -12,10 +12,6 @@
 
 		</ul>
 
-
-
-
-
 	</div>
 	<div>
 		<a class="nav-link active" href="/admin/users">Register</a>
