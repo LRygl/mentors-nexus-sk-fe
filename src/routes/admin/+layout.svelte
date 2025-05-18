@@ -45,6 +45,15 @@
 
 			<!-- Sidebar Item -->
 			<div class="flex flex-row items-center gap-x-4 px-5 h-14 mx-auto transition-all duration-300 ease-in-out border-b border-b-mentors-primary bg-mentors-primary-500 hover:bg-mentors-primary-600 relative">
+				<!-- Users Icon -->
+				<div class="rounded-lg bg-mentors-primary p-2">
+					<AntDesignUserSwitchOutlined class="text-white"/>
+				</div>
+				<a href="/admin/category" class="text-white text-sm relative z-10">Course Category</a>
+			</div>
+
+			<!-- Sidebar Item -->
+			<div class="flex flex-row items-center gap-x-4 px-5 h-14 mx-auto transition-all duration-300 ease-in-out border-b border-b-mentors-primary bg-mentors-primary-500 hover:bg-mentors-primary-600 relative">
 				<!-- SVG Home Icon -->
 				<div class="rounded-lg bg-mentors-primary p-2">
 					<AntDesignBulbOutlined class="text-white"/>

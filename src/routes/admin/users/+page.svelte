@@ -9,22 +9,11 @@
 	import AntDesignProfileOutlined from '~icons/ant-design/profile-outlined';
 	import AntDesignHistoryOutlined from '~icons/ant-design/history-outlined';
 
-
 	let { data }: { data: PageData } = $props();
-
 	const users: User[] = data.users
-
-
 	let drawHistoryModal = $state();
 
-
-
-
-
 </script>
-
-
-
 
 
 <h1 class="font-bold text-2xl mb-3">Admin - Users Page</h1>
