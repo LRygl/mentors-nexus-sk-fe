@@ -20,72 +20,104 @@
 
 @theme base {
 
-  --color-mentors-primary: #2b4265;
-  --color-mentors-secondary: #e24585;
-  --color-mentors-dark:#d5d9e0;
-  --color-mentors-light: #FEFEFE;
-  --color-mentors-gray: #95a1b2;
+  --color-nexus-primary: #33cc6b;
+  --color-nexus-secondary: #ffa0a6;
+  --color-nexus-dark:#01503d;
+  --color-nexus-light: #f7f6ef;
+  --color-nexus-gray: #95a1b2;
 
-  --color-mentors-success: #20CC86;
-  --color-mentors-success-text: #0E583A;
+  --color-nexus-success: #20CC86;
+  --color-nexus-success-text: #0E583A;
 
-  --color-mentors-warning: #E25445;
-  --color-mentors-warning-text: #6A1911;
+  --color-nexus-warning: #E25445;
+  --color-nexus-warning-text: #6A1911;
 
-  --color-mentors-danger: #EB3C3D;
+  --color-nexus-danger: #EB3C3D;
 
-  --color-mentors-info: #49ABDE;
-  --color-mentors-info-text: #0E2340;
-
-
-  --color-mentors-note: #5445E2;
-
-  --color-mentors-none: #D8D8FF;
+  --color-nexus-info: #49ABDE;
+  --color-nexus-info-text: #0E2340;
 
 
-  --color-mentors-primary-10:#405574;
-  --color-mentors-primary-20:#556884;
-  --color-mentors-primary-30:#6b7b93;
-  --color-mentors-primary-40:#808ea3;
-  --color-mentors-primary-50:#95a1b2;
-  --color-mentors-primary-60:#aab3c1;
-  --color-mentors-primary-70:#bfc6d1;
-  --color-mentors-primary-80:#d5d9e0;
-  --color-mentors-primary-90:#eaecf0;
+  --color-nexus-note: #5445E2;
 
-  --color-mentors-primary-100: #273b5b;
-  --color-mentors-primary-200: #223551;
-  --color-mentors-primary-300: #1e2e47;
-  --color-mentors-primary-400: #1a283d;
-  --color-mentors-primary-500: #162133;
-  --color-mentors-primary-600: #111a28;
-  --color-mentors-primary-700: #0d141e;
-  --color-mentors-primary-800: #090d14;
-  --color-mentors-primary-900: #04070a;
+  --color-nexus-none: #D8D8FF;
 
-  --color-mentors-secondary-10: #e55891;
-  --color-mentors-secondary-20: #e86a9d;
-  --color-mentors-secondary-30: #eb7daa;
-  --color-mentors-secondary-40: #ee8fb6;
-  --color-mentors-secondary-50: #f1a2c2;
-  --color-mentors-secondary-60: #f3b5ce;
-  --color-mentors-secondary-70: #f6c7da;
-  --color-mentors-secondary-80: #f9dae7;
-  --color-mentors-secondary-90: #fcecf3;
 
-  --color-mentors-secondary-100: #cb3e78;
-  --color-mentors-secondary-200: #b5376a;
-  --color-mentors-secondary-300: #9e305d;
-  --color-mentors-secondary-400: #882950;
-  --color-mentors-secondary-500: #712343;
-  --color-mentors-secondary-600: #5a1c35;
-  --color-mentors-secondary-700: #441528;
-  --color-mentors-secondary-800: #2d0e1b;
-  --color-mentors-secondary-900: #17070d;
+  --color-nexus-primary-10:#47d179;
+  --color-nexus-primary-20:#5bd688;
+  --color-nexus-primary-30:#70db97;
+  --color-nexus-primary-40:#84e0a6;
+  --color-nexus-primary-50:#99e5b5;
+  --color-nexus-primary-60:#adeac3;
+  --color-nexus-primary-70:#c1efd2;
+  --color-nexus-primary-80:#d6f4e1;
+  --color-nexus-primary-90:#eaf9f0;
 
+  --color-nexus-primary-100: #33cc6b;
+  --color-nexus-primary-200: #33cc6b;
+  --color-nexus-primary-300: #28a355;
+  --color-nexus-primary-400: #238e4a;
+  --color-nexus-primary-500: #1e7a40;
+  --color-nexus-primary-600: #196635;
+  --color-nexus-primary-700: #14512a;
+  --color-nexus-primary-800: #0f3d20;
+  --color-nexus-primary-900: #0a2815;
+
+  --color-nexus-secondary-10: #ff003c;
+  --color-nexus-secondary-20: #e86a9d;
+  --color-nexus-secondary-30: #eb7daa;
+  --color-nexus-secondary-40: #ee8fb6;
+  --color-nexus-secondary-50: #f1a2c2;
+  --color-nexus-secondary-60: #f3b5ce;
+  --color-nexus-secondary-70: #f6c7da;
+  --color-nexus-secondary-80: #f9dae7;
+  --color-nexus-secondary-90: #fcecf3;
+
+  --color-nexus-secondary-100: #cb3e78;
+  --color-nexus-secondary-200: #b5376a;
+  --color-nexus-secondary-300: #9e305d;
+  --color-nexus-secondary-400: #882950;
+  --color-nexus-secondary-500: #712343;
+  --color-nexus-secondary-600: #5a1c35;
+  --color-nexus-secondary-700: #441528;
+  --color-nexus-secondary-800: #2d0e1b;
+  --color-nexus-secondary-900: #17070d;
+
+  --color-nexus-dark-100: #E5E4E2;
 
 }
 
 body{
   width: 100vw;
+}
+
+:global(input) {
+  border-radius: 1rem;
+}
+
+:global(button) {
+  border-radius: 2rem;
+  border: 1px solid var(--color-nexus-danger);
+}
+
+.btn-primary {
+  border-radius: 1rem;
+  padding: 0.5rem 2rem;
+  color: var(--color-white);
+  background-color: var(--color-nexus-primary);
+  transition: ease-in-out 0.2s;
+
+
+}
+
+.btn-primary:hover {
+  background-color: #0E583A;
+  transition: ease-in-out 0.2s;
+  cursor: pointer;
+}
+
+input{
+  padding: 0.5rem;
+  border: 1px solid var(--color-nexus-danger);
+  border-radius: 0.5rem;
 }

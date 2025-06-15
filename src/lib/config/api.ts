@@ -1,0 +1,21 @@
+import {dev} from '$app/environment';
+
+
+export const API_CONFIG = {
+	BASE_URL: dev
+		? 'http://localhost:8080'
+		: 'http://localhost:8080',
+	VERSION: 'v1',
+	ENDPOINTS: {
+		CATEGORY: '/category',
+		// Add other endpoints as needed
+	},
+	get FULL_BASE_URL() {
+		return `${this.BASE_URL}/api/${this.VERSION}`;
+	}
+} as const;
+
+// Helper function with proper typing
+export function buildApiUrl(endpoint: string): string {
+	return `${API_CONFIG.FULL_BASE_URL}${endpoint}`;
+}
