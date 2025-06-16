@@ -62,19 +62,4 @@
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     }
 
-    .content {
-        padding: 10px 16px;
-        display: block;
-        color: white;
-        font-weight: 500;
-    }
-
-		.close {
-			background: transparent;
-			border: none;
-			color: white;
-			font-size: 1.2rem;
-			cursor: pointer;
-			margin-left: 10px;
-		}
 </style>

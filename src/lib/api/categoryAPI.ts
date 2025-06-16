@@ -24,7 +24,7 @@ export async function getCategory(id: number): Promise<Category> {
 }
 
 export async function createCategory(category: Omit<Category, 'id'>): Promise<Category> {
-	const response = await fetch(`${API_BASE}/categories`, {
+	const response = await fetch(buildApiUrl(`/category`), {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(category)
@@ -38,7 +38,7 @@ export async function createCategory(category: Omit<Category, 'id'>): Promise<Ca
 }
 
 export async function updateCategory(id: number, category: Partial<Category>): Promise<Category> {
-	const response = await fetch(`${API_BASE}/category/${id}`, {
+	const response = await fetch(buildApiUrl(`/category/${id}`), {
 		method: 'PUT',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(category)
@@ -52,7 +52,7 @@ export async function updateCategory(id: number, category: Partial<Category>): P
 }
 
 export async function deleteCategory(id: number): Promise<void> {
-	const response = await fetch(`${API_BASE}/category/${id}`, {
+	const response = await fetch(buildApiUrl(`/category/${id}`), {
 		method: 'DELETE'
 	});
 

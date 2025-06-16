@@ -1,7 +1,7 @@
 import { getCategories, getCategory } from '$lib/api/categoryAPI';
 import type { Category } from '$lib/types/category';
 
-class CategoryStore {
+class CategoryStoreSvelte {
 	categories = $state<Category[]>([])
 	selectedCategory = $state<Category>({
 		id: 0,
@@ -17,7 +17,13 @@ class CategoryStore {
 		try {
 			this.categories = await getCategories();
 		} catch (error) {
-			this.error = error instanceof Error ? error.message : error;
+			if (error instanceof Error) {
+				this.error = error.message;
+			} else if(typeof error === 'string') {
+				this.error = error;
+			} else {
+				this.error = 'An unknown error occurred.';
+			}
 		} finally {
 			this.loading = false;
 		}
@@ -30,13 +36,19 @@ class CategoryStore {
 		try {
 			this.selectedCategory = await getCategory(id);
 		} catch (error) {
-			this.error = error instanceof Error ? error.message : error;
+			if (error instanceof Error) {
+				this.error = error.message;
+			} else if(typeof error === 'string') {
+				this.error = error;
+			} else {
+				this.error = 'An unknown error occurred.';
+			}
 		} finally {
 			this.loading = false;
 		}
 	}
 
-	clearSelectedCategory(id: number) {
+	clearSelectedCategory() {
 		this.selectedCategory = { id: 0, name: ''};
 	}
 
@@ -47,4 +59,4 @@ class CategoryStore {
 
 }
 
-export const categoryStore = new CategoryStore();
+export const categoryStore = new CategoryStoreSvelte();

@@ -1,3 +1,49 @@
+
+// src/routes/categories/+page.svelte (Your main page)
+<script lang="ts">
+	import { onMount } from 'svelte';
+	import { categoryStore } from '$lib/stores/categoryStore.svelte';
+	import CategoryForm from '$lib/components/Forms/categoryForm.svelte';
+	import CategoryList from '$lib/components/CategoryList.svelte';
+
+	onMount(() => {
+		categoryStore.loadCategories();
+	});
+
+	function handleRefresh() {
+		categoryStore.reloadData();
+	}
+</script>
+
+<h1>Categories</h1>
+
+<button onclick={handleRefresh}>Refresh</button>
+
+<div class="layout">
+	<section>
+		<h2>Category Form</h2>
+		<CategoryForm />
+	</section>
+
+	<section>
+		<h2>Categories</h2>
+		<CategoryList />
+	</section>
+</div>
+
+<style>
+    .layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+    }
+</style>
+
+
+
+
+
+<!--
 <script lang="ts">
 	import type { PageProps } from '../../../../.svelte-kit/types/src/routes/admin/category/$types';
 	import { invalidateAll } from '$app/navigation';
@@ -151,7 +197,7 @@ Create Dialog
 
 edit dialog
 
-<!-- Edit dialog -->
+&lt;!&ndash; Edit dialog &ndash;&gt;
 <form onsubmit={handleUpdate}>
 	<label for="id">ID</label>
 	<input id="id" type="text" bind:value={selectedCategory.id} readonly />
@@ -160,4 +206,4 @@ edit dialog
 	<input id="name" type="text" bind:value={selectedCategory.name} />
 
 	<button class="btn-primary" type="submit">UPDATE</button>
-</form>
+</form>-->
