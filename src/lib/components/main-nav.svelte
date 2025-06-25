@@ -12,8 +12,18 @@
 	import CircleHelpIcon from "@lucide/svelte/icons/circle-help";
 	import CircleIcon from "@lucide/svelte/icons/circle";
 	import CircleCheckIcon from "@lucide/svelte/icons/circle-check";
+	import { onMount } from 'svelte';
 	let currentMode = mode.current;
 	$: logoSrc = currentMode === 'dark' ? '/logo-light.png' : '/logo-dark.png';
+
+
+	onMount(() => {
+		const lightLogo = new Image();
+		lightLogo.src = "/logo-light.png";
+
+		const darkLogo = new Image();
+		darkLogo.src = "/logo-dark.png";
+	});
 
 	function handleToggle() {
 		console.log("MODE: " + currentMode);

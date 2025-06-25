@@ -11,7 +11,7 @@
 	<div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-w-7xl mx-auto px-4">
 		<div>
 			<h1 class="text-4xl md:text-5xl font-extrabold leading-tight text-gray-800 dark:text-white">
-				Learn Anytime, Anywhere
+				Efective Fueling, Anywhere
 			</h1>
 			<p class="mt-4 text-lg text-gray-700 dark:text-gray-300">
 				Unlock your potential with our expert-led online courses.
@@ -28,7 +28,7 @@
 </section>
 <div>
 	<h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
-		Featured Courses
+		Featured Items
 	</h1>
 	<FeaturedCourses />
 </div>
