@@ -1,6 +1,9 @@
 <script lang="ts">
 	import MainNav from "$lib/components/main-nav.svelte";
 	import Banner from "$lib/components/banner.svelte";
+	import { ModeWatcher } from 'mode-watcher';
+
+	let { children } = $props();
 
 	const bannerContent = {
 		visible: false,
@@ -15,9 +18,11 @@
 </script>
 
 <Banner {...bannerContent } />
-<MainNav/>
-<slot/>
+<MainNav />
+<ModeWatcher />
 
-<style>
-
-</style>
+<main class="flex flex-col items-center min-h-screen">
+	<div class="w-4/5 max-w-4xl">
+		{@render children()}
+	</div>
+</main>
