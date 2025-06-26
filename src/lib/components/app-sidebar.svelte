@@ -56,19 +56,18 @@
 			},
 			{
 				title: "Courses",
-				url: "#",
 				icon: BotIcon,
 				items: [
 					{
-						title: "Course Category",
+						title: "Courses",
+						url: "/admin/course",
+					},
+					{
+						title: "Category",
 						url: "#",
 					},
 					{
-						title: "Explorer",
-						url: "#",
-					},
-					{
-						title: "Quantum",
+						title: "Discounts",
 						url: "#",
 					},
 				],
