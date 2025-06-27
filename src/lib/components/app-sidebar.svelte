@@ -64,7 +64,7 @@
 					},
 					{
 						title: "Category",
-						url: "#",
+						url: "/admin/category",
 					},
 					{
 						title: "Discounts",
