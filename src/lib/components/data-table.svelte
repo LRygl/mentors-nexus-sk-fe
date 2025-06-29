@@ -3,7 +3,7 @@
 
 	import { type ColumnDef, getCoreRowModel,getPaginationRowModel, type PaginationState } from '@tanstack/table-core';
 	import { createSvelteTable, FlexRender } from '$lib/components/ui/data-table';
-	import { Button } from '$lib/components/ui/button/index'
+	import { Button } from '$lib/components/ui/button/index';
 	import * as Table from "$lib/components/ui/table"
 
 	type DataTableProps<TData, TValue> = {
@@ -79,7 +79,10 @@
 	</div>
 	<div class="flex flex-row justify-between">
 		<div class="space-x-2 py-4">
-			text
+
+			<!-- COMBOBOX FOR PAGINATION -->
+			PAGINATION
+
 		</div>
 		<div class="flex items-center justify-end space-x-2 py-4">
 			<Button

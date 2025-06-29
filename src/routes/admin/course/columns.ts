@@ -3,31 +3,33 @@ import { createRawSnippet } from 'svelte';
 import type { ColumnDef } from '@tanstack/table-core';
 import { renderComponent} from '$lib/components/ui/data-table';
 import DataTableActions from '$lib/components/data-table-actions.svelte'
+import type { Course } from '$lib/types/course';
 
-export type Payment = {
-	id: string;
-	amount: number;
-	status: "pending" | "processing" | "success" | "failed";
-	email: string;
-};
-
-export const columns: ColumnDef<Payment>[] = [
+export const columns: ColumnDef<Course>[] = [
+	{
+		accessorKey: "id",
+		header: "Id",
+	},
+	{
+		accessorKey: "name",
+		header: "Název",
+	},
 	{
 		accessorKey: "status",
 		header: "Status",
 	},
 	{
-		accessorKey: "email",
-		header: "Email",
+		accessorKey: "uuid",
+		header: "UUID",
 	},
 
 	//Amount column has special extension - as i can have a separate columns definition for each table taht is passed to data
 	//table this could prove useful
 	{
-		accessorKey: "amount",
+		accessorKey: "price",
 		header: () => {
 			const amountHeaderSnippet = createRawSnippet(() => ({
-				render: () => `<div class="text-right">Amount</div>`,
+				render: () => `<div class="text-right">Cena</div>`,
 			}));
 			return renderSnippet(amountHeaderSnippet, "");
 		},

@@ -1,38 +1,49 @@
 <script lang="ts">
 import DataTable from '$lib/components/data-table.svelte'
+import type { Course } from '$lib/types/course';
 import { columns } from './columns';
-	type Payment = {
-		id: string;
-		amount: number;
-		status: "pending" | "processing" | "success" | "failed";
-		email: string;
-	};
+import { Button } from '$lib/components/ui/button';
 
-	export const data: Payment[] = [
+
+// State
+let courses = $state<Course[]>([]);
+let totalCourses = $state(0);
+let loading = $state(false);
+let error = $state<string | null>(null);
+let searchTerm = $state('');
+let statusFilter = $state<Course['status'] | ''>('');
+
+// Load resource data from API
+
+
+
+	export const data: Course[] = [
 		{
-			id: "728ed52f",
-			amount: 100,
-			status: "pending",
-			email: "m@example.com",
+			id: "1",
+			name: "Pilot",
+			status: "processing",
+			price: 125,
+			uuid: "0197bc8b-a30c-720e-a705-177e1bc6add0",
 		},
 		{
-			id: "489e1d42",
-			amount: 125,
+			id: "2",
+			name: "After Pilot",
 			status: "processing",
-			email: "example@gmail.com",
+			price: 250,
+			uuid: "0197bc8b-ba8e-7a49-b9be-92e55a2fb23d",
 		},
 		// ...
 	];
 
 </script>
 
+<div class="pb-2">
+	<div>Courses</div>
+	<div>
+		Search
+		<Button variant="default">Explore courses</Button>
+	</div>
 
-
-
-
-
-
-
-Courses
+</div>
 
 <DataTable {columns} {data} />
