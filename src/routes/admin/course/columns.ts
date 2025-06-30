@@ -19,6 +19,29 @@ export const columns: ColumnDef<Course>[] = [
 		header: "Status",
 	},
 	{
+		accessorKey: "lessons",
+		header: () => {
+			const lessonsHeaderSnippet = createRawSnippet(()=> ({
+				render: () => `<div class="text-center">Lessons</div>`,
+			}));
+
+			return renderSnippet(lessonsHeaderSnippet,"");
+		},
+		cell: ({ row }) => {
+			const lessons = row.getValue("lessons") as any[];
+			const lessonCount = lessons ? lessons.length : 0;
+
+			const lessonCountSnippet = createRawSnippet<[number]>((getCount) => {
+				const count = getCount();
+				return {
+					render: () => `<div class="text-center">${count}</div>`,
+				};
+			});
+
+			return renderSnippet(lessonCountSnippet, lessonCount);
+		}
+	},
+	{
 		accessorKey: "uuid",
 		header: "UUID",
 	},
@@ -52,9 +75,6 @@ export const columns: ColumnDef<Course>[] = [
 			);
 		},
 	},
-
-
-
 	{
 		id: "actions",
 		cell: ({ row }) => {

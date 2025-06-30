@@ -7,7 +7,7 @@ import { getCourses } from '$lib/api/CourseAPI';
 import { onMount } from 'svelte';
 import Loader2Icon from "@lucide/svelte/icons/loader-2";
 import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
-
+import Plus from "@lucide/svelte/icons/plus"
 // State
 let courses = $state<Course[]>([]);
 let totalCourses = $state(0);
@@ -20,7 +20,7 @@ async function loadCourses() {
 	error = null;
 
 	try {
-		const response = await getCourses({})
+		const response = await getCourses({size:20})
 		courses = response.content || [];
 		totalCourses = response.totalElements;
 	} catch (error) {
@@ -56,13 +56,15 @@ $effect(() => {
 				disabled={loading}
 			>
 				{#if loading}
-					<Loader2Icon class="w-4 h-4 mr-2 animate-spin" />
-					Loading...
+					<Loader2Icon class="w-4 h-4 animate-spin" />
 				{:else}
-					<RefreshCwIcon class="w-4 h-4 mr-2" />
+					<RefreshCwIcon class="w-4 h-4" />
 				{/if}
 			</Button>
-			<Button variant="default">Explore courses</Button>
+			<Button variant="default">
+				<Plus />
+				Add
+			</Button>
 		</div>
 	</div>
 </div>

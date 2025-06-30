@@ -103,6 +103,7 @@
 					{:else}
 						<Table.Row>
 							<Table.Cell colspan={columns.length} class="h-24 text-center">
+								<!-- TODO ADD ICON AND SOME BLING -->
 								No results.
 							</Table.Cell>
 						</Table.Row>
