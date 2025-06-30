@@ -28,6 +28,7 @@ export interface CourseListParams {
 
 
 import type { Page } from '$lib/types/page';
+import type { Lesson } from '$lib/types/lesson';
 
 export interface CourseOwner {
 	id: number;
@@ -47,7 +48,7 @@ export interface Course {
 	name: string;
 	labels: string[];
 	categories: string[];
-	lessons: any[];
+	lessons: Lesson[];
 	owners: CourseOwner[];
 	students: number;
 

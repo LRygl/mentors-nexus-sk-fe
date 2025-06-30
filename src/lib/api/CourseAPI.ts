@@ -23,7 +23,10 @@ export async function getCourses(params: GetCoursesParams): Promise<CourseListRe
 			throw new Error(`Failed to fetch courses: ${response.status} ${response.statusText}`);
 		}
 
-		return await response.json();
+		const data = await response.json();
+		console.log('Raw API response in getCourses:', data); // Add this line
+		return data; // Should return the full response object with content, totalElements, etc.
+
 	} catch (error) {
 		console.error('CourseAPI.getCourses error:', error);
 		throw new Error(
