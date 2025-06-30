@@ -1,4 +1,4 @@
-import { buildApiUrl, API_CONFIG } from '$lib/config/api';
+import { buildApiUrl } from '$lib/config/api';
 import type { Category} from '$lib/types/category';
 
 

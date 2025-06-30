@@ -1,28 +1,38 @@
 import { buildApiUrl } from '$lib/config/api';
-import type { Course, CourseListParams, CourseListResponse } from '$lib/types/course';
+import type { Course, CourseListResponse } from '$lib/types/course';
 
-export async function getCourses(params: CourseListParams = {}): Promise<CourseListResponse> {
-	const queryParams = new URLSearchParams();
-
-	if (params.page !== undefined) queryParams.append('page', params.page.toString());
-	if (params.pageSize !== undefined) queryParams.append('pageSize', params.pageSize.toString());
-	if (params.search) queryParams.append('search', params.search);
-	if (params.status) queryParams.append('status', params.status);
-	if (params.sortBy) queryParams.append('sortBy', params.sortBy);
-	if (params.sortOrder) queryParams.append('sortOrder', params.sortOrder);
-
-	const queryString = queryParams.toString();
-	const url = buildApiUrl(`/courses${queryString ? `?${queryString}` : ''}`);
-
-	const response = await fetch(url);
-
-	if (!response.ok) {
-		throw new Error(`HTTP error! status: ${response.status}`);
-	}
-
-	return response.json();
+export interface GetCoursesParams {
+	page?: number;
+	size?: number;
+	sort?: string;
 }
 
+export async function getCourses(params: GetCoursesParams): Promise<CourseListResponse> {
+	try {
+		const searchParams = new URLSearchParams();
+		if (params.page !== undefined) searchParams.set('page', params.page.toString());
+		if (params.size !== undefined) searchParams.set('size', params.size.toString());
+		if (params.sort) searchParams.set('sort', params.sort);
+
+		const response = await fetch(buildApiUrl(`/course?${searchParams}`), {
+			method: 'GET',
+			headers: { 'Content-Type': 'application/json' },
+		});
+
+		if (!response.ok) {
+			throw new Error(`Failed to fetch courses: ${response.status} ${response.statusText}`);
+		}
+
+		return await response.json();
+	} catch (error) {
+		console.error('CourseAPI.getCourses error:', error);
+		throw new Error(
+			error instanceof Error
+				? error.message
+				: 'An unexpected error occurred while fetching courses'
+		);
+	}
+}
 export async function getCourse(id: string): Promise<Course> {
 	const response = await fetch(buildApiUrl(`/courses/${id}`));
 

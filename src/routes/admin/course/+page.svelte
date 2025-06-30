@@ -3,47 +3,84 @@ import DataTable from '$lib/components/data-table.svelte'
 import type { Course } from '$lib/types/course';
 import { columns } from './columns';
 import { Button } from '$lib/components/ui/button';
-
+import { getCourses } from '$lib/api/CourseAPI';
+import { onMount } from 'svelte';
+import Loader2Icon from "@lucide/svelte/icons/loader-2";
+import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
 
 // State
 let courses = $state<Course[]>([]);
 let totalCourses = $state(0);
-let loading = $state(false);
+let loading = $state(true);
 let error = $state<string | null>(null);
-let searchTerm = $state('');
-let statusFilter = $state<Course['status'] | ''>('');
 
 // Load resource data from API
+async function loadCourses() {
+	loading = true;
+	error = null;
 
+	try {
+		const response = await getCourses({})
+		courses = response.content || [];
+		totalCourses = response.totalElements;
+	} catch (error) {
+		error = error instanceof Error ? error.message : 'Failed to load courses';
+		courses = [];
+		totalCourses = 0;
+	} finally {
+		loading = false;
+	}
+}
 
+onMount(() => {
+	loadCourses();
+})
 
-	export const data: Course[] = [
-		{
-			id: "1",
-			name: "Pilot",
-			status: "processing",
-			price: 125,
-			uuid: "0197bc8b-a30c-720e-a705-177e1bc6add0",
-		},
-		{
-			id: "2",
-			name: "After Pilot",
-			status: "processing",
-			price: 250,
-			uuid: "0197bc8b-ba8e-7a49-b9be-92e55a2fb23d",
-		},
-		// ...
-	];
-
+// Debug the courses data
+$effect(() => {
+	console.log('Courses data:', courses);
+	console.log('Courses length:', courses?.length);
+});
 </script>
 
 <div class="pb-2">
-	<div>Courses</div>
-	<div>
-		Search
-		<Button variant="default">Explore courses</Button>
+	<div class="flex items-center justify-between">
+		<div>
+			<h1 class="text-2xl font-bold">Courses</h1>
+			<p class="text-muted-foreground text-sm">Showing X of {totalCourses}</p>
+		</div>
+		<div class="flex gap-2">
+			<Button
+				variant="outline"
+				onclick={loadCourses}
+				disabled={loading}
+			>
+				{#if loading}
+					<Loader2Icon class="w-4 h-4 mr-2 animate-spin" />
+					Loading...
+				{:else}
+					<RefreshCwIcon class="w-4 h-4 mr-2" />
+				{/if}
+			</Button>
+			<Button variant="default">Explore courses</Button>
+		</div>
 	</div>
-
 </div>
 
-<DataTable {columns} {data} />
+{#if error}
+	<div class="rounded-md border p-8 text-center">
+		<div class="text-red-500 mb-2">⚠️ Error loading courses</div>
+		<div class="text-sm text-muted-foreground mb-4">{error}</div>
+		<Button variant="outline" onclick={loadCourses} disabled={loading}>
+			{#if loading}
+				<Loader2Icon class="w-4 h-4 mr-2 animate-spin" />
+				Retrying...
+			{:else}
+				<RefreshCwIcon class="w-4 h-4 mr-2" />
+				Try Again
+			{/if}
+		</Button>
+	</div>
+{:else}
+	<DataTable {columns} data={courses} {loading} />
+{/if}

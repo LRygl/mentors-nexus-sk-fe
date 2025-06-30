@@ -48,7 +48,7 @@ export const columns: ColumnDef<Course>[] = [
 
 			return renderSnippet(
 				amountCellSnippet,
-				formatter.format(parseFloat(row.getValue("amount")))
+				formatter.format(parseFloat(row.getValue("price")))
 			);
 		},
 	},
