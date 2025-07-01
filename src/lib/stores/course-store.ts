@@ -12,10 +12,5 @@ export async function loadUsers(): Promise<void> {
 
 	} catch (error) {
 		console.log("Error loading user data", error);
-		users.set([
-			{ id: 1, name: "John Doe" },
-			{ id: 2, name: "Jane Smith" },
-			{ id: 3, name: "Bob Johnson" }
-		]);
 	}
 }

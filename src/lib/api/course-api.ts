@@ -55,6 +55,7 @@ export async function createCourse(courseData: CourseFormData): Promise<CourseRe
 		courseOwnerId: courseData.courseOwnerId
 	};
 
+	console.log(JSON.stringify(payload));
 	const response = await fetch(buildApiUrl(`/courses`), {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },

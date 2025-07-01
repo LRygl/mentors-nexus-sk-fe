@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { Input } from "$lib/components/ui/input/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
-	import  Badge  from "$lib/components/ui/badge/index";
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { Plus, X } from "lucide-svelte";
+	import { Badge } from "$lib/components/ui/badge/index.js";
 
 	interface Props {
 		label: string;
@@ -45,7 +45,7 @@
 			{placeholder}
 			onkeypress={handleKeyPress}
 		/>
-		<Button type="button" variant="outline" on:click={addItem}>
+		<Button type="button" variant="outline" onclick={addItem}>
 			<Plus class="w-4 h-4" />
 		</Button>
 	</div>

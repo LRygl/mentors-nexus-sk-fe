@@ -5,9 +5,9 @@ import { columns } from './columns';
 import { Button } from '$lib/components/ui/button';
 import { getCourses } from '$lib/api/course-api';
 import { onMount } from 'svelte';
+import CourseDialog from '$lib/components/course-dialog.svelte';
 import Loader2Icon from "@lucide/svelte/icons/loader-2";
 import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
-import Plus from "@lucide/svelte/icons/plus"
 // State
 let courses = $state<Course[]>([]);
 let totalCourses = $state(0);
@@ -61,10 +61,8 @@ $effect(() => {
 					<RefreshCwIcon class="w-4 h-4" />
 				{/if}
 			</Button>
-			<Button variant="default">
-				<Plus />
-				Add
-			</Button>
+			<CourseDialog />
+
 		</div>
 	</div>
 </div>

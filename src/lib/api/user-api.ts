@@ -4,7 +4,7 @@ import type { UserListResponse } from '$lib/types/user';
 export async function getAllUsers(): Promise<UserListResponse> {
 	try {
 		const response = await fetch(buildApiUrl(`/user`),{
-			method: 'POST',
+			method: 'GET',
 				headers: { 'Content-Type': 'application/json' },
 		});
 
