@@ -1,5 +1,5 @@
 import { buildApiUrl } from '$lib/config/api';
-import type { Course, CourseListResponse } from '$lib/types/course';
+import type { Course, CourseFormData, CourseListResponse, CourseResponse } from '$lib/types/course';
 
 export interface GetCoursesParams {
 	page?: number;
@@ -46,12 +46,20 @@ export async function getCourse(id: string): Promise<Course> {
 	return response.json();
 }
 
-export async function createCourse(course: Omit<Course, 'id'>): Promise<Course> {
-	const response = await fetch(buildApiUrl('/courses'), {
+export async function createCourse(courseData: CourseFormData): Promise<CourseResponse> {
+	const payload: Omit<CourseFormData, 'id'> = {
+		name: courseData.name,
+		price: courseData.price,
+		labels: courseData.labels,
+		categories: courseData.categories,
+		courseOwnerId: courseData.courseOwnerId
+	};
+
+	const response = await fetch(buildApiUrl(`/courses`), {
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
-		body: JSON.stringify(course)
-	});
+		body: JSON.stringify(payload),
+	})
 
 	if (!response.ok) {
 		throw new Error(`HTTP error! status: ${response.status}`);

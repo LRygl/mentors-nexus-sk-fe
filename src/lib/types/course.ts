@@ -22,7 +22,22 @@ export interface Course {
 	lessons: Lesson[];
 	owners: CourseOwner[];
 	students: number;
+	courseOwnerId: number;
 
+}
+
+export interface CourseFormData {
+	name: string;
+	price: number;
+	labels: string[];
+	categories: string[];
+	courseOwnerId: number;
+}
+
+export interface CourseResponse extends Course {
+	id: number;
+	createdAt?: string;
+	updatedAt?: string;
 }
 
 export type CourseListResponse = Page<Course>;

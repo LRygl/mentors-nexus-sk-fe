@@ -3,7 +3,7 @@ import DataTable from '$lib/components/data-table.svelte'
 import type { Course } from '$lib/types/course';
 import { columns } from './columns';
 import { Button } from '$lib/components/ui/button';
-import { getCourses } from '$lib/api/CourseAPI';
+import { getCourses } from '$lib/api/course-api';
 import { onMount } from 'svelte';
 import Loader2Icon from "@lucide/svelte/icons/loader-2";
 import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";

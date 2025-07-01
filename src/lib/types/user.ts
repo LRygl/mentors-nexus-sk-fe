@@ -25,3 +25,7 @@ export interface User {
 	credentialsNonExpired: boolean;
 	uuid: string;
 }
+
+export interface UserListResponse {
+
+}

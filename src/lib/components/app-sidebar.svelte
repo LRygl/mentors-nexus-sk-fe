@@ -2,6 +2,8 @@
 	import AudioWaveformIcon from "@lucide/svelte/icons/audio-waveform";
 	import BookOpenIcon from "@lucide/svelte/icons/book-open";
 	import BotIcon from "@lucide/svelte/icons/bot";
+	import Users from "@lucide/svelte/icons/users";
+	import Course from "@lucide/svelte/icons/book";
 	import ChartPieIcon from "@lucide/svelte/icons/chart-pie";
 	import CommandIcon from "@lucide/svelte/icons/command";
 	import FrameIcon from "@lucide/svelte/icons/frame";
@@ -35,29 +37,39 @@
 		],
 		navMain: [
 			{
-				title: "Playground",
+				title: "Dashboard",
 				url: "#",
 				icon: SquareTerminalIcon,
 				isActive: true,
 				items: [
 					{
-						title: "History",
-						url: "#",
-					},
-					{
-						title: "Starred",
-						url: "#",
-					},
-					{
-						title: "Settings",
+						title: "Events",
 						url: "#",
 					},
 				],
 			},
 			{
-				title: "Courses",
-				icon: BotIcon,
+				title: "Users",
+				icon: Users,
 				items: [
+					{
+						title: "Users",
+						url: "/admin/users",
+					},
+					{
+						title: "Companies",
+						url: "/admin/users",
+					},
+				],
+			},
+			{
+				title: "Courses",
+				icon: Course,
+				items: [
+					{
+						title: "Featured",
+						url: "/admin/course",
+					},
 					{
 						title: "Courses",
 						url: "/admin/course",
@@ -67,13 +79,17 @@
 						url: "/admin/category",
 					},
 					{
+						title: "Lessons",
+						url: "#",
+					},
+					{
 						title: "Discounts",
 						url: "#",
 					},
 				],
 			},
 			{
-				title: "Documentation",
+				title: "Invoices",
 				url: "#",
 				icon: BookOpenIcon,
 				items: [
