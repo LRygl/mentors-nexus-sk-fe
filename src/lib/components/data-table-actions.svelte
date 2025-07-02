@@ -6,9 +6,12 @@
 	import CopyIcon from '@lucide/svelte/icons/copy'
 	import EyeIcon from '@lucide/svelte/icons/eye'
 	import InfoIcon from '@lucide/svelte/icons/info'
+	import Trash_2 from '@lucide/svelte/icons/trash-2'
 	import { DropdownMenuContent } from '$lib/components/ui/dropdown-menu/index.js';
 
 	let { id }: { id: string } = $props();
+
+
 </script>
 
 <DropdownMenu.Root>
@@ -41,6 +44,10 @@
 		<DropdownMenu.Item class="flex items-center gap-2">
 			<InfoIcon size={16} />
 			Details
+		</DropdownMenu.Item>
+		<DropdownMenu.Item class="flex items-center gap-2">
+			<Trash_2 size={16} />
+			Delete
 		</DropdownMenu.Item>
 	</DropdownMenu.Content>
 </DropdownMenu.Root>

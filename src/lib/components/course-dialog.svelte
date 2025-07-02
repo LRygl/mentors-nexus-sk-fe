@@ -4,10 +4,10 @@
 		Dialog,
 		DialogContent,
 		DialogDescription,
-		DialogHeader,
+		DialogHeader, DialogOverlay,
 		DialogTitle,
-		DialogTrigger,
-	} from "$lib/components/ui/dialog/index.js";
+		DialogTrigger
+	} from '$lib/components/ui/dialog/index.js';
 	import Plus from "@lucide/svelte/icons/plus"
 	import CourseForm from "$lib/components/course-form.svelte";
 	import { loadUsers } from "$lib/stores/course-store";
@@ -18,28 +18,45 @@
 		courseCreated: CourseResponse;
 	}>();
 
-	let open = $state<boolean>(false);
+	interface Props {
+		onSuccess?: (result: CourseResponse) => void;
+		onCancel?: () => void;
+	}
+
+	let { onSuccess, onCancel }: Props = $props();
+
+	// Manage dialog state internally
+	let open = $state(false);
 
 	onMount(() => {
 		loadUsers();
 	});
 
 	function handleSuccess(result: CourseResponse): void {
+		// Close dialog first
 		open = false;
-		alert('Course created successfully!');
+
+		// Call the parent's onSuccess callback
+		onSuccess?.(result);
+
+		// Dispatch event
 		dispatch('courseCreated', result);
 	}
 
 	function handleCancel(): void {
+		// Close dialog first
 		open = false;
+
+		// Call the parent's onCancel callback
+		onCancel?.();
 	}
 </script>
 
 <Dialog bind:open>
 	<DialogTrigger class={buttonVariants({ variant: "default" })}>
-		<Plus />
+		<Plus /> Create
 	</DialogTrigger>
-
+	<DialogOverlay class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm" />
 	<DialogContent class="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
 		<DialogHeader>
 			<DialogTitle>Add New Course</DialogTitle>

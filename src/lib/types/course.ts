@@ -28,10 +28,18 @@ export interface Course {
 
 export interface CourseFormData {
 	name: string;
+	price: string;
+	labels: string[];
+	categories: string[];
+	courseOwnerId: string;
+}
+
+export interface CreateCourseRequest {
+	name: string;
 	price: number;
 	labels: string[];
 	categories: string[];
-	courseOwnerId: number;
+	courseOwnerId: number; // number for API
 }
 
 export interface CourseResponse extends Course {

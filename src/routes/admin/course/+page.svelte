@@ -1,6 +1,6 @@
 <script lang="ts">
 import DataTable from '$lib/components/data-table.svelte'
-import type { Course } from '$lib/types/course';
+import type { Course, CourseResponse } from '$lib/types/course';
 import { columns } from './columns';
 import { Button } from '$lib/components/ui/button';
 import { getCourses } from '$lib/api/course-api';
@@ -13,6 +13,12 @@ let courses = $state<Course[]>([]);
 let totalCourses = $state(0);
 let loading = $state(true);
 let error = $state<string | null>(null);
+let dialogOpen = $state(false);
+
+// Load courses when component mounts
+onMount(() => {
+	loadCourses();
+})
 
 // Load resource data from API
 async function loadCourses() {
@@ -32,15 +38,20 @@ async function loadCourses() {
 	}
 }
 
-onMount(() => {
-	loadCourses();
-})
+// Handle successful course creation
+async function handleCourseSuccess(result: CourseResponse) {
+	// Refresh the courses list
+	await loadCourses();
 
-// Debug the courses data
-$effect(() => {
-	console.log('Courses data:', courses);
-	console.log('Courses length:', courses?.length);
-});
+	// Show success message (optional)
+	console.log('Course created successfully:', result);
+}
+
+function handleCourseCancel() {
+	// Handle cancel if needed
+	console.log('Course creation cancelled');
+}
+
 </script>
 
 <div class="pb-2">
@@ -61,8 +72,10 @@ $effect(() => {
 					<RefreshCwIcon class="w-4 h-4" />
 				{/if}
 			</Button>
-			<CourseDialog />
-
+			<CourseDialog
+				onSuccess={handleCourseSuccess}
+				onCancel={handleCourseCancel}
+			/>
 		</div>
 	</div>
 </div>

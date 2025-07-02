@@ -2,12 +2,7 @@
 	import { Input } from "$lib/components/ui/input/index.js";
 	import { Label } from "$lib/components/ui/label/index.js";
 	import { Button } from "$lib/components/ui/button/index.js";
-	import {
-		Select,
-		SelectContent,
-		SelectItem,
-		SelectTrigger,
-	} from "$lib/components/ui/select/index";
+	import * as Select from "$lib/components/ui/select/index";
 	import TagInput from "$lib/components/ui/tag-input.svelte";
 	import { createCourse } from "$lib/api/course-api";
 	import { users, isSubmitting } from "$lib/stores/course-store";
@@ -19,9 +14,20 @@
 		onCancel?: () => void;
 	}
 
-	let { onSuccess, onCancel }: Props = $props();
+	const selectedUserLabel = $derived(
+		$users.find((user) => user.id.toString() === formData.courseOwnerId)?.lastName ?? "Select a course owner"
+	);
 
+	let { onSuccess, onCancel }: Props = $props();
 	let formData = $state<CourseFormData>(createFormData());
+	// Create the selected object structure that shadcn-svelte expects
+
+	// Create the trigger content that shows the selected user
+	const triggerContent = $derived(
+		$users.find((user) => user.id.toString() === formData.courseOwnerId)
+			? `${$users.find((user) => user.id.toString() === formData.courseOwnerId)?.lastName} ${$users.find((user) => user.id.toString() === formData.courseOwnerId)?.firstName} (${$users.find((user) => user.id.toString() === formData.courseOwnerId)?.email})`
+			: "Select a course owner"
+	);
 
 	async function handleSubmit(): Promise<void> {
 		if (!validateForm(formData)) return;
@@ -44,6 +50,8 @@
 			$isSubmitting = false;
 		}
 	}
+
+
 </script>
 
 <form onsubmit={handleSubmit} class="space-y-6">
@@ -91,19 +99,28 @@
 	<!-- Course Owner -->
 	<div class="space-y-2">
 		<Label for="courseOwner">Course Owner</Label>
-		<Select bind:value={formData.courseOwnerId}>
-			<SelectTrigger>
-			</SelectTrigger>
-			<SelectContent>
-				{#each $users as user}
-					<SelectItem value={user.id.toString()}>{user.lastName}</SelectItem>
-				{/each}
-			</SelectContent>
-		</Select>
+		<Select.Root type="single" bind:value={formData.courseOwnerId}>
+			<Select.Trigger class="w-full">
+				{triggerContent}
+			</Select.Trigger>
+			<Select.Content>
+				<Select.Group>
+					<Select.Label>Course Owners</Select.Label>
+					{#each $users as user (user.id)}
+						<Select.Item
+							value={user.id.toString()}
+							label={user.lastName + " " + user.firstName + " (" + user.email + ")"}
+						>
+							{user.lastName} {user.firstName} ({user.email})
+						</Select.Item>
+					{/each}
+				</Select.Group>
+			</Select.Content>
+		</Select.Root>
 	</div>
 
 	<div class="flex gap-2 justify-end">
-		<Button type="button" variant="outline" onclick={onCancel}>
+		<Button type="button" variant="outline" onclick={() => onCancel?.()}>
 			Cancel
 		</Button>
 		<Button
