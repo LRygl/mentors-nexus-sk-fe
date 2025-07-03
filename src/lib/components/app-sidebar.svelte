@@ -16,7 +16,7 @@
 		user: {
 			name: "shadcn",
 			email: "m@example.com",
-			avatar: "/avatars/shadcn.jpg",
+			avatar: "https://robohash.org/77.48.128.67.png",
 		},
 		teams: [
 			{
