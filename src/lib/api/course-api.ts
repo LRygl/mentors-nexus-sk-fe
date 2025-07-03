@@ -78,7 +78,7 @@ export async function createCourse(courseData: CourseFormData): Promise<CourseRe
 }
 
 export async function updateCourse(id: string, course: Partial<Course>): Promise<Course> {
-	const response = await fetch(buildApiUrl(`/courses/${id}`), {
+	const response = await fetch(buildApiUrl(`/course/${id}`), {
 		method: 'PUT',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify(course)
@@ -92,7 +92,8 @@ export async function updateCourse(id: string, course: Partial<Course>): Promise
 }
 
 export async function deleteCourse(id: string): Promise<void> {
-	const response = await fetch(buildApiUrl(`/courses/${id}`), {
+	console.log("API CALL To Delete Course ID " + id);
+	const response = await fetch(buildApiUrl(`/course/${id}`), {
 		method: 'DELETE'
 	});
 

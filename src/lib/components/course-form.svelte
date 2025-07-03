@@ -5,7 +5,7 @@
 	import * as Select from "$lib/components/ui/select/index";
 	import TagInput from "$lib/components/ui/tag-input.svelte";
 	import { createCourse } from "$lib/api/course-api";
-	import { users, isSubmitting } from "$lib/stores/course-store";
+	import { users, isSubmitting } from "$lib/stores/user-store";
 	import { createFormData, validateForm } from "$lib/utils/form-utils";
 	import type { CourseFormData, CourseResponse } from "$lib/types/course";
 
@@ -15,7 +15,7 @@
 	}
 
 	const selectedUserLabel = $derived(
-		$users.find((user) => user.id.toString() === formData.courseOwnerId)?.lastName ?? "Select a course owner"
+		$users.data.find((user) => user.id.toString() === formData.courseOwnerId)?.lastName ?? "Select a course owner"
 	);
 
 	let { onSuccess, onCancel }: Props = $props();
@@ -24,8 +24,8 @@
 
 	// Create the trigger content that shows the selected user
 	const triggerContent = $derived(
-		$users.find((user) => user.id.toString() === formData.courseOwnerId)
-			? `${$users.find((user) => user.id.toString() === formData.courseOwnerId)?.lastName} ${$users.find((user) => user.id.toString() === formData.courseOwnerId)?.firstName} (${$users.find((user) => user.id.toString() === formData.courseOwnerId)?.email})`
+		$users.data.find((user) => user.id.toString() === formData.courseOwnerId)
+			? `${$users.data.find((user) => user.id.toString() === formData.courseOwnerId)?.lastName} ${$users.data.find((user) => user.id.toString() === formData.courseOwnerId)?.firstName} (${$users.data.find((user) => user.id.toString() === formData.courseOwnerId)?.email})`
 			: "Select a course owner"
 	);
 

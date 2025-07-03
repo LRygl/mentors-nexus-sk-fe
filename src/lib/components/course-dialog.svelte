@@ -10,7 +10,7 @@
 	} from '$lib/components/ui/dialog/index.js';
 	import Plus from "@lucide/svelte/icons/plus"
 	import CourseForm from "$lib/components/course-form.svelte";
-	import { loadUsers } from "$lib/stores/course-store";
+	import { users } from "$lib/stores/user-store";
 	import { onMount, createEventDispatcher } from "svelte";
 	import type { CourseResponse } from "$lib/types/course";
 
@@ -29,7 +29,7 @@
 	let open = $state(false);
 
 	onMount(() => {
-		loadUsers();
+		users.load();
 	});
 
 	function handleSuccess(result: CourseResponse): void {

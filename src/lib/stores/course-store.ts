@@ -1,16 +1,46 @@
+// lib/stores/courses-store.ts
 import { writable } from 'svelte/store';
-import type { User } from '$lib/types/user';
-import { getAllUsers } from '$lib/api/user-api';
+import type { Course, GetCoursesParams, CourseListResponse } from '$lib/types/course'; // adjust import paths
+import { getCourses } from '$lib/api/course-api';
 
-export const users = writable<User[]>([]);
-export const isSubmitting = writable<boolean>(false);
+export const courses = writable<Course[]>([]);
+export const isLoading = writable<boolean>(false);
+export const currentParams = writable<GetCoursesParams | null>(null);
 
-export async function loadUsers(): Promise<void> {
+export async function loadCourses(params: GetCoursesParams): Promise<void> {
+	isLoading.set(true);
+	currentParams.set(params);
+
 	try {
-		const usersData = await getAllUsers();
-		users.set(usersData);
-
+		const response: CourseListResponse = await getCourses(params);
+		courses.set(response.courses); // adjust based on your response structure
 	} catch (error) {
-		console.log("Error loading user data", error);
+		console.log("Error loading courses data", error);
+		courses.set([]);
+	} finally {
+		isLoading.set(false);
 	}
+}
+
+export async function refreshCourses(): Promise<void> {
+	const params = currentParams.get();
+	if (params) {
+		await loadCourses(params);
+	}
+}
+
+export function removeCourse(id: string): void {
+	courses.update(coursesList => coursesList.filter(course => course.id !== id));
+}
+
+export function addCourse(course: Course): void {
+	courses.update(coursesList => [...coursesList, course]);
+}
+
+export function updateCourse(updatedCourse: Course): void {
+	courses.update(coursesList =>
+		coursesList.map(course =>
+			course.id === updatedCourse.id ? updatedCourse : course
+		)
+	);
 }
