@@ -26,9 +26,18 @@ export interface User {
 	uuid: string;
 }
 
-export interface UserListResponse {
+export interface UserSummary {
  	id: number,
 	firstName: string,
 	lastName: string,
 	email: string,
 }
+
+export interface UserStoreState {
+	data: User[];
+	loading: boolean;
+	error: string | null;
+	loaded: boolean;
+}
+
+export type UserListResponse = User[];

@@ -18,6 +18,11 @@ export const PAGE_MAP: PageMap = {
 		title: 'Category',
 		parent: 'Admin',
 		parentHref: '/admin',
+	},
+	'/admin/company': {
+		title: 'Company',
+		parent: 'Admin',
+		parentHref: '/admin',
 	}
 };
 

@@ -1,83 +1,69 @@
-
 import { get, writable } from 'svelte/store';
 import { getAllUsers } from '$lib/api/user-api';
+import type { UserStoreState } from '$lib/types/user';
 
-//export const users = writable<User[]>();
 export const isLoading = writable<boolean>(false);
 export const isSubmitting = writable<boolean>(false);
 
-
-/*
-export async function loadUsers(): Promise<void> {
-	isLoading.set(true);
-
-	try {
-		const response: UserListResponse = await getAllUsers();
-		users.set(response.users);
-	} catch (error) {
-		users.set([])
-	} finally {
-		isLoading.set(false);
-	}
-
-}
-
-*/
-
 function createUserStore() {
-	const { subscribe, set, update } = writable({
+	const store = writable<UserStoreState>({
 		data: [],
 		loading: false,
 		error: null,
-		loaded: false,
+		loaded: false
 	});
 
-	return {
-		subscribe,
-		load: async (force = false) => {
-			const state = get({ subscribe });
+	const { subscribe, set, update } = store;
 
-			//Skip if data is allready loaded and not forcing
+	const userStore = {
+		subscribe,
+
+		load: async (force = false) => {
+			const state = get(store);
+
 			if (state.loaded && !force) return state.data;
 
-			update(s => ({ ...s, loading: true, error: null }));
+			update((s) => ({ ...s, loading: true, error: null }));
 
 			try {
-				const response = await getAllUsers();
-				const users = response.users;
+				const users = await getAllUsers(); // assuming UserListResponse is User[]
 
 				set({
 					data: users,
 					loading: false,
 					error: null,
-					loaded: true,
+					loaded: true
 				});
 
 				return users;
 			} catch (error) {
-				update(s => ({ ...s, loading: false, error: error.message }));
+				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+				update((s) => ({ ...s, loading: false, error: errorMessage }));
 				throw error;
 			}
 		},
-		findById: async (id: string) => {
-			const state = get({ subscribe });
 
-			// Ensure data is loaded
+		findById: async (id: string) => {
+			let state = get(store);
+
 			if (!state.loaded && !state.loading) {
-				await this.load();
+				await userStore.load(); // ✅ Use userStore.load() instead of this.load()
 			}
 
-			const currentState = get({ subscribe });
-			return currentState.data.find(user => user.id.toString() === id.toString());
+			state = get(store);
+			return state.data.find((user) => user.id.toString() === id.toString());
 		},
+
 		ensureLoaded: async () => {
-			const state = get({ subscribe });
+			const state = get(store);
 			if (!state.loaded && !state.loading) {
-				return await this.load();
+				return await userStore.load(); // ✅ Use userStore.load()
 			}
 			return state.data;
 		}
 	};
+
+	return userStore;
 }
 
 export const users = createUserStore();

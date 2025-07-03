@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { categoryStore } from '$lib/stores/categoryStore.svelte';
-	import { deleteCategory } from '$lib/api/categoryAPI'
+	import { categoryStore } from '$lib/stores/category-store.js';
+	import { deleteCategory } from '$lib/api/category-api'
 
 	async function handleEdit(id: number) {
 		await categoryStore.loadCategory(id);

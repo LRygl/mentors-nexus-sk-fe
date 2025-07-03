@@ -57,7 +57,7 @@ function handleCourseCancel() {
 <div class="pb-2">
 	<div class="flex items-center justify-between">
 		<div>
-			<h1 class="text-2xl font-bold">Courses</h1>
+			<h1 class="text-2xl font-bold">EMV Courses</h1>
 			<p class="text-muted-foreground text-sm">Showing X of {totalCourses}</p>
 		</div>
 		<div class="flex gap-2">

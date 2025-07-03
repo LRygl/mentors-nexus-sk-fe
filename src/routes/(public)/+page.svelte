@@ -23,7 +23,7 @@
 
 			</div>
 		</div>
-		<img src="https://source.unsplash.com/600x400/?education,online" alt="Hero Image" class="rounded-2xl shadow-lg w-full" />
+		<img src="https://source.unsplash.com/600x400/?education,online" alt="" class="rounded-2xl shadow-lg w-full" />
 	</div>
 </section>
 <div>

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { categoryStore } from '$lib/stores/categoryStore.svelte';
-	import { createCategory, updateCategory } from '$lib/api/categoryAPI';
+	import { categoryStore } from '$lib/stores/category-store.js';
+	import { createCategory, updateCategory } from '$lib/api/category-api';
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();

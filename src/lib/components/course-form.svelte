@@ -106,7 +106,7 @@
 			<Select.Content>
 				<Select.Group>
 					<Select.Label>Course Owners</Select.Label>
-					{#each $users as user (user.id)}
+					{#each $users.data as user (user.id)}
 						<Select.Item
 							value={user.id.toString()}
 							label={user.lastName + " " + user.firstName + " (" + user.email + ")"}

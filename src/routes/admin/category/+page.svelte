@@ -1,209 +1,53 @@
-
-// src/routes/categories/+page.svelte (Your main page)
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { categoryStore } from '$lib/stores/categoryStore.svelte';
-	import CategoryForm from '$lib/components/Forms/categoryForm.svelte';
-	import CategoryList from '$lib/components/CategoryList.svelte';
+	import { categories } from '$lib/stores/category-store';
+	import { LoaderCircle, RefreshCw } from 'lucide-svelte';
+	import { Button } from '$lib/components/ui/button';
+	import { columns } from './columns';
+	import DataTable from '$lib/components/data-table.svelte';
 
-	onMount(() => {
-		categoryStore.loadCategories();
-	});
+	onMount(() => {	loadCategories(); })
+	async function loadCategories() {	await categories.load(); }
+	async function reloadCategories() {	await categories.load(true); }
 
-	function handleRefresh() {
-		categoryStore.reloadData();
-	}
 </script>
 
-<h1>Categories</h1>
-
-<button onclick={handleRefresh}>Refresh</button>
-
-<div class="layout">
-	<section>
-		<h2>Category Form</h2>
-		<CategoryForm />
-	</section>
-
-	<section>
-		<h2>Categories</h2>
-		<CategoryList />
-	</section>
+<div class="pb-2">
+	<div class="flex items-center justify-between">
+		<div>
+			<h1 class="text-2xl font-bold">Application Categories</h1>
+			<p class="text-muted-foreground text-sm">Showing X of Y</p>
+		</div>
+		<div class="flex gap-2">
+			<Button
+				variant="outline"
+				onclick={reloadCategories}
+				disabled={$categories.loading}
+			>
+				{#if $categories.loading}
+					<LoaderCircle class="w-4 h-4 animate-spin" />
+				{:else}
+					<RefreshCw class="w-4 h-4" />
+				{/if}
+			</Button>
+		</div>
+	</div>
 </div>
 
-<style>
-    .layout {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 2rem;
-    }
-</style>
-
-
-
-
-
-<!--
-<script lang="ts">
-	import type { PageProps } from '../../../../.svelte-kit/types/src/routes/admin/category/$types';
-	import { invalidateAll } from '$app/navigation';
-	import { formatDateTime} from '$lib/components/utils/dateTimeFormat';
-	import AntDesignEditOutlined from '~icons/ant-design/edit-outlined';
-	import AntDesignDeleteOutlined from '~icons/ant-design/delete-outlined';
-	import AntDesignProfileOutlined from '~icons/ant-design/profile-outlined';
-	import AntDesignHistoryOutlined from '~icons/ant-design/history-outlined';
-	let { data }: PageProps = $props();
-
-	let name = '';
-
-	let selectedCategory = $state<{
-		id: number;
-		name: string
-	}>({
-		id: 0,
-		name: ''
-	});
-
-	async function loadPageDataFrame() {
-		try {
-			const response = await fetch('http://localhost:8080/api/v1/category')
-		}
-	}
-
-	const handleSubmit = async () => {
-		const response = await fetch('http://localhost:8080/api/v1/category', {
-			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify({
-				name
-			})
-		});
-
-		if (response.ok) {
-			console.log('Category created');
-			await invalidateAll();
-			name = '';
-		} else {
-			console.error('Failed to create category');
-		}
-	};
-
-	async function  handleDetailsDialog(id: number) {
-		console.log("Showing category Id" + id);
-		try{
-			const response = await fetch(`http://localhost:8080/api/v1/category/${id}`);
-			if (!response.ok) {
-				console.error('Failed to create category');
-			}
-
-			selectedCategory = await response.json();
-			console.log('Category loaded', selectedCategory);
-		} catch (error) {
-			console.error('Failed to load category:', error);
-			throw error;
-		}
-	}
-
-	async function handleUpdate(event: Event){
-		event.preventDefault();
-
-		const response = await fetch(`http://localhost:8080/api/v1/category/${selectedCategory.id}`, {
-			method: 'PUT',
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			body: JSON.stringify(selectedCategory)
-		});
-
-		if(response.ok) {
-			console.log('Category updated sucessfully')
-		} else {
-			console.error('Failed to update category')
-		}
-	}
-
-</script>
-
-<h1 class="text-4xl font-bold accent-nexus-primary">Category</h1>
-
-
-{#if data && data.category.length > 0}
-	<div class="relative overflow-x-auto shadow-md sm:rounded-lg">
-		<table class="w-full text-sm text-left rtl:text-right text-nexus-primary-800 border border-nexus-dark-100">
-			<thead class="text-xs uppercase bg-nexus-primary text-nexus-primary-80">
-			<tr class="">
-				<th scope="col" class="px-6 py-3">Id</th>
-				<th scope="col" class="px-6 py-3">Category Name</th>
-				<th scope="col" class="px-6 py-3">Category Created</th>
-				<th scope="col" class="px-6 py-3">Courses</th>
-				<th scope="col" class="px-6 py-3">Action</th>
-			</tr>
-			</thead>
-			<tbody>
-			{#each data.category as category}
-				<tr>
-					<td class="px-6 py-3">{category.id}</td>
-					<th scope="row" class="flex items-center px-6 py-4 text-gray-900 whitespace-nowrap">
-						{category.name}
-						<div class="ps-3">
-							<div class="text-base font-semibold text-nexus-primary-600"></div>
-							<div class="font-normal text-gray-500"></div>
-						</div>
-					</th>
-					<td class="px-6 py-3">{formatDateTime(category.created)}</td>
-					<td class="px-6 py-3">
-					</td>
-					<td class="px-6 py-3">
-						<div class="inline-flex rounded-md shadow-sm" role="group">
-
-							<button type="button" class="group inline-flex items-center px-3 py-2.25 text-sm border border-gray-300 rounded-s-lg cursor-pointer">
-								<AntDesignEditOutlined class="group-hover:text-nexus-secondary"/>
-							</button>
-							<button type="button" onclick={() => handleDetailsDialog(category.id)} class="group inline-flex items-center px-3 py-2 text-sm border border-gray-300 cursor-pointer">
-								<AntDesignProfileOutlined class="group-hover:text-nexus-secondary"/>
-							</button>
-							<button type="button" class="group inline-flex items-center px-3 py-2 text-sm border border-gray-300 cursor-pointer">
-								<AntDesignHistoryOutlined class="group-hover:text-nexus-secondary"/>
-							</button>
-							<button type="button" class="group inline-flex items-center px-3 py-2 text-sm border border-gray-300 rounded-e-lg cursor-pointer">
-								<AntDesignDeleteOutlined class="group-hover:text-nexus-secondary"/>
-							</button>
-
-						</div>
-					</td>
-				</tr>
-			{/each}
-			</tbody>
-		</table>
-
+{#if $categories.error}
+	<div class="rounded-md border p-8 text-center">
+		<div class="text-red-500 mb-2">⚠️ Error loading courses</div>
+		<div class="text-sm text-muted-foreground mb-4">{$categories.error}</div>
+		<Button variant="outline" onclick={loadCategories()} disabled={$categories.loading}>
+			{#if $categories.loading}
+				<LoaderCircle class="w-4 h-4 mr-2 animate-spin" />
+				Retrying...
+			{:else}
+				<RefreshCw class="w-4 h-4 mr-2" />
+				Try Again
+			{/if}
+		</Button>
 	</div>
-
-
 {:else}
-	<p>No users available.</p>
+	<DataTable {columns} data={$categories.data} loading={$categories.loading} />
 {/if}
-
-Create Dialog
-<form class="pt-5" onsubmit={handleSubmit}>
-	<div>
-		<label for="name">Name:</label>
-		<input id="name" bind:value={name} required />
-	</div>
-	<button class="btn-primary mt-4" type="submit">Add Category</button>
-</form>
-
-
-edit dialog
-
-&lt;!&ndash; Edit dialog &ndash;&gt;
-<form onsubmit={handleUpdate}>
-	<label for="id">ID</label>
-	<input id="id" type="text" bind:value={selectedCategory.id} readonly />
-
-	<label for="name">Name</label>
-	<input id="name" type="text" bind:value={selectedCategory.name} />
-
-	<button class="btn-primary" type="submit">UPDATE</button>
-</form>-->

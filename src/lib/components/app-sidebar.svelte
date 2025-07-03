@@ -58,7 +58,7 @@
 					},
 					{
 						title: "Companies",
-						url: "/admin/users",
+						url: "/admin/company",
 					},
 				],
 			},
@@ -80,7 +80,7 @@
 					},
 					{
 						title: "Lessons",
-						url: "#",
+						url: "/admin/lesson",
 					},
 					{
 						title: "Discounts",

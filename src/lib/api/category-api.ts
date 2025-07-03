@@ -3,8 +3,7 @@ import type { Category} from '$lib/types/category';
 
 
 export async function getCategories(): Promise<Category[]> {
-	const response = await fetch(buildApiUrl('/category'));
-
+	const response = await fetch(buildApiUrl('/category/all'));
 	if (!response.ok) {
 		throw new Error(`HTTP error! status: ${response.status}`);
 	}
