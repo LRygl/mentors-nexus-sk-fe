@@ -2,6 +2,7 @@ import { get, writable } from 'svelte/store';
 import { getCategories } from '$lib/api/category-api';
 import type { CategoryStoreState } from '$lib/types/category';
 
+//Category State
 function createCategoryStore() {
 	const store = writable<CategoryStoreState>({
 		data: [],
