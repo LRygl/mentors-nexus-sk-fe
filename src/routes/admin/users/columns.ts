@@ -1,9 +1,10 @@
 import { renderSnippet } from '$lib/components/ui/data-table';
 import { createRawSnippet } from 'svelte';
 import type { ColumnDef } from '@tanstack/table-core';
-import { renderComponent} from '$lib/components/ui/data-table';
+import { renderComponent } from '$lib/components/ui/data-table';
 import DataTableActions from '$lib/components/data-table-actions.svelte'
 import type { User } from '$lib/types/user';
+import DataTableBadge from '$lib/components/data-table-badge.svelte';
 
 export const columns: ColumnDef<User>[] = [
 	{
@@ -33,6 +34,12 @@ export const columns: ColumnDef<User>[] = [
 	{
 		accessorKey: "role",
 		header: "Role",
+		cell: ({ row }) => {
+			return renderComponent(DataTableBadge, {
+				variant: "default",
+				value: row.getValue("role") as string  // Use 'value' instead of 'text'
+			})
+		}
 	},
 	{
 		id: "actions",

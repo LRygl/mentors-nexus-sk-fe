@@ -2,7 +2,7 @@ import { buildApiUrl } from '$lib/config/api';
 import type {
 	Course,
 	CourseFormData,
-	CourseListResponse,
+	CourseListPagedResponse, CourseListResponse,
 	CourseResponse,
 	CreateCourseRequest
 } from '$lib/types/course';
@@ -13,7 +13,29 @@ export interface GetCoursesParams {
 	sort?: string;
 }
 
-export async function getCourses(params: GetCoursesParams): Promise<CourseListResponse> {
+export async function getAllCourses(): Promise<CourseListResponse> {
+	try {
+		const response = await fetch(buildApiUrl(`/course/all`), {
+			method: 'GET',
+			headers: { 'Content-Type': 'application/json' },
+		});
+
+		if (!response.ok) {
+			throw new Error(`Failed to fetch courses: ${response.status} ${response.statusText}`);
+		}
+
+		return await response.json();
+	} catch (error) {
+		console.error('CourseAPI.getCourses error:', error);
+		throw new Error(
+			error instanceof Error
+				? error.message
+				: 'An unexpected error occurred while fetching courses'
+		);
+	}
+}
+
+export async function getCourses(params: GetCoursesParams): Promise<CourseListPagedResponse> {
 	try {
 		const searchParams = new URLSearchParams();
 		if (params.page !== undefined) searchParams.set('page', params.page.toString());

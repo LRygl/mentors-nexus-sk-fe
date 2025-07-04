@@ -50,8 +50,6 @@
 			$isSubmitting = false;
 		}
 	}
-
-
 </script>
 
 <form onsubmit={handleSubmit} class="space-y-6">

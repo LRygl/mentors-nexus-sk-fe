@@ -1,11 +1,9 @@
-import { renderSnippet } from '$lib/components/ui/data-table';
-import { createRawSnippet } from 'svelte';
-import type { ColumnDef } from '@tanstack/table-core';
 import { renderComponent} from '$lib/components/ui/data-table';
 import DataTableActions from '$lib/components/data-table-actions.svelte'
-import type { Category } from '$lib/types/category';
+import type { Company } from '$lib/types/company';
+import type { ColumnDef } from '@tanstack/table-core';
 
-export const columns: ColumnDef<Category>[] = [
+export const columns: ColumnDef<Company>[] = [
 	{
 		accessorKey: "id",
 		header: "Id",
@@ -18,8 +16,18 @@ export const columns: ColumnDef<Category>[] = [
 		accessorKey: "uuid",
 		header: "UUID",
 	},
-
-
+	{
+		accessorKey: "registrationNumber",
+		header: "Reg.No",
+	},
+	{
+		accessorKey: "createdDate",
+		header: "Created",
+	},
+	{
+		accessorKey: "updatedDate",
+		header: "Updated",
+	},
 	{
 		id: "actions",
 		cell: ({ row }) => {

@@ -1,6 +1,7 @@
 <script lang="ts">
 import DataTable from '$lib/components/data-table.svelte'
 import type { Course, CourseResponse } from '$lib/types/course';
+import { courses } from '$lib/stores/course-store';
 import { columns } from './columns';
 import { Button } from '$lib/components/ui/button';
 import { getCourses } from '$lib/api/course-api';
@@ -8,43 +9,20 @@ import { onMount } from 'svelte';
 import CourseDialog from '$lib/components/course-dialog.svelte';
 import Loader2Icon from "@lucide/svelte/icons/loader-2";
 import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
-// State
-let courses = $state<Course[]>([]);
-let totalCourses = $state(0);
-let loading = $state(true);
-let error = $state<string | null>(null);
-let dialogOpen = $state(false);
 
-// Load courses when component mounts
-onMount(() => {
-	loadCourses();
-})
 
-// Load resource data from API
+onMount(() => {	loadCourses(); })
 async function loadCourses() {
-	loading = true;
-	error = null;
-
-	try {
-		const response = await getCourses({size:20})
-		courses = response.content || [];
-		totalCourses = response.totalElements;
-	} catch (error) {
-		error = error instanceof Error ? error.message : 'Failed to load courses';
-		courses = [];
-		totalCourses = 0;
-	} finally {
-		loading = false;
-	}
+	await courses.load()
+}
+async function reloadCourses() {
+	await courses.load(true)
 }
 
 // Handle successful course creation
-async function handleCourseSuccess(result: CourseResponse) {
-	// Refresh the courses list
-	await loadCourses();
-
-	// Show success message (optional)
-	console.log('Course created successfully:', result);
+function handleCourseSuccess(result: CourseResponse) {
+	// Refresh the courses list if pagination is used skip to last page
+	reloadCourses();
 }
 
 function handleCourseCancel() {
@@ -58,15 +36,15 @@ function handleCourseCancel() {
 	<div class="flex items-center justify-between">
 		<div>
 			<h1 class="text-2xl font-bold">EMV Courses</h1>
-			<p class="text-muted-foreground text-sm">Showing X of {totalCourses}</p>
+			<p class="text-muted-foreground text-sm">Showing X of Y</p>
 		</div>
 		<div class="flex gap-2">
 			<Button
 				variant="outline"
-				onclick={loadCourses}
-				disabled={loading}
+				onclick={reloadCourses}
+				disabled={$courses.loading}
 			>
-				{#if loading}
+				{#if $courses.loading}
 					<Loader2Icon class="w-4 h-4 animate-spin" />
 				{:else}
 					<RefreshCwIcon class="w-4 h-4" />
@@ -80,12 +58,12 @@ function handleCourseCancel() {
 	</div>
 </div>
 
-{#if error}
+{#if $courses.error}
 	<div class="rounded-md border p-8 text-center">
 		<div class="text-red-500 mb-2">⚠️ Error loading courses</div>
-		<div class="text-sm text-muted-foreground mb-4">{error}</div>
-		<Button variant="outline" onclick={loadCourses} disabled={loading}>
-			{#if loading}
+		<div class="text-sm text-muted-foreground mb-4">{$courses.error}</div>
+		<Button variant="outline" onclick={reloadCourses} disabled={$courses.loading}>
+			{#if $courses.loading}
 				<Loader2Icon class="w-4 h-4 mr-2 animate-spin" />
 				Retrying...
 			{:else}
@@ -95,5 +73,5 @@ function handleCourseCancel() {
 		</Button>
 	</div>
 {:else}
-	<DataTable {columns} data={courses} {loading} />
+	<DataTable {columns} data={$courses.data} loading={$courses.loading} />
 {/if}

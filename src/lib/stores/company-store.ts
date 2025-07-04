@@ -1,11 +1,10 @@
-// lib/stores/courses-store.ts
+import type { Company, CompanyStoreState } from '$lib/types/company';
 import { get, writable } from 'svelte/store';
-import { getAllCourses } from '$lib/api/course-api';
-import type { CourseStoreState } from '$lib/types/course';
+import { getAllCompanies } from '$lib/api/company-api';
 
-function createCourseStore() {
-	const store = writable<CourseStoreState>({
-		data: [],
+function createCompanyStore() {
+	const store = writable<CompanyStoreState>({
+		data: [] as Company[],
 		loading: false,
 		error: null,
 		loaded: false,
@@ -13,7 +12,7 @@ function createCourseStore() {
 
 	const { subscribe, set, update } = store;
 
-	const courseStore = {
+	const companyStore = {
 		subscribe,
 
 		load: async (force = false) => {
@@ -21,19 +20,19 @@ function createCourseStore() {
 
 			if (state.loaded && !force) return state.data;
 
-			update((s) => ({...s, loading: true, error: null}));
+			update((state) => ({...state, loading: true, error: null}));
 
 			try {
-				const courses = await getAllCourses();
+				const companies = await getAllCompanies();
 
 				set({
-					data: courses,
+					data: companies,
 					loading: false,
 					error: null,
-					loaded: true,
+					loaded: false,
 				});
 
-				return courses;
+				return companies;
 			} catch (error) {
 				const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 				update((s) => ({ ...s, loading: false, error: errorMessage }));
@@ -42,10 +41,11 @@ function createCourseStore() {
 		},
 
 
+
 	}
 
-	return courseStore;
+	return companyStore;
 
 }
 
-export const courses = createCourseStore();
+export const companies = createCompanyStore();

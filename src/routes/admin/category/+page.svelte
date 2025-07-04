@@ -38,7 +38,7 @@
 	<div class="rounded-md border p-8 text-center">
 		<div class="text-red-500 mb-2">⚠️ Error loading courses</div>
 		<div class="text-sm text-muted-foreground mb-4">{$categories.error}</div>
-		<Button variant="outline" onclick={loadCategories()} disabled={$categories.loading}>
+		<Button variant="outline" onclick={loadCategories} disabled={$categories.loading}>
 			{#if $categories.loading}
 				<LoaderCircle class="w-4 h-4 mr-2 animate-spin" />
 				Retrying...

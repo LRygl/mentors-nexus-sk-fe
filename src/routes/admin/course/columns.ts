@@ -46,6 +46,12 @@ export const columns: ColumnDef<Course>[] = [
 		header: "UUID",
 	},
 
+	{
+		//Todo display User Name with email and avatar - the click redirects to user detail
+		accessorKey: "courseOwnerId",
+		header: "Owner",
+	},
+
 	//Amount column has special extension - as i can have a separate columns definition for each table taht is passed to data
 	//table this could prove useful
 	{
@@ -75,6 +81,7 @@ export const columns: ColumnDef<Course>[] = [
 			);
 		},
 	},
+
 	{
 		id: "actions",
 		cell: ({ row }) => {

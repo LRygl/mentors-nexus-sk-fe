@@ -48,4 +48,12 @@ export interface CourseResponse extends Course {
 	updatedAt?: string;
 }
 
-export type CourseListResponse = Page<Course>;
+export interface CourseStoreState {
+	data: Course[],
+	loading: boolean,
+	error: string | null;
+	loaded: boolean;
+}
+
+export type CourseListPagedResponse = Page<Course>;
+export type CourseListResponse = Course[];
