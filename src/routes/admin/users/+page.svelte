@@ -19,17 +19,7 @@
 			<p class="text-muted-foreground text-sm">Showing X of Y</p>
 		</div>
 		<div class="flex gap-2">
-			<Button
-				variant="outline"
-				onclick={reloadUsers}
-				disabled={$users.loading}
-			>
-				{#if $users.loading}
-					<LoaderCircle class="w-4 h-4 animate-spin" />
-				{:else}
-					<RefreshCw class="w-4 h-4" />
-				{/if}
-			</Button>
+
 		</div>
 	</div>
 </div>
@@ -49,5 +39,10 @@
 		</Button>
 	</div>
 {:else}
-	<DataTable {columns} data={$users.data} loading={$users.loading} />
+	<DataTable columns={columns}
+						 data={$users.data}
+						 loading={$users.loading}
+						 loadTableData={reloadUsers}
+
+	/>
 {/if}

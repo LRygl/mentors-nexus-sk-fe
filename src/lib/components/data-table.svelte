@@ -1,27 +1,49 @@
 <script lang="ts" generics="TData, TValue">
-	import { type ColumnDef, getCoreRowModel,getPaginationRowModel, type PaginationState } from '@tanstack/table-core';
+	import {
+		type ColumnDef,
+		getCoreRowModel,
+		getPaginationRowModel,
+		type PaginationState,
+		type RowSelectionState,
+	} from '@tanstack/table-core';
 	import { createSvelteTable, FlexRender } from '$lib/components/ui/data-table';
 	import { Button } from '$lib/components/ui/button/index';
 	import * as Table from "$lib/components/ui/table"
 	import Loader2Icon from "@lucide/svelte/icons/loader-2";
+	import { Input } from '$lib/components/ui/input';
+	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
+	import { CirclePlus, EyeOff, LoaderCircle, RefreshCw } from 'lucide-svelte';
+	import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
 
 	type DataTableProps<TData, TValue> = {
 		columns: ColumnDef<TData, TValue>[];
 		data: TData[];
 		loading?: boolean;
+		loadTableData?: () => Promise<void>;
 	}
 
-	let { data, columns, loading = false }: DataTableProps<TData, TValue> = $props();
+	let { data, columns, loading = false, loadTableData }: DataTableProps<TData, TValue> = $props();
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10})
+	let rowSelection = $state<RowSelectionState>({});
 
 	const table = createSvelteTable({
 		get data() {
 			return data;
 		},
 		columns,
+		onRowSelectionChange: (updater) => {
+			if (typeof updater === "function") {
+				rowSelection = updater(rowSelection);
+			} else {
+				rowSelection = updater;
+			}
+		},
 		state: {
 			get pagination() {
 				return pagination;
+			},
+			get rowSelection() {
+				return rowSelection;
 			},
 		},
 		onPaginationChange: (updater) => {
@@ -38,6 +60,28 @@
 </script>
 
 <div>
+	<div class="flex justify-end mb-2">
+		<div class="inline-flex rounded-md shadow-sm" role="group">
+			<Button
+				onclick={loadTableData}
+				variant="outline"
+				class="rounded-r-none border-r-0"
+			>
+				{#if loading}
+					<LoaderCircle class="w-4 h-4 animate-spin" />
+				{:else}
+					<RefreshCw class="w-4 h-4" />
+				{/if}
+			</Button>
+			<Button
+				onclick={loadTableData}
+				variant="outline"
+				class="rounded-l-none"
+			>
+				<CirclePlus />Create
+			</Button>
+		</div>
+	</div>
 	<div class="rounded-md border">
 		<Table.Root>
 			<Table.Header>

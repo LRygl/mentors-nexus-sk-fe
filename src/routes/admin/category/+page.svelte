@@ -19,17 +19,7 @@
 			<p class="text-muted-foreground text-sm">Showing X of Y</p>
 		</div>
 		<div class="flex gap-2">
-			<Button
-				variant="outline"
-				onclick={reloadCategories}
-				disabled={$categories.loading}
-			>
-				{#if $categories.loading}
-					<LoaderCircle class="w-4 h-4 animate-spin" />
-				{:else}
-					<RefreshCw class="w-4 h-4" />
-				{/if}
-			</Button>
+
 		</div>
 	</div>
 </div>
@@ -38,16 +28,11 @@
 	<div class="rounded-md border p-8 text-center">
 		<div class="text-red-500 mb-2">⚠️ Error loading courses</div>
 		<div class="text-sm text-muted-foreground mb-4">{$categories.error}</div>
-		<Button variant="outline" onclick={loadCategories} disabled={$categories.loading}>
-			{#if $categories.loading}
-				<LoaderCircle class="w-4 h-4 mr-2 animate-spin" />
-				Retrying...
-			{:else}
-				<RefreshCw class="w-4 h-4 mr-2" />
-				Try Again
-			{/if}
-		</Button>
 	</div>
 {:else}
-	<DataTable {columns} data={$categories.data} loading={$categories.loading} />
+	<DataTable {columns}
+						 data={$categories.data}
+						 loading={$categories.loading}
+						 loadTableData={reloadCategories}
+	/>
 {/if}

@@ -38,13 +38,25 @@
 		navMain: [
 			{
 				title: "Dashboard",
-				url: "#",
+				url: "/admin/dashboard",
 				icon: SquareTerminalIcon,
 				isActive: true,
 				items: [
 					{
-						title: "Events",
-						url: "#",
+						title: "Overview",
+						url: "/admin/dashboard",
+					},
+					{
+						title: "Sales",
+						url: "/admin/dashboard",
+					},
+					{
+						title: "Users",
+						url: "/admin/dashboard",
+					},
+					{
+						title: "Views",
+						url: "/admin/dashboard",
 					},
 				],
 			},

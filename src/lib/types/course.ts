@@ -1,6 +1,13 @@
 import type { Page } from '$lib/types/page';
 import type { Lesson } from '$lib/types/lesson';
 
+export enum CourseStatus {
+	PUBLISHED = "PUBLISHED",
+	UNPUBLISHED = "UNPUBLISHED",
+	HIDDEN = "HIDDEN",
+	PRIVATE = "PRIVATE"
+}
+
 export interface CourseOwner {
 	id: number;
 	firstName: string;
@@ -15,12 +22,12 @@ export interface Course {
 	updated: string | null;
 	published: string | null;
 	price: number;
-	status: string;
+	status: CourseStatus;
 	name: string;
 	labels: string[];
 	categories: string[];
 	lessons: Lesson[];
-	owners: CourseOwner[];
+	owner: CourseOwner;
 	students: number;
 	courseOwnerId: number;
 
