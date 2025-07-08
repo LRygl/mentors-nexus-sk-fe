@@ -1,7 +1,9 @@
 <!-- LanguageSwitcher.svelte -->
 <script lang="ts">
-	import { currentLanguage, availableLanguages, setLanguage, type LanguageCode } from '$lib/stores/internalization-store';
+	import { currentLanguage, setLanguage,  } from '$lib/stores/internalization-store';
 	import { Globe } from 'lucide-svelte';
+	import type { LanguageCode } from '$lib/types/translation';
+	import { availableLanguages } from '$lib/language';
 
 	function handleLanguageChange(event: Event): void {
 		const target = event.target as HTMLSelectElement;

@@ -9,28 +9,21 @@
 	import { createSvelteTable, FlexRender } from '$lib/components/ui/data-table';
 	import { Button } from '$lib/components/ui/button/index';
 	import * as Table from "$lib/components/ui/table"
-	import { Loader2Icon } from "lucide-svelte";
-	import { Input } from '$lib/components/ui/input';
-	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
+	import { Loader2Icon, MoreHorizontal } from 'lucide-svelte';
 	import { CirclePlus, EyeOff, LoaderCircle, RefreshCw } from 'lucide-svelte';
-	import { t, type AsyncStore } from '$lib/stores/internalization-store';
-	import type { Snippet } from 'svelte';
+	import { t } from '$lib/stores/internalization-store';
 
 	type DataTableProps<TData, TValue> = {
 		columns: ColumnDef<TData, TValue>[];
 		data: TData[];
 		loading?: boolean;
 		loadTableData?: () => Promise<void>;
-		//language store is not part of the table props and is not passed - but defined globaly
-		//The async store does not match my current user store
-		languageStore: AsyncStore<any>;
 	}
 
-	let { data, columns, loading = false, loadTableData, languageStore }: DataTableProps<TData, TValue> = $props();
+	let { data, columns, loading = false, loadTableData }: DataTableProps<TData, TValue> = $props();
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10})
 	let rowSelection = $state<RowSelectionState>({});
 
-	const createText = $derived($t.buttons.create);
 	const table = createSvelteTable({
 		get data() {
 			return data;
@@ -61,7 +54,6 @@
 		getCoreRowModel: getCoreRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
 	});
-
 </script>
 
 <div>
@@ -79,11 +71,17 @@
 				{/if}
 			</Button>
 			<Button
+				variant="outline"
+				class="rounded-none border-r-0"
+			>
+				<MoreHorizontal class="w-4 h-4" />
+			</Button>
+			<Button
 				onclick={loadTableData}
 				variant="outline"
 				class="rounded-l-none"
 			>
-				<CirclePlus />{createText}
+				<CirclePlus />{$t.buttons.create}
 			</Button>
 		</div>
 	</div>
@@ -133,7 +131,7 @@
 						</Table.Row>
 					{:else}
 						<Table.Row>
-							<Table.Cell colspan={columns.length} class="h-24 text-center">
+							<Table.Cell colspan={columns.length} class="h-24 text-center text-muted">
 								{$t.errors.not_found}
 							</Table.Cell>
 						</Table.Row>

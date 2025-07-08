@@ -1,8 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { categories } from '$lib/stores/category-store';
-	import { LoaderCircle, RefreshCw } from 'lucide-svelte';
-	import { Button } from '$lib/components/ui/button';
 	import { columns } from './columns';
 	import DataTable from '$lib/components/data-table.svelte';
 

@@ -1,5 +1,3 @@
-import { renderSnippet } from '$lib/components/ui/data-table';
-import { createRawSnippet } from 'svelte';
 import type { ColumnDef } from '@tanstack/table-core';
 import { renderComponent} from '$lib/components/ui/data-table';
 import DataTableActions from '$lib/components/data-table-actions.svelte'

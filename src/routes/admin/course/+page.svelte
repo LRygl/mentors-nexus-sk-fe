@@ -9,14 +9,24 @@ import { onMount } from 'svelte';
 import CourseDialog from '$lib/components/course-dialog.svelte';
 import Loader2Icon from "@lucide/svelte/icons/loader-2";
 import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
+import DataTableAsyncWrapper from '$lib/components/data-table-async-wrapper.svelte';
+import { measurePerformanceAsync } from '$lib/performance/performance';
 
 
-onMount(() => {	loadCourses(); })
+onMount(() => {
+	measurePerformanceAsync('Data Table Component Mount', async () => {
+		await loadCourses();
+	})
+});
 async function loadCourses() {
-	await courses.load()
+	measurePerformanceAsync('Courses Store Refresh', async () => {
+		await courses.load();
+	})
 }
 async function reloadCourses() {
-	await courses.load(true)
+	measurePerformanceAsync('Courses Store Refresh (force)', async () => {
+		await courses.load(true);
+	})
 }
 
 // Handle successful course creation
@@ -31,7 +41,7 @@ function handleCourseCancel() {
 }
 
 </script>
-
+<!-- OLD Script for Create Dialog
 <div class="pb-2">
 	<div class="flex items-center justify-between">
 		<div>
@@ -57,21 +67,19 @@ function handleCourseCancel() {
 		</div>
 	</div>
 </div>
-
-{#if $courses.error}
-	<div class="rounded-md border p-8 text-center">
-		<div class="text-red-500 mb-2">⚠️ Error loading courses</div>
-		<div class="text-sm text-muted-foreground mb-4">{$courses.error}</div>
-		<Button variant="outline" onclick={reloadCourses} disabled={$courses.loading}>
-			{#if $courses.loading}
-				<Loader2Icon class="w-4 h-4 mr-2 animate-spin" />
-				Retrying...
-			{:else}
-				<RefreshCwIcon class="w-4 h-4 mr-2" />
-				Try Again
-			{/if}
-		</Button>
-	</div>
-{:else}
-	<DataTable {columns} data={$courses.data} loading={$courses.loading} />
-{/if}
+ For users -->
+<DataTableAsyncWrapper
+	store={$courses}
+	errorKey="errors.loading_users"
+	loadingKey="loading.users"
+	onRetry={loadCourses}
+>
+	{#snippet children()}
+		<DataTable
+			columns={columns}
+			data={$courses.data}
+			loading={$courses.loading}
+			loadTableData={reloadCourses}
+		/>
+	{/snippet}
+</DataTableAsyncWrapper>
