@@ -2,17 +2,17 @@
 
 	import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index"
 	import { Button } from '$lib/components/ui/button';
-	import EllipsisIcon from '@lucide/svelte/icons/ellipsis'
-	import CopyIcon from '@lucide/svelte/icons/copy'
-	import EyeIcon from '@lucide/svelte/icons/eye'
-	import InfoIcon from '@lucide/svelte/icons/info'
-	import Trash_2 from '@lucide/svelte/icons/trash-2'
-	import { DropdownMenuContent } from '$lib/components/ui/dropdown-menu/index.js';
+	import { EllipsisIcon, CopyIcon, EyeIcon, InfoIcon, Trash2 } from 'lucide-svelte'
 	import { dialogStore } from '$lib/stores/dialog-store';
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, type Snippet } from 'svelte';
 	import { deleteCourse } from '$lib/api/course-api';
+	import { t, type AsyncStore, type TranslationKey } from '$lib/stores/internalization-store';
 
-	let { id }: { id: string } = $props();
+	interface Props {
+		languageStore: AsyncStore<any>;
+	}
+
+	let { id, languageStore }: { id: string, languageStore: string } = $props();
 
 	const dispatch = createEventDispatcher<{
 		deleted: { id: string };
@@ -71,24 +71,23 @@
 			<DropdownMenu.Label>Actions</DropdownMenu.Label>
 			<DropdownMenu.Item onclick={() => navigator.clipboard.writeText(id)} class="flex items-center gap-2">
 				<CopyIcon size={16} />
-				Copy to clipboard
+				{$t.action.copyToClipboard}
 			</DropdownMenu.Item>
 		</DropdownMenu.Group>
 		<DropdownMenu.Separator />
 		<DropdownMenu.Item class="flex items-center gap-2">
 			<EyeIcon size={16} />
-			View
+			{$t.action.view}
 		</DropdownMenu.Item>
 		<DropdownMenu.Item class="flex items-center gap-2">
 			<InfoIcon size={16} />
-			Details
+			{$t.action.details}
 		</DropdownMenu.Item>
 		<DropdownMenu.Item
 			onclick={confirmDelete}
-			class="flex items-center gap-2 text-red-600 focus:text-red-600"
-		>
-			<Trash_2 size={16} />
-			Delete
+			class="flex items-center gap-2 text-red-600 focus:text-red-600">
+			<Trash2 size={16} />
+			{$t.action.delete}
 		</DropdownMenu.Item>
 	</DropdownMenu.Content>
 </DropdownMenu.Root>

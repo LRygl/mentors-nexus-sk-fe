@@ -5,10 +5,11 @@
 	import { companies } from '$lib/stores/company-store';
 	import DataTable from '$lib/components/data-table.svelte';
 	import { columns } from './columns';
+	import DataTableAsyncWrapper from '$lib/components/data-table-async-wrapper.svelte';
 
-	onMount(() => {	loadCategories(); })
-	async function loadCategories() {	await companies.load(); }
-	async function reloadCategories() {	await companies.load(true); }
+	onMount(() => {	loadCompanies(); })
+	async function loadCompanies() {	await companies.load(); }
+	async function reloadCompanies() {	await companies.load(true); }
 
 </script>
 
@@ -18,36 +19,22 @@
 			<h1 class="text-2xl font-bold">Application Companies</h1>
 			<p class="text-muted-foreground text-sm">Showing X of Y</p>
 		</div>
-		<div class="flex gap-2">
-			<Button
-				variant="outline"
-				onclick={reloadCategories}
-				disabled={$companies.loading}
-			>
-				{#if $companies.loading}
-					<LoaderCircle class="w-4 h-4 animate-spin" />
-				{:else}
-					<RefreshCw class="w-4 h-4" />
-				{/if}
-			</Button>
-		</div>
 	</div>
 </div>
 
-{#if $companies.error}
-	<div class="rounded-md border p-8 text-center">
-		<div class="text-red-500 mb-2">⚠️ Error loading courses</div>
-		<div class="text-sm text-muted-foreground mb-4">{$companies.error}</div>
-		<Button variant="outline" onclick={loadCategories} disabled={$companies.loading}>
-			{#if $companies.loading}
-				<LoaderCircle class="w-4 h-4 mr-2 animate-spin" />
-				Retrying...
-			{:else}
-				<RefreshCw class="w-4 h-4 mr-2" />
-				Try Again
-			{/if}
-		</Button>
-	</div>
-{:else}
-	<DataTable {columns} data={$companies.data} loading={$companies.loading} />
-{/if}
+<!-- Create Companies Data Table -->
+<DataTableAsyncWrapper
+	store={$companies}
+	errorKey="errors.loading_companies"
+	loadingKey="loading.companies"
+	onRetry={loadCompanies}
+>
+	{#snippet children()}
+	<DataTable
+		columns={columns}
+		data={$companies.data}
+		loading={$companies.loading}
+		loadTableData={reloadCompanies}
+	/>
+	{/snippet}
+</DataTableAsyncWrapper>

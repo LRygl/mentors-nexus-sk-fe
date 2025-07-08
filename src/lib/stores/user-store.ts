@@ -9,7 +9,7 @@ export const isSubmitting = writable<boolean>(false);
 function createUserStore() {
 	const store = writable<UserStoreState>({
 		data: [],
-		loading: false,
+		loading: true,
 		error: null,
 		loaded: false
 	});

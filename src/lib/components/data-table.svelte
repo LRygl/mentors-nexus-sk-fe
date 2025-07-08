@@ -9,23 +9,28 @@
 	import { createSvelteTable, FlexRender } from '$lib/components/ui/data-table';
 	import { Button } from '$lib/components/ui/button/index';
 	import * as Table from "$lib/components/ui/table"
-	import Loader2Icon from "@lucide/svelte/icons/loader-2";
+	import { Loader2Icon } from "lucide-svelte";
 	import { Input } from '$lib/components/ui/input';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu/index';
 	import { CirclePlus, EyeOff, LoaderCircle, RefreshCw } from 'lucide-svelte';
-	import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
+	import { t, type AsyncStore } from '$lib/stores/internalization-store';
+	import type { Snippet } from 'svelte';
 
 	type DataTableProps<TData, TValue> = {
 		columns: ColumnDef<TData, TValue>[];
 		data: TData[];
 		loading?: boolean;
 		loadTableData?: () => Promise<void>;
+		//language store is not part of the table props and is not passed - but defined globaly
+		//The async store does not match my current user store
+		languageStore: AsyncStore<any>;
 	}
 
-	let { data, columns, loading = false, loadTableData }: DataTableProps<TData, TValue> = $props();
+	let { data, columns, loading = false, loadTableData, languageStore }: DataTableProps<TData, TValue> = $props();
 	let pagination = $state<PaginationState>({ pageIndex: 0, pageSize: 10})
 	let rowSelection = $state<RowSelectionState>({});
 
+	const createText = $derived($t.buttons.create);
 	const table = createSvelteTable({
 		get data() {
 			return data;
@@ -78,7 +83,7 @@
 				variant="outline"
 				class="rounded-l-none"
 			>
-				<CirclePlus />Create
+				<CirclePlus />{createText}
 			</Button>
 		</div>
 	</div>
@@ -107,7 +112,9 @@
 						<Table.Cell colspan={columns.length} class="h-32 text-center">
 							<div class="flex items-center justify-center">
 								<Loader2Icon class="w-6 h-6 animate-spin mr-2" />
-								<span>Loading data...</span>
+								<span>
+									{$t.loading.default}
+								</span>
 							</div>
 						</Table.Cell>
 					</Table.Row>
@@ -127,7 +134,7 @@
 					{:else}
 						<Table.Row>
 							<Table.Cell colspan={columns.length} class="h-24 text-center">
-								No results.
+								{$t.errors.not_found}
 							</Table.Cell>
 						</Table.Row>
 					{/each}
@@ -148,7 +155,7 @@
 						<Table.Row>
 							<Table.Cell colspan={columns.length} class="h-24 text-center">
 								<!-- TODO ADD ICON AND SOME BLING -->
-								No results.
+								{$t.errors.not_found}
 							</Table.Cell>
 						</Table.Row>
 					{/each}
@@ -183,7 +190,7 @@
 				onclick={() => table.previousPage()}
 				disabled={!table.getCanPreviousPage() || loading}
 			>
-				Previous
+				{$t.common.previous}
 			</Button>
 			<Button
 				variant="outline"
@@ -191,7 +198,7 @@
 				onclick={() => table.nextPage()}
 				disabled={!table.getCanNextPage() || loading}
 			>
-				Next
+				{$t.common.next}
 			</Button>
 		</div>
 	</div>
