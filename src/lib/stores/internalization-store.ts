@@ -1,4 +1,4 @@
-import { writable, derived, type Writable, type Readable } from 'svelte/store';
+import { writable, derived, type Writable, type Readable, get } from 'svelte/store';
 
 // Language code type
 export type LanguageCode = 'en' | 'cs';
@@ -182,7 +182,7 @@ export type TranslationKey =
 
 // Helper function to get nested translation
 export function translate(key: TranslationKey, lang?: LanguageCode): string {
-	const translations = lang ? messages[lang] : messages[currentLanguage.value];
+	const translations = lang ? messages[lang] : messages[get(currentLanguage)];
 	const keys = key.split('.') as [keyof Translations, string];
 	const section = translations[keys[0]];
 	return (section as any)[keys[1]] || key;
