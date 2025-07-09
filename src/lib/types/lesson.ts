@@ -14,3 +14,11 @@ export interface Lesson {
 		price: number | null;
 	};
 }
+
+
+export interface LessonStoreState {
+	data: Lesson[];
+	loading: boolean;
+	error: string | null;
+	loaded: boolean;
+}

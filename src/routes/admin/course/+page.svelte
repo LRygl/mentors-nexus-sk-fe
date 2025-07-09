@@ -1,14 +1,9 @@
 <script lang="ts">
 import DataTable from '$lib/components/data-table.svelte'
-import type { Course, CourseResponse } from '$lib/types/course';
+import type { CourseResponse } from '$lib/types/course';
 import { courses } from '$lib/stores/course-store';
 import { columns } from './columns';
-import { Button } from '$lib/components/ui/button';
-import { getCourses } from '$lib/api/course-api';
 import { onMount } from 'svelte';
-import CourseDialog from '$lib/components/course-dialog.svelte';
-import Loader2Icon from "@lucide/svelte/icons/loader-2";
-import RefreshCwIcon from "@lucide/svelte/icons/refresh-cw";
 import DataTableAsyncWrapper from '$lib/components/data-table-async-wrapper.svelte';
 import { measurePerformanceAsync } from '$lib/performance/performance';
 
@@ -19,12 +14,12 @@ onMount(() => {
 	})
 });
 async function loadCourses() {
-	measurePerformanceAsync('Courses Store Refresh', async () => {
+	await measurePerformanceAsync('Courses Store Refresh', async () => {
 		await courses.load();
 	})
 }
 async function reloadCourses() {
-	measurePerformanceAsync('Courses Store Refresh (force)', async () => {
+	await measurePerformanceAsync('Courses Store Refresh (force)', async () => {
 		await courses.load(true);
 	})
 }

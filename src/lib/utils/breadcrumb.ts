@@ -23,6 +23,16 @@ export const PAGE_MAP: PageMap = {
 		title: 'Company',
 		parent: 'Admin',
 		parentHref: '/admin',
+	},
+	'/admin/lesson': {
+		title: 'Lessons',
+		parent: 'Admin',
+		parentHref: '/admin',
+	},
+	'/admin/featured': {
+		title: 'Featured Courses',
+		parent: 'Admin',
+		parentHref: '/admin',
 	}
 };
 

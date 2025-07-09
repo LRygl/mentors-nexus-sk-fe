@@ -5,13 +5,13 @@
 	import type { HTMLAttributes } from "svelte/elements";
 	import { Button } from "$lib/components/ui/button/index";
 	import { mode, toggleMode } from "mode-watcher";
-	import { fade } from 'svelte/transition';
-	import LogIn from '@lucide/svelte/icons/log-in';
-	import SunIcon from "@lucide/svelte/icons/sun"
-	import MoonIcon from "@lucide/svelte/icons/moon"
-	import CircleHelpIcon from "@lucide/svelte/icons/circle-help";
-	import CircleIcon from "@lucide/svelte/icons/circle";
-	import CircleCheckIcon from "@lucide/svelte/icons/circle-check";
+	import {
+		LogIn,
+		SunIcon,
+		MoonIcon,
+		CircleHelpIcon,
+		CircleIcon,
+		CircleCheckIcon } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	let currentMode = mode.current;
 	$: logoSrc = currentMode === 'dark' ? '/logo-light.png' : '/logo-dark.png';

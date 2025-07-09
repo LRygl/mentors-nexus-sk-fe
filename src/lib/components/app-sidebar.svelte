@@ -80,7 +80,7 @@
 				items: [
 					{
 						title: "Featured",
-						url: "/admin/course",
+						url: "/admin/featured",
 					},
 					{
 						title: "Courses",
