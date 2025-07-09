@@ -96,7 +96,7 @@
 					},
 					{
 						title: "Discounts",
-						url: "#",
+						url: "/admin/discount",
 					},
 				],
 			},

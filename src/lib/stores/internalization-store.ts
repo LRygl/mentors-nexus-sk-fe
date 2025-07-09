@@ -2,12 +2,8 @@ import { writable, derived, type Writable, type Readable, get } from 'svelte/sto
 import type { LanguageCode, TranslationKey, Translations } from '$lib/types/translation';
 import { availableLanguages, messages } from '$lib/language/translations';
 
-
-
 // Current language store
 export const currentLanguage: Writable<LanguageCode> = writable('cs');
-
-
 
 // Helper function to get nested translation
 export function translate(key: TranslationKey, lang?: LanguageCode): string {

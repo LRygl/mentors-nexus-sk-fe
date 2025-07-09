@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
-	import { LoaderCircle, RefreshCw } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { companies } from '$lib/stores/company-store';
 	import DataTable from '$lib/components/data-table.svelte';
