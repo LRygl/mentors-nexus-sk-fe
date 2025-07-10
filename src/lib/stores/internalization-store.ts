@@ -42,6 +42,6 @@ export interface AsyncStore<T> {
 }
 
 // Derived store for current translations
-export const t: Readable<Translations> = derived(currentLanguage, ($currentLanguage) => {
+export const translation: Readable<Translations> = derived(currentLanguage, ($currentLanguage) => {
 	return messages[$currentLanguage] || messages.cs;
 });

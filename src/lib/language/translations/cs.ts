@@ -43,9 +43,16 @@ export const cs: Translations = {
 		next: 'Následující'
 	},
 	action: {
+		noAvailableAction: 'Není dostupné',
 		copyToClipboard: 'Kopírovat ID',
 		view: 'Zobrazit',
 		details: 'Detail',
 		delete: 'Odstranit'
+	},
+	column: {
+		user: {
+			firstName: 'Jméno',
+			lastName: 'Příjmení',
+		}
 	}
 };

@@ -1,7 +1,7 @@
 import type { Lesson } from '$lib/types/lesson';
 import type { ColumnDef } from '@tanstack/table-core';
 import { renderComponent, renderSnippet } from '$lib/components/ui/data-table';
-import DataTableActions from '$lib/components/data-table-actions.svelte';
+import DataTableActions from '$lib/components/DataTable/DataTableActions/data-table-actions.svelte';
 import { Checkbox } from '$lib/components/ui/checkbox';
 import id = $props.id;
 import { createRawSnippet } from 'svelte';

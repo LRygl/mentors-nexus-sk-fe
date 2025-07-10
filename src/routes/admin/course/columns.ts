@@ -2,7 +2,7 @@ import { renderSnippet } from '$lib/components/ui/data-table';
 import { createRawSnippet } from 'svelte';
 import type { ColumnDef } from '@tanstack/table-core';
 import { renderComponent} from '$lib/components/ui/data-table';
-import DataTableActions from '$lib/components/data-table-actions.svelte'
+import DataTableActions from '$lib/components/DataTable/DataTableActions/data-table-actions.svelte'
 import { type Course, CourseStatus } from '$lib/types/course';
 import DataTableBadge from '$lib/components/data-table-badge.svelte';
 import { getStatusConfig } from '$lib/utils/course-status';

@@ -43,11 +43,18 @@ export interface Translations {
 		next: string;
 	};
 	action: {
+		noAvailableAction: string;
 		copyToClipboard: string;
 		view: string;
 		details: string;
 		delete: string;
 	};
+	column: {
+		user: {
+			firstName: string;
+			lastName: string;
+		}
+	}
 }
 
 export type TranslationKey =

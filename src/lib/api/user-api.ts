@@ -19,3 +19,15 @@ export async function getAllUsers(): Promise<UserListResponse> {
 		throw error;
 	}
 }
+
+export async function deleteUser(id: string): Promise<void> {
+	console.log("API CALL To Delete User with ID " + id);
+	const response = await fetch(buildApiUrl(`/user/${id}`), {
+		method: 'DELETE'
+	});
+
+	if (!response.ok) {
+		throw new Error(`HTTP error! status: ${response.status}`);
+	}
+}
+

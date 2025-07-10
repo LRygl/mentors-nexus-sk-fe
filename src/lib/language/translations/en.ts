@@ -43,9 +43,16 @@ export const en: Translations = {
 		next: 'Next'
 	},
 	action: {
+		noAvailableAction: 'No Actions',
 		copyToClipboard: 'Copy to clipboard',
 		view: 'View',
 		details: 'Details',
 		delete: 'Delete'
+	},
+	column: {
+		user: {
+			firstName: 'First Name',
+			lastName: 'Last Name',
+		}
 	}
 };

@@ -1,14 +1,17 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { users } from '$lib/stores/user-store';
-	import { columns } from './columns';
 	import DataTable from '$lib/components/data-table.svelte';
 	import LanguageSwitcher from '$lib/components/language-switcher.svelte';
 	import DataTableAsyncWrapper from '$lib/components/data-table-async-wrapper.svelte';
-
+	import { getColumns } from './columns';
+	import { translation } from '$lib/stores/internalization-store'
 	onMount(() => {	loadUsers(); });
 	async function loadUsers() { await users.load(); }
 	async function reloadUsers() { await users.load(true); }
+
+	// Reactively call the getColumns function whenever $translation changes
+	$: columns = getColumns($translation);
 
 </script>
 <!-- Language switcher in your header/nav -->

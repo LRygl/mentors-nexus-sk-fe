@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	//import { page } from '$app/state';
 	import { getPageInfo } from '$lib/utils/breadcrumb';
 
 	$: pageInfo = getPageInfo($page.route.id, $page.url.pathname);

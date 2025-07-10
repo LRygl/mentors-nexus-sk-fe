@@ -1,7 +1,7 @@
 export type { LanguageCode, Translations, TranslationKey, AsyncStore } from '$lib/types/translation';
 export {
 	currentLanguage,
-	t,
+	translation,
 	translate,
 	setLanguage,
 	initializeLanguage

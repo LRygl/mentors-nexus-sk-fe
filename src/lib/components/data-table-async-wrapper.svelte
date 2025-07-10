@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { TriangleAlert, LoaderCircle, RefreshCw } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
-	import { t, type AsyncStore, type TranslationKey } from '$lib/stores/internalization-store';
+	import { translation, type AsyncStore, type TranslationKey } from '$lib/stores/internalization-store';
 	import type { Snippet } from 'svelte';
 
 	interface Props {
@@ -25,17 +25,17 @@
 
 	// Get translations with proper typing
 	const errorTitle = $derived(() => {
-		const [section, key] = errorKey.split('.') as [keyof typeof $t, string];
-		return ($t[section] as any)[key] as string;
+		const [section, key] = errorKey.split('.') as [keyof typeof $translation, string];
+		return ($translation[section] as any)[key] as string;
 	});
 
 	const loadingMessage = $derived(() => {
-		const [section, key] = loadingKey.split('.') as [keyof typeof $t, string];
-		return ($t[section] as any)[key] as string;
+		const [section, key] = loadingKey.split('.') as [keyof typeof $translation, string];
+		return ($translation[section] as any)[key] as string;
 	});
 
-	const tryAgainText = $derived($t.buttons.try_again);
-	const retryingText = $derived($t.buttons.retrying);
+	const tryAgainText = $derived($translation.buttons.try_again);
+	const retryingText = $derived($translation.buttons.retrying);
 </script>
 
 {#if state.error}

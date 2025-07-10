@@ -1,5 +1,5 @@
 import { renderComponent} from '$lib/components/ui/data-table';
-import DataTableActions from '$lib/components/data-table-actions.svelte'
+import DataTableActions from '$lib/components/DataTable/DataTableActions/data-table-actions.svelte'
 import type { Company } from '$lib/types/company';
 import type { ColumnDef } from '@tanstack/table-core';
 

@@ -10,8 +10,8 @@
 	import { Button } from '$lib/components/ui/button/index';
 	import * as Table from "$lib/components/ui/table"
 	import { Loader2Icon, MoreHorizontal } from 'lucide-svelte';
-	import { CirclePlus, EyeOff, LoaderCircle, RefreshCw } from 'lucide-svelte';
-	import { t } from '$lib/stores/internalization-store';
+	import { CirclePlus, LoaderCircle, RefreshCw } from 'lucide-svelte';
+	import { translation } from '$lib/stores/internalization-store';
 
 	type DataTableProps<TData, TValue> = {
 		columns: ColumnDef<TData, TValue>[];
@@ -81,7 +81,7 @@
 				variant="outline"
 				class="rounded-l-none"
 			>
-				<CirclePlus />{$t.buttons.create}
+				<CirclePlus />{$translation.buttons.create}
 			</Button>
 		</div>
 	</div>
@@ -111,7 +111,7 @@
 							<div class="flex items-center justify-center">
 								<Loader2Icon class="w-6 h-6 animate-spin mr-2" />
 								<span>
-									{$t.loading.default}
+									{$translation.loading.default}
 								</span>
 							</div>
 						</Table.Cell>
@@ -131,8 +131,8 @@
 						</Table.Row>
 					{:else}
 						<Table.Row>
-							<Table.Cell colspan={columns.length} class="h-24 text-center text-muted">
-								{$t.errors.not_found}
+							<Table.Cell colspan={columns.length} class="h-24 text-xl text-center text-muted-foreground">
+								{$translation.errors.not_found}
 							</Table.Cell>
 						</Table.Row>
 					{/each}
@@ -151,9 +151,9 @@
 						</Table.Row>
 					{:else}
 						<Table.Row>
-							<Table.Cell colspan={columns.length} class="h-24 text-center">
+							<Table.Cell colspan={columns.length} class="h-45 text-xl font-medium text-center text-muted-foreground" >
 								<!-- TODO ADD ICON AND SOME BLING -->
-								{$t.errors.not_found}
+								{$translation.errors.not_found}
 							</Table.Cell>
 						</Table.Row>
 					{/each}
@@ -188,7 +188,7 @@
 				onclick={() => table.previousPage()}
 				disabled={!table.getCanPreviousPage() || loading}
 			>
-				{$t.common.previous}
+				{$translation.common.previous}
 			</Button>
 			<Button
 				variant="outline"
@@ -196,7 +196,7 @@
 				onclick={() => table.nextPage()}
 				disabled={!table.getCanNextPage() || loading}
 			>
-				{$t.common.next}
+				{$translation.common.next}
 			</Button>
 		</div>
 	</div>
