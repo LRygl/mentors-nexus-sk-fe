@@ -8,24 +8,52 @@
 
 <!-- Hero Section -->
 <section class="relative bg-blue-100 dark:bg-blue-950 py-20 w-screen max-w-none overflow-hidden -mx-[10vw] lg:-mx-[calc((100vw-100%)/2)] z-10">
-	<div class="grid grid-cols-1 md:grid-cols-2 gap-12 items-center max-w-7xl mx-auto px-4">
-		<div>
-			<h1 class="text-4xl md:text-5xl font-extrabold leading-tight text-gray-800 dark:text-white">
-				Efective Fueling, Anywhere
+	<div class="max-w-7xl mx-auto px-6 lg:px-8 py-24 lg:flex lg:items-center lg:justify-between">
+		<!-- Text content -->
+		<div class="text-center lg:text-left">
+			<h1 class="text-5xl sm:text-6xl font-extrabold tracking-tight text-gray-900 leading-tight">
+				Launch smarter, grow faster
 			</h1>
-			<p class="mt-4 text-lg text-gray-700 dark:text-gray-300">
-				Unlock your potential with our expert-led online courses.
+			<p class="mt-6 text-lg text-gray-600">
+				Supercharge your product with our all-in-one platform built for speed,
+				scalability, and modern teams.
 			</p>
-			<div class="mt-6">
 
-				<Button variant="default">Explore courses</Button>
-				<Button variant="secondary">Explore courses</Button>
-
+			<div class="mt-8 flex flex-col sm:flex-row justify-center lg:justify-start gap-4">
+				<a
+					href="#"
+					class="inline-flex items-center justify-center px-6 py-3 text-base font-semibold rounded-2xl text-white bg-indigo-600 shadow-lg hover:bg-indigo-500 transition duration-300"
+				>
+					🚀 Get Started
+				</a>
+				<a
+					href="#"
+					class="inline-flex items-center justify-center px-6 py-3 text-base font-semibold rounded-2xl text-indigo-600 border border-indigo-200 hover:bg-indigo-50 transition duration-300"
+				>
+					Learn More →
+				</a>
 			</div>
 		</div>
-		<img src="https://source.unsplash.com/600x400/?education,online" alt="" class="rounded-2xl shadow-lg w-full" />
+
+		<!-- Image or illustration -->
+		<div class="mt-16 lg:mt-0 lg:ml-16 relative">
+			<div class="absolute -inset-2 bg-indigo-100 rounded-3xl blur-2xl opacity-30 animate-pulse hidden lg:block"></div>
+			<img
+				src="https://source.unsplash.com/600x400/?dashboard,analytics"
+				alt="Dashboard preview"
+				class="relative w-full max-w-md mx-auto rounded-2xl shadow-xl ring-1 ring-gray-200"
+			/>
+		</div>
 	</div>
 </section>
+
+<section class="relative bg-gradient-to-br from-indigo-50 via-white to-white overflow-hidden w-screen max-w-none overflow-hidden -mx-[10vw] lg:-mx-[calc((100vw-100%)/2)] z-10">
+
+</section>
+
+
+
+
 <div>
 	<h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl">
 		Featured Items

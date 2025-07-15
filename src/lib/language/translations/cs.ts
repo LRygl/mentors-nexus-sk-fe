@@ -40,19 +40,32 @@ export const cs: Translations = {
 		info: 'Informace', // Fixed from Spanish
 		confirmation: 'Jste si jisti?', // Fixed from Spanish
 		previous: 'Předchozí',
-		next: 'Následující'
+		next: 'Následující',
+		action: 'Akce'
 	},
 	action: {
 		noAvailableAction: 'Není dostupné',
 		copyToClipboard: 'Kopírovat ID',
 		view: 'Zobrazit',
 		details: 'Detail',
-		delete: 'Odstranit'
+		delete: 'Odstranit',
+		activate: 'Aktivovat',
+		deactivate: 'Deaktivovat'
 	},
 	column: {
 		user: {
+			id: 'ID',
+			user: 'Uživatel',
 			firstName: 'Jméno',
 			lastName: 'Příjmení',
+			email: 'E-Mail',
+			telephone: 'Telefon',
+			uuid: 'UUID',
+			lastLoginDate: 'Poslední přihlášení',
+			role: 'Role'
+		},
+		course: {
+			courseName: 'Název'
 		}
 	}
 };

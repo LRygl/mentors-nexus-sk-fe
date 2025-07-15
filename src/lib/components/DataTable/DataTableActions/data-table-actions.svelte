@@ -2,7 +2,7 @@
 
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { Button } from '$lib/components/ui/button';
-	import { EllipsisIcon, CopyIcon, EyeIcon, InfoIcon, Trash2 } from 'lucide-svelte';
+	import { EllipsisIcon, CopyIcon, EyeIcon, InfoIcon, Trash2, ShieldCheck, ShieldMinus } from 'lucide-svelte';
 	import { dialogStore } from '$lib/stores/dialog-store';
 	import { createEventDispatcher, type Snippet } from 'svelte';
 	import { deleteCourse } from '$lib/api/course-api';
@@ -20,7 +20,9 @@
 		showView,
 		showDetails,
 		showDelete,
-		showCopy
+		showCopy,
+		showActivate,
+		showDeactivate,
 	}: ActionButtonProps = $props();
 
 	// Get default action visibility based on entityType
@@ -31,10 +33,12 @@
 	const finalShowDetails = $derived(showDetails ?? defaultVisibility().showDetails);
 	const finalShowDelete = $derived(showDelete ?? defaultVisibility().showDelete);
 	const finalShowCopy = $derived(showCopy ?? defaultVisibility().showCopy);
+	const finalShowActivate = $derived(showActivate ?? defaultVisibility().showActivate);
+	const finalShowDeactivate = $derived(showDeactivate ?? defaultVisibility().showDeactivate);
 
 	// Check if entityType has any actions available
 	const hasVisibleActions = $derived(
-		finalShowView || finalShowDetails || finalShowDelete || finalShowCopy
+		finalShowView || finalShowDetails || finalShowDelete || finalShowCopy || finalShowActivate || finalShowDeactivate
 	);
 
 	const dispatch = createEventDispatcher<{
@@ -127,7 +131,7 @@
 	<DropdownMenu.Content>
 		{#if hasVisibleActions}
 			<DropdownMenu.Group>
-				<DropdownMenu.Label>Actions</DropdownMenu.Label>
+				<DropdownMenu.Label>{$translation.common.action}</DropdownMenu.Label>
 				{#if finalShowCopy}
 					<DropdownMenu.Item onclick={handleCopy} class="flex items-center gap-2">
 						<CopyIcon size={16} />
@@ -135,7 +139,7 @@
 					</DropdownMenu.Item>
 				{/if}
 			</DropdownMenu.Group>
-			{#if finalShowView || finalShowDetails}
+			{#if finalShowView || finalShowDetails || finalShowActivate || finalShowDeactivate}
 				<DropdownMenu.Separator />
 				{#if finalShowView}
 					<DropdownMenu.Item class="flex items-center gap-2">
@@ -147,6 +151,18 @@
 					<DropdownMenu.Item class="flex items-center gap-2">
 						<InfoIcon size={16} />
 						{$translation.action.details}
+					</DropdownMenu.Item>
+				{/if}
+				{#if finalShowActivate}
+					<DropdownMenu.Item class="flex items-center gap-2">
+						<ShieldCheck size={16}/>
+						{$translation.action.activate}
+					</DropdownMenu.Item>
+				{/if}
+				{#if finalShowDeactivate}
+					<DropdownMenu.Item class="flex items-center gap-2">
+						<ShieldMinus size={16}/>
+						{$translation.action.deactivate}
 					</DropdownMenu.Item>
 				{/if}
 			{/if}

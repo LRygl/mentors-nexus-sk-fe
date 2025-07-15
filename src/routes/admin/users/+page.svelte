@@ -4,14 +4,20 @@
 	import DataTable from '$lib/components/data-table.svelte';
 	import LanguageSwitcher from '$lib/components/language-switcher.svelte';
 	import DataTableAsyncWrapper from '$lib/components/data-table-async-wrapper.svelte';
-	import { getColumns } from './columns';
-	import { translation } from '$lib/stores/internalization-store'
-	onMount(() => {	loadUsers(); });
-	async function loadUsers() { await users.load(); }
-	async function reloadUsers() { await users.load(true); }
+	import { currentLanguage } from '$lib/stores/internalization-store';
+	import { userColumns } from './user-columns';
 
-	// Reactively call the getColumns function whenever $translation changes
-	$: columns = getColumns($translation);
+	onMount(() => {
+		loadUsers();
+	});
+
+	async function loadUsers() {
+		await users.load();
+	}
+
+	async function reloadUsers() {
+		await users.load(true);
+	}
 
 </script>
 <!-- Language switcher in your header/nav -->
@@ -33,17 +39,19 @@
 
 <!-- For users -->
 <DataTableAsyncWrapper
-	store={$users}
 	errorKey="errors.loading_users"
 	loadingKey="loading.users"
 	onRetry={loadUsers}
+	store={$users}
 >
 	{#snippet children()}
-		<DataTable
-			columns={columns}
-			data={$users.data}
-			loading={$users.loading}
-			loadTableData={reloadUsers}
-		/>
+		{#key $currentLanguage}
+			<DataTable
+				columns={$userColumns}
+				data={$users.data}
+				loading={$users.loading}
+				loadTableData={reloadUsers}
+			/>
+		{/key}
 	{/snippet}
 </DataTableAsyncWrapper>

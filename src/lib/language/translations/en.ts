@@ -40,19 +40,33 @@ export const en: Translations = {
 		info: 'Information',
 		confirmation: 'Are you sure?',
 		previous: 'Previous',
-		next: 'Next'
+		next: 'Next',
+		action: 'Action',
 	},
 	action: {
 		noAvailableAction: 'No Actions',
 		copyToClipboard: 'Copy to clipboard',
 		view: 'View',
 		details: 'Details',
-		delete: 'Delete'
+		delete: 'Delete',
+		activate: 'Activate',
+		deactivate: 'Deactivate'
+
 	},
 	column: {
 		user: {
+			id: 'ID',
+			user: 'User',
 			firstName: 'First Name',
 			lastName: 'Last Name',
+			email: 'E-Mail',
+			telephone: 'Telephone',
+			uuid: 'UUID',
+			lastLoginDate: 'Last Login',
+			role: 'Role'
+		},
+		course: {
+			courseName: 'Course Name'
 		}
 	}
 };

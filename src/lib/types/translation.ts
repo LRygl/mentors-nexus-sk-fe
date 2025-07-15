@@ -41,6 +41,7 @@ export interface Translations {
 		confirmation: string;
 		previous: string;
 		next: string;
+		action: string;
 	};
 	action: {
 		noAvailableAction: string;
@@ -48,11 +49,23 @@ export interface Translations {
 		view: string;
 		details: string;
 		delete: string;
+		activate: string;
+		deactivate: string;
 	};
 	column: {
 		user: {
+			id: string;
+			user: string;
 			firstName: string;
 			lastName: string;
+			email: string;
+			telephone: string;
+			uuid: string;
+			lastLoginDate: string;
+			role: string;
+		},
+		course: {
+			courseName: string;
 		}
 	}
 }
@@ -62,7 +75,9 @@ export type TranslationKey =
 	| `loading.${keyof Translations['loading']}`
 	| `buttons.${keyof Translations['buttons']}`
 	| `common.${keyof Translations['common']}`
-	| `action.${keyof Translations['action']}`;
+	| `action.${keyof Translations['action']}`
+	| `column.user.${keyof Translations['column']['user']}`
+	| `column.course.${keyof Translations['column']['course']}`;
 
 export interface AsyncStore<T> {
 	data: T | null;

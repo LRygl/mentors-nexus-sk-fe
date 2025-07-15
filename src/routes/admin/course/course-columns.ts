@@ -8,7 +8,7 @@ import DataTableBadge from '$lib/components/data-table-badge.svelte';
 import { getStatusConfig } from '$lib/utils/course-status';
 import { Checkbox } from '$lib/components/ui/checkbox';
 
-export const columns: ColumnDef<Course>[] = [
+export const courseColumns: ColumnDef<Course>[] = [
 	{
 		id: "select",
 		header: ({ table }) =>
@@ -119,7 +119,7 @@ export const columns: ColumnDef<Course>[] = [
 
 
 
-	//Amount column has special extension - as i can have a separate columns definition for each table taht is passed to data
+	//Amount column has special extension - as i can have a separate userColumns definition for each table taht is passed to data
 	//table this could prove useful
 	{
 		accessorKey: "price",
@@ -153,7 +153,13 @@ export const columns: ColumnDef<Course>[] = [
 		id: "actions",
 		cell: ({ row }) => {
 			// You can pass whatever you need from `row.original` to the component
-			return renderComponent(DataTableActions, { id: row.original.id });
+			return renderComponent(DataTableActions, {
+				id: row.original.id.toString(),
+				entityType: 'user',
+				deleteFunction: function (id: string): Promise<void> {
+					throw new Error('Function not implemented.');
+				}
+			});
 		},
 		enableSorting: false,
 		enableHiding: false,

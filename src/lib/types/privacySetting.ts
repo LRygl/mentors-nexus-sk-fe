@@ -1,0 +1,1 @@
+export type PrivacySetting = 'personalDataProcessing' | 'personalDataPublishing' | 'marketing';

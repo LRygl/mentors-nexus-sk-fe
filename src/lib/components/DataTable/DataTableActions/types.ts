@@ -13,6 +13,8 @@ export interface ActionButtonProps {
 	showDetails?: boolean;
 	showDelete?: boolean;
 	showCopy?: boolean;
+	showActivate?: boolean;
+	showDeactivate?: boolean;
 }
 
 export interface EntityVisibilityConfig {
@@ -20,4 +22,6 @@ export interface EntityVisibilityConfig {
 	showDetails: boolean;
 	showDelete: boolean;
 	showCopy: boolean;
+	showActivate: boolean;
+	showDeactivate: boolean;
 }

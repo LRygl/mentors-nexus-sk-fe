@@ -23,7 +23,7 @@
 			<Separator orientation="vertical" class="mr-2 h-4" />
 			<Breadcrumb />
 		</header>
-		<main class="p-4">
+		<main class="p-4 bg-gray-50 dark:bg-gray-900">
 			<slot/>
 		</main>
 	</Sidebar.Inset>
