@@ -21,8 +21,6 @@
 <MainNav />
 <ModeWatcher />
 
-<main class="flex flex-col items-center min-h-screen">
-	<div class="w-4/5 max-w-4xl">
+<main class="flex flex-col items-center min-h-screen bg-gray-50 dark:bg-gray-900 ">
 		{@render children()}
-	</div>
 </main>

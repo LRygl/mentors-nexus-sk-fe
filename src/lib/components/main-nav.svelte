@@ -262,6 +262,7 @@
 			/>
 			<span class="sr-only">Toggle theme</span>
 		</Button>
+
 		<Button variant="outline">
 			<LogIn class="h-[1.2rem] w-[1.2rem] rotate-0" />
 			<span>Login</span>
