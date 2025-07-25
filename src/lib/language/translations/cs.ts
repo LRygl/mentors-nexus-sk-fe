@@ -41,7 +41,8 @@ export const cs: Translations = {
 		confirmation: 'Jste si jisti?', // Fixed from Spanish
 		previous: 'Předchozí',
 		next: 'Následující',
-		action: 'Akce'
+		action: 'Akce',
+		login: "Přihlášení"
 	},
 	action: {
 		noAvailableAction: 'Není dostupné',
@@ -67,5 +68,19 @@ export const cs: Translations = {
 		course: {
 			courseName: 'Název'
 		}
+	},
+	page: {
+		about_us: {
+			title: "O Nás",
+			subTitle: "Text o nás",
+		}
+	},
+	nav: {
+		courses: "Kurzy",
+		about_us: "O Nás",
+		support: "Podpora",
+		admin: "Administrace",
+		home: "Domů"
+
 	}
 };

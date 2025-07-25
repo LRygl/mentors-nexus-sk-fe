@@ -19,6 +19,8 @@
 		class="group relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-3xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 hover:scale-[1.02] hover:-translate-y-2 border border-white/20 dark:border-gray-700/30"
 		on:mouseenter={() => isHovered = true}
 		on:mouseleave={() => isHovered = false}
+		role="button"
+		tabindex="0"
 	>
 		<!-- Image Container with Advanced Effects -->
 		<div class="relative h-48 overflow-hidden">

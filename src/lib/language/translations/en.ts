@@ -42,6 +42,7 @@ export const en: Translations = {
 		previous: 'Previous',
 		next: 'Next',
 		action: 'Action',
+		login: "Login"
 	},
 	action: {
 		noAvailableAction: 'No Actions',
@@ -68,5 +69,19 @@ export const en: Translations = {
 		course: {
 			courseName: 'Course Name'
 		}
+	},
+	page: {
+		about_us: {
+			title: "About Us",
+			subTitle: "Text o nás",
+		}
+	},
+	nav: {
+		courses: "Courses",
+		about_us: "About Us",
+		support: "Support",
+		admin: "Administration",
+		home: "Home"
+
 	}
 };

@@ -42,6 +42,7 @@ export interface Translations {
 		previous: string;
 		next: string;
 		action: string;
+		login: string;
 	};
 	action: {
 		noAvailableAction: string;
@@ -67,6 +68,19 @@ export interface Translations {
 		course: {
 			courseName: string;
 		}
+	},
+	page: {
+		about_us: {
+			title: string;
+			subTitle: string;
+		}
+	},
+	nav: {
+		courses: string;
+		about_us: string;
+		support: string;
+		admin: string;
+		home: string;
 	}
 }
 
@@ -77,7 +91,9 @@ export type TranslationKey =
 	| `common.${keyof Translations['common']}`
 	| `action.${keyof Translations['action']}`
 	| `column.user.${keyof Translations['column']['user']}`
-	| `column.course.${keyof Translations['column']['course']}`;
+	| `column.course.${keyof Translations['column']['course']}`
+	| `page.about_us.${keyof Translations['page']['about_us']}`;
+
 
 export interface AsyncStore<T> {
 	data: T | null;

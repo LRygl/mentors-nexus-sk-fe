@@ -2,6 +2,7 @@
 	import * as NavigationMenu from "$lib/components/ui/navigation-menu/index.js";
 	import { cn } from "$lib/utils.js";
 	import { navigationMenuTriggerStyle } from "$lib/components/ui/navigation-menu/navigation-menu-trigger.svelte";
+	import LanguageSwitcher from './language-switcher.svelte'
 	import type { HTMLAttributes } from "svelte/elements";
 	import { Button } from "$lib/components/ui/button/index";
 	import { mode, toggleMode } from "mode-watcher";
@@ -9,10 +10,10 @@
 		LogIn,
 		SunIcon,
 		MoonIcon,
-		CircleHelpIcon,
-		CircleIcon,
-		CircleCheckIcon } from 'lucide-svelte';
+	} from 'lucide-svelte';
+
 	import { onMount } from 'svelte';
+	import { translation } from '$lib/stores/internalization-store';
 	let currentMode = mode.current;
 	$: logoSrc = currentMode === 'dark' ? '/logo-light.png' : '/logo-dark.png';
 
@@ -26,12 +27,8 @@
 	});
 
 	function handleToggle() {
-		console.log("MODE: " + currentMode);
 		toggleMode();
-
-			currentMode = mode.current;
-			console.log("MODE updated:", currentMode);
-			console.log("SRC: " + logoSrc);
+		currentMode = mode.current;
 
 	}
 
@@ -122,8 +119,17 @@
 	<div class="flex flex-wrap items-center">
 		<NavigationMenu.Root viewport={false} class="h-15">
 			<NavigationMenu.List>
+
 				<NavigationMenu.Item>
-					<NavigationMenu.Trigger>Home</NavigationMenu.Trigger>
+					<NavigationMenu.Link>
+						{#snippet child()}
+							<a href="/" class={navigationMenuTriggerStyle()}>{$translation.nav.home}</a>
+						{/snippet}
+					</NavigationMenu.Link>
+				</NavigationMenu.Item>
+
+				<NavigationMenu.Item>
+					<NavigationMenu.Trigger>{$translation.nav.courses}</NavigationMenu.Trigger>
 					<NavigationMenu.Content>
 						<ul
 							class="grid gap-2 p-2 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]"
@@ -134,7 +140,7 @@
 								>
 									{#snippet child({ props })}
 										<a {...props} href="/">
-											<div class="mb-2 mt-4 text-lg font-medium">shadcn-svelte</div>
+											<div class="mb-2 mt-4 text-lg font-medium">Amazing</div>
 											<p class="text-muted-foreground text-sm leading-tight">
 												Beautifully designed components built with Tailwind CSS.
 											</p>
@@ -158,11 +164,17 @@
 								title: "Typography",
 								content: "Styles for headings, paragraphs, lists...etc"
 							})}
+							{@render ListItem({
+								href: "/docs/primitives/typography",
+								title: "Typography",
+								content: "Styles for headings, paragraphs, lists...etc"
+							})}
 						</ul>
 					</NavigationMenu.Content>
 				</NavigationMenu.Item>
+				<!--
 				<NavigationMenu.Item>
-					<NavigationMenu.Trigger>Courses</NavigationMenu.Trigger>
+					<NavigationMenu.Trigger>{$translation.nav.courses}</NavigationMenu.Trigger>
 					<NavigationMenu.Content>
 						<ul
 							class="grid w-[400px] gap-2 p-2 md:w-[500px] md:grid-cols-2 lg:w-[600px]"
@@ -177,41 +189,58 @@
 						</ul>
 					</NavigationMenu.Content>
 				</NavigationMenu.Item>
-
+-->
 				<NavigationMenu.Item>
-					<NavigationMenu.Link>
-						{#snippet child()}
-							<a href="/docs" class={navigationMenuTriggerStyle()}>Docs</a>
-						{/snippet}
-					</NavigationMenu.Link>
-				</NavigationMenu.Item>
-				<NavigationMenu.Item>
-					<NavigationMenu.Trigger>List</NavigationMenu.Trigger>
+					<NavigationMenu.Trigger>{$translation.nav.about_us}</NavigationMenu.Trigger>
 					<NavigationMenu.Content>
 						<ul class="grid w-[300px] gap-4 p-2">
 							<li>
-								<NavigationMenu.Link href="#">
-									<div class="font-medium">Courses</div>
+								<NavigationMenu.Link href="/about-us">
+									<div class="font-medium">About Us</div>
 									<div class="text-muted-foreground">
 										Browse all components in the library.
 									</div>
 								</NavigationMenu.Link>
-								<NavigationMenu.Link href="#">
-									<div class="font-medium">Documentation</div>
+								<NavigationMenu.Link href="/terms">
+									<div class="font-medium">Terms And Conditions</div>
 									<div class="text-muted-foreground">
-										Learn how to use the library.
+										Review the legal terms that govern your use of our services.
 									</div>
 								</NavigationMenu.Link>
-								<NavigationMenu.Link href="#">
-									<div class="font-medium">Blog</div>
+								<NavigationMenu.Link href="/privacy">
+									<div class="font-medium">Privacy</div>
 									<div class="text-muted-foreground">
-										Read our latest blog posts.
+										Understand how we collect, use, and protect your personal data.
+									</div>
+								</NavigationMenu.Link>
+								<NavigationMenu.Link href="/cookies">
+									<div class="font-medium">Cookies</div>
+									<div class="text-muted-foreground">
+										Learn how we use cookies to improve site functionality and personalize your experience.
 									</div>
 								</NavigationMenu.Link>
 							</li>
 						</ul>
 					</NavigationMenu.Content>
 				</NavigationMenu.Item>
+
+				<NavigationMenu.Item>
+					<NavigationMenu.Link>
+						{#snippet child()}
+							<a href="/support" class={navigationMenuTriggerStyle()}>{$translation.nav.support}</a>
+						{/snippet}
+					</NavigationMenu.Link>
+				</NavigationMenu.Item>
+
+				<NavigationMenu.Item>
+					<NavigationMenu.Link>
+						{#snippet child()}
+							<a href="/admin/users" class={navigationMenuTriggerStyle()}>{$translation.nav.admin}</a>
+						{/snippet}
+					</NavigationMenu.Link>
+				</NavigationMenu.Item>
+
+				<!--
 				<NavigationMenu.Item>
 					<NavigationMenu.Trigger>Admin</NavigationMenu.Trigger>
 					<NavigationMenu.Content>
@@ -224,6 +253,7 @@
 						</ul>
 					</NavigationMenu.Content>
 				</NavigationMenu.Item>
+
 				<NavigationMenu.Item>
 					<NavigationMenu.Trigger>With Icon</NavigationMenu.Trigger>
 
@@ -248,11 +278,12 @@
 						</ul>
 					</NavigationMenu.Content>
 				</NavigationMenu.Item>
+							-->
 			</NavigationMenu.List>
 
 		</NavigationMenu.Root>
 	</div>
-	<div class="content-center">
+	<div class="content-center flex flex-row">
 		<Button onclick={handleToggle} variant="outline" size="icon">
 			<SunIcon
 				class="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0"
@@ -263,9 +294,11 @@
 			<span class="sr-only">Toggle theme</span>
 		</Button>
 
+		<LanguageSwitcher />
+
 		<Button variant="outline">
 			<LogIn class="h-[1.2rem] w-[1.2rem] rotate-0" />
-			<span>Login</span>
+			<span>{$translation.common.login}</span>
 		</Button>
 	</div>
 </nav>
