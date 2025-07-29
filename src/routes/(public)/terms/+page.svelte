@@ -112,23 +112,9 @@
 		/>
 	</div>
 </section>
-	<!-- Terms Body -->
 
 	<!-- Terms Content -->
 	<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
-		<!-- Important Notice -->
-		<div class="mb-12 p-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/30 rounded-2xl">
-			<div class="flex items-start gap-4">
-				<AlertTriangle class="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-1" />
-				<div>
-					<h3 class="text-lg font-semibold text-amber-800 dark:text-amber-200 mb-2">Important Notice</h3>
-					<p class="text-amber-700 dark:text-amber-300 text-sm leading-relaxed">
-						These terms are legally binding. By using our LMS platform, you agree to comply with all terms outlined below.
-						Please read carefully and contact us if you have any questions.
-					</p>
-				</div>
-			</div>
-		</div>
 
 		<!-- Date Information -->
 		<div class="mb-12 grid md:grid-cols-2 gap-6">
@@ -150,7 +136,7 @@
 
 		<!-- Terms Sections -->
 		<div class="space-y-8">
-			{#each termsData as section, index}
+			{#each termsData as section, sectionIndex}
 				<div class="group bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-3xl border border-gray-200/50 dark:border-gray-700/50 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-1">
 					<div class="p-8">
 						<div class="flex items-start gap-4 mb-6">
@@ -159,14 +145,17 @@
 							</div>
 							<div>
 								<h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-									{index + 1}. {section.title}
+									{sectionIndex + 1}. {section.title}
 								</h2>
 							</div>
 						</div>
 
 						<div class="space-y-4 ml-16">
-							{#each section.content as paragraph}
+							{#each section.content as paragraph, contentIndex}
 								<p class="text-gray-700 dark:text-gray-300 leading-relaxed">
+                  <span class="font-semibold text-gray-800 dark:text-gray-200">
+                    {sectionIndex + 1}.{contentIndex + 1} -
+                  </span>
 									{paragraph}
 								</p>
 							{/each}
