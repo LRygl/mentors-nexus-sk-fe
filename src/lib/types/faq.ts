@@ -1,5 +1,4 @@
-// FAQ Type Definitions
-
+// src/lib/types/faq.ts
 export interface FAQItem {
 	id: string;
 	category: string;
@@ -15,7 +14,14 @@ export interface FAQCategory {
 	count: number;
 }
 
-export interface SearchFilters {
-	query: string;
-	category: string;
+export interface FAQFilters {
+	searchQuery: string;
+	selectedCategory: string;
+}
+
+export interface FAQState {
+	items: FAQItem[];
+	categories: FAQCategory[];
+	filters: FAQFilters;
+	expandedItems: Set<string>;
 }

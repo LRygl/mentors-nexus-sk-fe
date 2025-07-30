@@ -23,8 +23,8 @@
 <div class="relative min-h-screen overflow-hidden bg-transparent">
 
 	<!-- 🔮 Full-page gradient background layer -->
-	<div class="absolute inset-0 -z-10 bg-gradient-to-br from-slate-50 via-blue-50/30 to-indigo-50
-		dark:from-slate-900 dark:via-blue-950/30 dark:to-indigo-950/50">
+	<div class="absolute inset-0 -z-10 bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-gray-900 dark:via-slate-900 dark:to-indigo-950">
+
 	</div>
 
 	<!-- 🔮 Animated blobs -->
