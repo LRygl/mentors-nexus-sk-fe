@@ -1,15 +1,16 @@
 <script lang="ts">
-	import {notifications} from '$lib/stores/notification';
-	import Notification from '$lib/components/notification.svelte';
-	import notification from '$lib/components/notification.svelte';
+	import HeaderSection from '\$lib/components/Sections/header-section.svelte';
+	import { translation } from '$lib/stores/internalization-store';
 </script>
 
-about us
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-gray-800 dark:text-gray-100">
+	<div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+		<HeaderSection
+			heading={$translation.page.about_us.title}
+			subHeading={$translation.page.about_us.subTitle}
+			showBadge={true}
+			badgeText="Legal"
+		/>
+	</div>
 
-<br>
-<button class="button" on:click={() => notifications.warning('Wait a moment... this might be a very long message present in the message and it could be difficult to draw')}>
-	Warn!
-</button>
-
-
-<Notification />
+</section>

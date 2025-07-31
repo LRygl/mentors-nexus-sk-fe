@@ -1,0 +1,86 @@
+{
+  "popularSearches": [
+    "certificates",
+    "payment",
+    "video issues",
+    "account",
+    "enrollment",
+    "refund"
+  ],
+  "categories": [
+    {
+      "id": "all",
+      "label": "All Categories",
+      "iconName": "HelpCircle"
+    },
+    {
+      "id": "getting-started",
+      "label": "Getting Started",
+      "iconName": "User"
+    },
+    {
+      "id": "courses",
+      "label": "Courses & Learning",
+      "iconName": "BookOpen"
+    },
+    {
+      "id": "billing",
+      "label": "Billing & Payments",
+      "iconName": "CreditCard"
+    },
+    {
+      "id": "technical",
+      "label": "Technical Support",
+      "iconName": "Settings"
+    },
+    {
+      "id": "account",
+      "label": "Account & Privacy",
+      "iconName": "Shield"
+    }
+  ],
+  "faqs": [
+    {
+      "id": "gs-1",
+      "category": "getting-started",
+      "question": "How do I create an account on the LMS platform?",
+      "answer": "Creating an account is simple! Click the \"Sign Up\" button on our homepage, fill in your basic information including name, email, and password. You'll receive a verification email to activate your account. Once verified, you can immediately start exploring our course catalog and enroll in courses.",
+      "tags": ["signup", "registration", "account", "verification"]
+    },
+    {
+      "id": "gs-2",
+      "category": "getting-started",
+      "question": "What are the system requirements to use the platform?",
+      "answer": "Our platform works on any modern web browser including Chrome, Firefox, Safari, and Edge. For the best experience, we recommend using the latest version of your browser. You'll need a stable internet connection for video content. Mobile apps are available for iOS and Android devices.",
+      "tags": ["requirements", "browser", "mobile", "compatibility", "chrome", "firefox"]
+    },
+    {
+      "id": "c-1",
+      "category": "courses",
+      "question": "How do I enroll in a course?",
+      "answer": "Browse our course catalog, click on any course that interests you to view details, prerequisites, and pricing. Click \"Enroll Now\" and complete the payment process if required. Free courses are instantly accessible. Once enrolled, the course appears in your \"My Courses\" section.",
+      "tags": ["enrollment", "courses", "payment", "access", "catalog"]
+    },
+    {
+      "id": "b-1",
+      "category": "billing",
+      "question": "What payment methods do you accept?",
+      "answer": "We accept all major credit cards (Visa, MasterCard, American Express), PayPal, and bank transfers. For enterprise customers, we also offer invoice billing. All payments are processed securely through our encrypted payment gateway.",
+      "tags": ["payment", "credit card", "paypal", "billing", "visa", "mastercard", "enterprise"]
+    },
+    {
+      "id": "t-1",
+      "category": "technical",
+      "question": "I'm having trouble playing videos. What should I do?",
+      "answer": "First, check your internet connection and try refreshing the page. Clear your browser cache and cookies. Ensure your browser is updated to the latest version. If issues persist, try switching to a different browser or device. Contact support if problems continue.",
+      "tags": ["video", "playback", "streaming", "troubleshooting", "browser", "cache", "connection"]
+    },
+    {
+      "id": "a-1",
+      "category": "account",
+      "question": "How do I update my profile information?",
+      "answer": "Go to Account Settings from your dashboard, click \"Edit Profile\", update your information, and save changes. You can modify your name, email, profile picture, bio, and learning preferences. Email changes require verification.",
+      "tags": ["profile", "settings", "update", "information", "email", "verification", "preferences"]
+    }
+  ]
+}
