@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { categoryStore } from '$lib/stores/category-store.js';
-	import { createCategory, updateCategory } from '$lib/api/category-api';
+	import { createCategory, updateCategory } from '$lib/api/CourseCategoryAdminAPI';
 
 	async function handleSubmit(event: Event) {
 		event.preventDefault();

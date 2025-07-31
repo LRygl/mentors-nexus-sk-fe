@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { categoryStore } from '$lib/stores/category-store.js';
-	import { deleteCategory } from '$lib/api/category-api'
+	import { deleteCategory } from '$lib/api/CourseCategoryAdminAPI'
 
 	async function handleEdit(id: number) {
 		await categoryStore.loadCategory(id);

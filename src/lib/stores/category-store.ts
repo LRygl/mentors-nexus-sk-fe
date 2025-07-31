@@ -1,5 +1,5 @@
 import { get, writable } from 'svelte/store';
-import { getCategories } from '$lib/api/category-api';
+import { getCategories } from '$lib/api/CourseCategoryAdminAPI';
 import type { CategoryStoreState } from '$lib/types/category';
 
 //Category State
