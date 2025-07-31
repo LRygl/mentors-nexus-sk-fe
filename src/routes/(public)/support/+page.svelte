@@ -6,7 +6,13 @@
 	import CategoryFilter from '$lib/components/FAQ/CategoryFilter.svelte';
 	import FAQCard from '$lib/components/FAQ/FAQCard.svelte';
 	import EmptyState from '$lib/components/FAQ/EmptyState.svelte';
-	import { faqStore, faqActions } from '$lib/stores/faq-store';
+	import {
+		faqStore,
+		faqActions,
+		filteredFAQs,
+		visibleCategories,
+		showClearButton
+	} from '$lib/stores/faq-store';
 	import { Loader2, TrendingUp, Star } from 'lucide-svelte';
 
 	// Load FAQ data on mount
@@ -56,7 +62,7 @@
 <!-- Main Content -->
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
 	<!-- Loading State -->
-	{#if faqStore.loading}
+	{#if $faqStore.loading}
 		<div class="flex items-center justify-center py-16">
 			<div class="flex items-center gap-3 text-nexus-primary">
 				<Loader2 class="w-6 h-6 animate-spin" />
@@ -65,7 +71,7 @@
 		</div>
 
 		<!-- Error State -->
-	{:else if faqStore.error}
+	{:else if $faqStore.error}
 		<div class="bg-red-50 border border-red-200 rounded-xl p-6 mb-8">
 			<div class="flex items-center gap-3">
 				<div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
@@ -75,7 +81,7 @@
 				</div>
 				<div>
 					<h3 class="text-lg font-semibold text-red-900">Failed to load FAQs</h3>
-					<p class="text-red-700 mt-1">{faqStore.error}</p>
+					<p class="text-red-700 mt-1">{$faqStore.error}</p>
 					<button
 						onclick={() => faqActions.loadAllData()}
 						class="mt-3 text-red-600 hover:text-red-500 font-medium"
@@ -89,17 +95,17 @@
 		<!-- Content -->
 	{:else}
 		<!-- Featured FAQs Section (if any) -->
-		{#if faqStore.featuredFAQs.length > 0 && faqStore.selectedCategorySlug === 'all' && !faqStore.searchQuery}
+		{#if $faqStore.featuredFAQs.length > 0 && $faqStore.selectedCategorySlug === 'all' && !$faqStore.searchQuery}
 			<div class="mb-12">
 				<div class="flex items-center gap-2 mb-6">
 					<Star class="w-5 h-5 text-yellow-500" />
 					<h2 class="text-xl font-semibold text-gray-900">Featured Questions</h2>
 				</div>
 				<div class="grid gap-4 md:grid-cols-2">
-					{#each faqStore.featuredFAQs.slice(0, 4) as faq}
+					{#each $faqStore.featuredFAQs.slice(0, 4) as faq}
 						<FAQCard
 							{faq}
-							isExpanded={faqStore.expandedItems.has(faq.id.toString())}
+							isExpanded={$faqStore.expandedItems.has(faq.id.toString())}
 							onToggle={handleToggleExpanded}
 							showAnalytics={false}
 						/>
@@ -109,17 +115,17 @@
 		{/if}
 
 		<!-- Popular FAQs Section (if any) -->
-		{#if faqStore.popularFAQs.length > 0 && faqStore.selectedCategorySlug === 'all' && !faqStore.searchQuery}
+		{#if $faqStore.popularFAQs.length > 0 && $faqStore.selectedCategorySlug === 'all' && !$faqStore.searchQuery}
 			<div class="mb-12">
 				<div class="flex items-center gap-2 mb-6">
 					<TrendingUp class="w-5 h-5 text-green-500" />
 					<h2 class="text-xl font-semibold text-gray-900">Most Popular</h2>
 				</div>
 				<div class="grid gap-4 md:grid-cols-2">
-					{#each faqStore.popularFAQs.slice(0, 4) as faq}
+					{#each $faqStore.popularFAQs.slice(0, 4) as faq}
 						<FAQCard
 							{faq}
-							isExpanded={faqStore.expandedItems.has(faq.id.toString())}
+							isExpanded={$faqStore.expandedItems.has(faq.id.toString())}
 							onToggle={handleToggleExpanded}
 							showAnalytics={true}
 						/>
@@ -131,8 +137,8 @@
 		<!-- Search Bar -->
 		<div class="mb-12">
 			<SearchBar
-				searchQuery={faqStore.searchQuery}
-				popularSearches={faqStore.popularSearches}
+				searchQuery={$faqStore.searchQuery}
+				popularSearches={$faqStore.popularSearches}
 				onSearchChange={handleSearchChange}
 				onPopularSearchClick={handlePopularSearchClick}
 			/>
@@ -142,28 +148,28 @@
 			<!-- Category Filter Sidebar -->
 			<div class="lg:col-span-1">
 				<CategoryFilter
-					categories={faqStore.visibleCategories}
-					selectedCategorySlug={faqStore.selectedCategorySlug}
+					categories={$visibleCategories}
+					selectedCategorySlug={$faqStore.selectedCategorySlug}
 					onCategoryChange={handleCategoryChange}
 					onClearFilters={handleClearFilters}
-					showClearButton={faqStore.showClearButton}
+					showClearButton={$showClearButton}
 				/>
 			</div>
 
 			<!-- FAQ Content -->
 			<div class="lg:col-span-3">
-				{#if faqStore.filteredFAQs.length === 0}
+				{#if $filteredFAQs.length === 0}
 					<EmptyState onClearFilters={handleClearFilters} />
 				{:else}
 					<!-- Results Header -->
 					<div class="flex items-center justify-between mb-6">
 						<div class="text-sm text-gray-600">
-							Showing {faqStore.filteredFAQs.length} FAQ{faqStore.filteredFAQs.length !== 1 ? 's' : ''}
-							{#if faqStore.searchQuery}
-								for "{faqStore.searchQuery}"
+							Showing {$filteredFAQs.length} FAQ{$filteredFAQs.length !== 1 ? 's' : ''}
+							{#if $faqStore.searchQuery}
+								for "{$faqStore.searchQuery}"
 							{/if}
-							{#if faqStore.selectedCategorySlug !== 'all'}
-								{@const selectedCat = faqStore.visibleCategories.find(cat => cat.slug === faqStore.selectedCategorySlug)}
+							{#if $faqStore.selectedCategorySlug !== 'all'}
+								{@const selectedCat = $visibleCategories.find(cat => cat.slug === $faqStore.selectedCategorySlug)}
 								{#if selectedCat}
 									in {selectedCat.name}
 								{/if}
@@ -190,10 +196,10 @@
 
 					<!-- FAQ List -->
 					<div class="space-y-4">
-						{#each faqStore.filteredFAQs as faq}
+						{#each $filteredFAQs as faq}
 							<FAQCard
 								{faq}
-								isExpanded={faqStore.expandedItems.has(faq.id.toString())}
+								isExpanded={$faqStore.expandedItems.has(faq.id.toString())}
 								onToggle={handleToggleExpanded}
 								showAnalytics={false}
 							/>
@@ -201,7 +207,7 @@
 					</div>
 
 					<!-- Load More (if needed for pagination) -->
-					{#if faqStore.filteredFAQs.length >= 20}
+					{#if $filteredFAQs.length >= 20}
 						<div class="mt-8 text-center">
 							<button class="px-6 py-3 bg-nexus-primary text-white rounded-xl hover:bg-nexus-primary-600 transition-colors duration-200">
 								Load More FAQs

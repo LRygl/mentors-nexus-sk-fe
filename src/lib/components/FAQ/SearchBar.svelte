@@ -1,6 +1,7 @@
+
 <!-- src/lib/components/FAQ/SearchBar.svelte -->
 <script lang="ts">
-	import { Search, X } from 'lucide-svelte';
+	import { Search } from 'lucide-svelte';
 
 	interface Props {
 		searchQuery: string;
@@ -11,58 +12,36 @@
 
 	let { searchQuery, popularSearches, onSearchChange, onPopularSearchClick }: Props = $props();
 
-	let inputElement: HTMLInputElement;
-
 	function handleInput(event: Event) {
 		const target = event.target as HTMLInputElement;
 		onSearchChange(target.value);
 	}
-
-	function handleClear() {
-		onSearchChange('');
-		inputElement?.focus();
-	}
-
-	function handlePopularClick(search: string) {
-		onPopularSearchClick(search);
-		inputElement?.focus();
-	}
 </script>
 
-<div class="space-y-6">
+<div class="max-w-2xl mx-auto">
 	<!-- Search Input -->
-	<div class="relative max-w-2xl mx-auto">
-		<div class="relative">
-			<Search class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-			<input
-				bind:this={inputElement}
-				type="text"
-				value={searchQuery}
-				oninput={handleInput}
-				placeholder="Search FAQs..."
-				class="w-full pl-12 pr-12 py-4 text-lg border border-gray-300 rounded-2xl focus:ring-2 focus:ring-nexus-primary focus:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
-			/>
-			{#if searchQuery}
-				<button
-					onclick={handleClear}
-					class="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors duration-200"
-					aria-label="Clear search"
-				>
-					<X class="w-5 h-5" />
-				</button>
-			{/if}
+	<div class="relative mb-6">
+		<div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+			<Search class="w-5 h-5 text-gray-400" />
 		</div>
+		<input
+			type="text"
+			value={searchQuery}
+			oninput={handleInput}
+			placeholder="Search frequently asked questions..."
+			class="block w-full pl-10 pr-4 py-4 border border-gray-300 rounded-xl text-lg placeholder-gray-500 focus:ring-2 focus:ring-nexus-primary focus:border-transparent transition-colors duration-200"
+		/>
 	</div>
 
 	<!-- Popular Searches -->
 	{#if popularSearches.length > 0 && !searchQuery}
-		<div class="text-center space-y-3">
-			<p class="text-sm text-gray-600 font-medium">Popular searches:</p>
+		<div class="text-center">
+			<p class="text-sm text-gray-600 mb-3">Popular searches:</p>
 			<div class="flex flex-wrap justify-center gap-2">
 				{#each popularSearches as search}
 					<button
-						onclick={() => handlePopularClick(search)}
-						class="px-4 py-2 text-sm bg-gray-100 hover:bg-nexus-primary hover:text-white rounded-full transition-all duration-200 font-medium"
+						onclick={() => onPopularSearchClick(search)}
+						class="px-3 py-1 bg-gray-100 hover:bg-nexus-primary-50 text-gray-700 hover:text-nexus-primary text-sm rounded-full transition-colors duration-200"
 					>
 						{search}
 					</button>

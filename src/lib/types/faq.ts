@@ -1,9 +1,5 @@
 // src/lib/types/faq.ts
-// FAQ-specific types matching your Spring Boot FAQ model
 
-import type { FAQCategory } from './faqCategory';
-
-// Enums for FAQ
 export enum FAQStatus {
 	DRAFT = 'DRAFT',
 	PUBLISHED = 'PUBLISHED',
@@ -14,33 +10,31 @@ export enum FAQPriority {
 	LOW = 'LOW',
 	NORMAL = 'NORMAL',
 	HIGH = 'HIGH',
-	CRITICAL = 'CRITICAL'
+	URGENT = 'URGENT'
 }
 
-// Direct 1:1 mapping with your Spring Boot FAQ model
 export interface FAQ {
 	id: number;
 	uuid: string;
 	question: string;
 	answer: string;
-	category: FAQCategory; // Note: your backend uses 'category', not 'faqCategory'
+	category: FAQCategory;
 	status: FAQStatus;
 	displayOrder: number;
 	isPublished: boolean;
 	isFeatured: boolean;
-	searchKeywords: string | null;
-	metaDescription: string | null;
-	slug: string | null;
+	searchKeywords?: string;
+	metaDescription?: string;
+	slug: string;
 	viewCount: number;
 	helpfulVotes: number;
 	notHelpfulVotes: number;
 	priority: FAQPriority;
-	createdAt: string; // LocalDateTime from backend as string
-	updatedAt: string; // LocalDateTime from backend as string
-	createdBy: string | null; // UUID as string
-	updatedBy: string | null; // UUID as string
-
-	// Computed fields from your backend methods
+	createdAt: string;
+	updatedAt: string;
+	createdBy?: string;
+	updatedBy?: string;
+	// Computed properties from backend
 	helpfulnessRatio?: number;
 	isPopular?: boolean;
 	fullUrl?: string;
@@ -48,47 +42,58 @@ export interface FAQ {
 	categorySlug?: string;
 }
 
-// DTO types for FAQ operations
-export interface CreateFAQDTO {
-	question: string;
-	answer: string;
-	category: {
-		id: number;
-	};
-	status?: FAQStatus;
-	displayOrder?: number;
-	isPublished?: boolean;
-	isFeatured?: boolean;
-	searchKeywords?: string;
+export interface FAQCategory {
+	id: number;
+	uuid: string;
+	name: string;
+	description?: string;
+	slug: string;
+	iconClass?: string;
+	colorCode?: string;
+	displayOrder: number;
+	isActive: boolean;
+	isVisible: boolean;
 	metaDescription?: string;
-	priority?: FAQPriority;
+	metaKeywords?: string;
+	// Computed fields
+	faqCount?: number;
+	publishedFaqCount?: number;
+	createdAt: string;
+	updatedAt: string;
+	createdBy?: string;
+	updatedBy?: string;
+	// Helper computed properties
+	fullUrl?: string;
 }
 
-export interface UpdateFAQDTO {
-	question?: string;
-	answer?: string;
-	category?: {
-		id: number;
-	};
-	status?: FAQStatus;
-	displayOrder?: number;
-	isPublished?: boolean;
-	isFeatured?: boolean;
-	searchKeywords?: string;
-	metaDescription?: string;
-	priority?: FAQPriority;
+// API Response types
+export interface FAQSearchParams {
+	q?: string;
+	category?: string;
 }
 
-// FAQ-specific response types
-export interface FAQResponse {
-	httpTimestamp: string;
-	httpStatusCode: number;
-	httpStatus: string;
-	httpStatusReason: string;
-	httpStatusMessage: string;
-	httpDeveloperMessage?: string;
-	httpResponseData?: {
-		faq?: FAQ;
-		faqs?: FAQ[];
-	};
+export interface FAQVoteRequest {
+	helpful: boolean;
+}
+
+// Store state interfaces
+export interface FAQStoreState {
+	// Data
+	faqs: FAQ[];
+	categories: FAQCategory[];
+	featuredFAQs: FAQ[];
+	popularFAQs: FAQ[];
+
+	// UI State
+	loading: boolean;
+	error: string | null;
+	searchQuery: string;
+	selectedCategorySlug: string;
+	expandedItems: Set<string>;
+
+	// Computed
+	filteredFAQs: FAQ[];
+	visibleCategories: FAQCategory[];
+	showClearButton: boolean;
+	popularSearches: string[];
 }

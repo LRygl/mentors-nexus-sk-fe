@@ -8,6 +8,11 @@ export const API_CONFIG = {
 	VERSION: 'v1',
 	ENDPOINTS: {
 		CATEGORY: '/category',
+		FAQ: '/faq',
+		FAQ_CATEGORY: '/faq-category',
+		USER: '/user',
+		AUTH: '/auth',
+		EVENT: '/event'
 		// Add other endpoints as needed
 	},
 	get FULL_BASE_URL() {
