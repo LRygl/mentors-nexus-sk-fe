@@ -1,6 +1,14 @@
-import faqData from '$lib/data/faq-data.json';
-import { faqActions } from '$lib/stores/faq-store';
+// src/lib/utils/faq-loader.ts
+import { faqStore } from '$lib/stores/faq-store';
 
-export async function loadFAQData() {
-	await faqActions.loadData(faqData);
+/**
+ * Load FAQ data - categories and published FAQs
+ */
+export async function loadFAQData(): Promise<void> {
+	try {
+		await faqStore.loadAllData();
+	} catch (error) {
+		console.error('Failed to load FAQ data:', error);
+		throw error;
+	}
 }

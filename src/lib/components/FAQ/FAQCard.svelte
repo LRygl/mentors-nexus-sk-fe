@@ -1,153 +1,198 @@
-<!-- components/FAQ/FAQCard.svelte -->
+<!-- src/lib/components/FAQ/FAQCard.svelte -->
 <script lang="ts">
-	import { ChevronDown, ChevronUp, Hash } from 'lucide-svelte';
-	import type { FAQItem } from '$lib/types/faq.js';
+	import { ChevronDown, ChevronUp, Star, Eye, ThumbsUp, ThumbsDown, AlertCircle } from 'lucide-svelte';
+	import { slide } from 'svelte/transition';
+	import type { FAQ, FAQPriority } from '$lib/types/faq';
+	import { faqActions } from '$lib/stores/faq-store';
 
 	interface Props {
-		faq: FAQItem;
+		faq: FAQ;
 		isExpanded: boolean;
 		onToggle: (id: string) => void;
+		showAnalytics?: boolean;
 	}
 
-	let { faq, isExpanded, onToggle }: Props = $props();
+	let { faq, isExpanded, onToggle, showAnalytics = false }: Props = $props();
+
+	function handleToggle() {
+		onToggle(faq.id.toString());
+
+		// Track view when FAQ is expanded
+		if (!isExpanded) {
+			faqActions.trackFAQView(faq.id);
+		}
+	}
+
+	// Format the answer with basic HTML support
+	function formatAnswer(answer: string): string {
+		return answer.replace(/\n/g, '<br>');
+	}
+
+	// Get priority badge styling
+	function getPriorityBadge(priority: FAQPriority) {
+		switch (priority) {
+			case 'CRITICAL':
+				return { class: 'bg-red-100 text-red-800', text: 'Critical' };
+			case 'HIGH':
+				return { class: 'bg-orange-100 text-orange-800', text: 'High Priority' };
+			case 'NORMAL':
+				return { class: 'bg-blue-100 text-blue-800', text: 'Normal' };
+			case 'LOW':
+				return { class: 'bg-gray-100 text-gray-800', text: 'Low Priority' };
+			default:
+				return { class: 'bg-gray-100 text-gray-800', text: 'Normal' };
+		}
+	}
+
+	// Calculate helpfulness percentage
+	function getHelpfulnessPercentage(): number {
+		const total = faq.helpfulVotes + faq.notHelpfulVotes;
+		if (total === 0) return 0;
+		return Math.round((faq.helpfulVotes / total) * 100);
+	}
+
+	const priorityBadge = getPriorityBadge(faq.priority);
 </script>
 
-<div class="group relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl border border-white/20 dark:border-gray-700/30 overflow-hidden transition-all duration-500 hover:shadow-2xl hover:scale-[1.01] hover:-translate-y-1 {isExpanded ? 'shadow-2xl scale-[1.01] -translate-y-1' : 'shadow-lg'}">
-	<!-- Gradient border effect -->
-	<div class="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-cyan-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-3xl"></div>
-
-	<!-- Question button -->
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200">
+	<!-- Question Header -->
 	<button
-		onclick={() => onToggle(faq.id)}
-		class="relative w-full p-8 text-left flex items-start justify-between hover:bg-white/50 dark:hover:bg-gray-700/20 transition-all duration-300 group/button"
+		onclick={handleToggle}
+		class="w-full px-6 py-5 text-left flex items-center justify-between hover:bg-gray-50 rounded-t-xl transition-colors duration-200"
+		aria-expanded={isExpanded}
 	>
-		<!-- Question content -->
-		<div class="flex-1 pr-6">
-			<!-- Question number indicator -->
-			<div class="flex items-start gap-4 mb-2">
-				<div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center shadow-lg group/button-hover:scale-110 transition-transform duration-300">
-					<Hash class="w-4 h-4 text-white" />
-				</div>
+		<div class="flex-1 pr-4">
+			<div class="flex items-start gap-3">
+				<!-- Priority Indicator -->
+				{#if faq.priority !== 'NORMAL'}
+					<div class="flex-shrink-0 mt-1">
+						<AlertCircle class={`w-4 h-4 ${
+              faq.priority === 'CRITICAL' ? 'text-red-500' :
+              faq.priority === 'HIGH' ? 'text-orange-500' : 'text-gray-500'
+            }`} />
+					</div>
+				{/if}
 
-				<!-- Question text -->
-				<h3 class="text-xl font-bold text-gray-900 dark:text-gray-100 leading-relaxed group/button-hover:text-blue-600 dark:group/button-hover:text-blue-400 transition-colors duration-300">
-					{faq.question}
-				</h3>
+				<div class="flex-1">
+					<h3 class="text-lg font-semibold text-gray-900 leading-relaxed">
+						{faq.question}
+					</h3>
+
+					<!-- Badges and Metadata -->
+					<div class="mt-3 flex items-center gap-2 flex-wrap">
+						<!-- Category Badge -->
+						<span
+							class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-nexus-primary-100 text-nexus-primary-800"
+							style={faq.category.colorCode ? `background-color: ${faq.category.colorCode}20; color: ${faq.category.colorCode}` : ''}
+						>
+              {#if faq.category.iconClass}
+                <i class={`${faq.category.iconClass} mr-1`}></i>
+              {/if}
+							{faq.category.name}
+            </span>
+
+						<!-- Featured Badge -->
+						{#if faq.isFeatured}
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                <Star class="w-3 h-3" />
+                Featured
+              </span>
+						{/if}
+
+						<!-- Priority Badge (for non-normal priorities) -->
+						{#if faq.priority !== 'NORMAL'}
+              <span class={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityBadge.class}`}>
+                {priorityBadge.text}
+              </span>
+						{/if}
+
+						<!-- Popular Badge -->
+						{#if faq.isPopular}
+              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                <Eye class="w-3 h-3" />
+                Popular
+              </span>
+						{/if}
+					</div>
+
+					<!-- Analytics (if enabled) -->
+					{#if showAnalytics}
+						<div class="mt-2 flex items-center gap-4 text-xs text-gray-500">
+              <span class="flex items-center gap-1">
+                <Eye class="w-3 h-3" />
+								{faq.viewCount} views
+              </span>
+							{#if faq.helpfulVotes > 0 || faq.notHelpfulVotes > 0}
+                <span class="flex items-center gap-1">
+                  <ThumbsUp class="w-3 h-3" />
+									{getHelpfulnessPercentage()}% helpful
+                </span>
+							{/if}
+						</div>
+					{/if}
+				</div>
 			</div>
 		</div>
 
-		<!-- Chevron with rotation animation -->
-		<div class="flex-shrink-0 mt-2">
-			<div class="w-10 h-10 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center group/button-hover:bg-blue-100 dark:group/button-hover:bg-blue-900/30 group/button-hover:scale-110 transition-all duration-300">
+		<!-- Expand/Collapse Icon -->
+		<div class="flex-shrink-0 ml-4">
+			<div class="w-8 h-8 flex items-center justify-center rounded-full bg-nexus-primary-50 text-nexus-primary transition-all duration-200">
 				{#if isExpanded}
-					<ChevronUp class="w-5 h-5 text-gray-600 dark:text-gray-400 group/button-hover:text-blue-600 dark:group/button-hover:text-blue-400 transition-all duration-300 animate-bounce-subtle" />
+					<ChevronUp class="w-4 h-4" />
 				{:else}
-					<ChevronDown class="w-5 h-5 text-gray-600 dark:text-gray-400 group/button-hover:text-blue-600 dark:group/button-hover:text-blue-400 transition-all duration-300" />
+					<ChevronDown class="w-4 h-4" />
 				{/if}
 			</div>
 		</div>
 	</button>
 
-	<!-- Expandable answer section -->
+	<!-- Answer Content -->
 	{#if isExpanded}
-		<div class="px-8 pb-8 border-t border-gray-200/50 dark:border-gray-700/50 animate-fade-in-down">
-			<div class="pt-6">
-				<!-- Answer text with better typography -->
-				<div class="prose prose-lg dark:prose-invert max-w-none mb-6">
-					<p class="text-gray-700 dark:text-gray-300 leading-relaxed text-lg">
-						{faq.answer}
-					</p>
+		<div
+			class="px-6 pb-6 border-t border-gray-100"
+			transition:slide={{ duration: 200 }}
+		>
+			<div class="pt-4 prose prose-sm max-w-none text-gray-700 leading-relaxed">
+				{@html formatAnswer(faq.answer)}
+			</div>
+
+			<!-- SEO Keywords (if available) -->
+			{#if faq.searchKeywords}
+				<div class="mt-4 pt-4 border-t border-gray-100">
+					<div class="flex items-center gap-2 flex-wrap">
+						<span class="text-sm font-medium text-gray-600">Related topics:</span>
+						{#each faq.searchKeywords.split(',').map(k => k.trim()).filter(k => k) as keyword}
+              <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs bg-gray-100 text-gray-600 hover:bg-nexus-primary-50 hover:text-nexus-primary-700 transition-colors duration-200">
+                {keyword}
+              </span>
+						{/each}
+					</div>
 				</div>
+			{/if}
 
-				<!-- Enhanced tags section -->
-				{#if faq.tags.length > 0}
-					<div class="border-t border-gray-200/30 dark:border-gray-700/30 pt-6">
-						<h4 class="text-sm font-semibold text-gray-500 dark:text-gray-400 mb-3 uppercase tracking-wider">
-							Related Topics
-						</h4>
-						<div class="flex flex-wrap gap-2">
-							{#each faq.tags as tag, index}
-								<button
-									onclick={() => {/* Handle tag click if needed */}}
-									class="group/tag inline-flex items-center gap-2 px-4 py-2 text-sm font-medium bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 text-blue-700 dark:text-blue-300 rounded-full border border-blue-200/50 dark:border-blue-700/30 hover:from-blue-100 hover:to-purple-100 dark:hover:from-blue-800/30 dark:hover:to-purple-800/30 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-md hover:scale-105 transition-all duration-300 animate-fade-in-up"
-									style="animation-delay: {index * 100}ms;"
-								>
-									<!-- Tag icon -->
-									<div class="w-2 h-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full group/tag-hover:scale-125 transition-transform duration-300"></div>
-
-									<!-- Tag text -->
-									<span class="group/tag-hover:translate-x-0.5 transition-transform duration-300">
-                    {tag}
-                  </span>
-								</button>
-							{/each}
+			<!-- Helpfulness Voting (if analytics enabled) -->
+			{#if showAnalytics}
+				<div class="mt-4 pt-4 border-t border-gray-100">
+					<div class="flex items-center justify-between">
+						<span class="text-sm font-medium text-gray-600">Was this helpful?</span>
+						<div class="flex items-center gap-2">
+							<button class="flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200">
+								<ThumbsUp class="w-4 h-4" />
+								Yes ({faq.helpfulVotes})
+							</button>
+							<button class="flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200">
+								<ThumbsDown class="w-4 h-4" />
+								No ({faq.notHelpfulVotes})
+							</button>
 						</div>
 					</div>
-				{/if}
+				</div>
+			{/if}
+
+			<!-- Last Updated -->
+			<div class="mt-4 text-xs text-gray-400">
+				Last updated: {new Date(faq.updatedAt).toLocaleDateString()}
 			</div>
 		</div>
 	{/if}
-
-	<!-- Shine effect on hover -->
-	<div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 group-hover:opacity-100 group-hover:animate-shine transition-opacity duration-500 rounded-3xl pointer-events-none"></div>
 </div>
-
-<!-- Custom CSS Animations -->
-<style>
-    @keyframes shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
-    }
-
-    @keyframes shine {
-        0% { transform: translateX(-100%) skewX(-15deg); }
-        100% { transform: translateX(200%) skewX(-15deg); }
-    }
-
-    @keyframes fade-in-up {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes fade-in-down {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    @keyframes bounce-subtle {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-2px); }
-    }
-
-    .animate-shimmer {
-        animation: shimmer 2s infinite;
-    }
-
-    .animate-shine {
-        animation: shine 1.5s ease-out;
-    }
-
-    .animate-fade-in-up {
-        animation: fade-in-up 0.6s ease-out both;
-    }
-
-    .animate-fade-in-down {
-        animation: fade-in-down 0.4s ease-out both;
-    }
-
-    .animate-bounce-subtle {
-        animation: bounce-subtle 2s infinite;
-    }
-</style>

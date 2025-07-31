@@ -1,6 +1,6 @@
-<!-- components/FAQ/EmptyState.svelte -->
+<!-- src/lib/components/FAQ/EmptyState.svelte -->
 <script lang="ts">
-	import { HelpCircle } from 'lucide-svelte';
+	import { Search, RotateCcw, HelpCircle } from 'lucide-svelte';
 
 	interface Props {
 		onClearFilters: () => void;
@@ -9,16 +9,43 @@
 	let { onClearFilters }: Props = $props();
 </script>
 
-<div class="text-center py-16">
-	<HelpCircle class="w-16 h-16 text-gray-400 mx-auto mb-4" />
-	<h3 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No questions found</h3>
-	<p class="text-gray-600 dark:text-gray-400 mb-6">
-		Try adjusting your search terms or browse different categories.
-	</p>
-	<button
-		onclick={onClearFilters}
-		class="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
-	>
-		Show All Questions
-	</button>
+<div class="text-center py-16 px-6">
+	<div class="max-w-md mx-auto">
+		<!-- Icon -->
+		<div class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+			<Search class="w-8 h-8 text-gray-400" />
+		</div>
+
+		<!-- Heading -->
+		<h3 class="text-xl font-semibold text-gray-900 mb-4">
+			No FAQs found
+		</h3>
+
+		<!-- Description -->
+		<p class="text-gray-600 mb-8 leading-relaxed">
+			We couldn't find any FAQs matching your current search criteria. Try adjusting your search terms or clearing the filters.
+		</p>
+
+		<!-- Actions -->
+		<div class="space-y-4">
+			<button
+				onclick={onClearFilters}
+				class="inline-flex items-center gap-2 px-6 py-3 bg-nexus-primary text-white rounded-xl hover:bg-nexus-primary-600 transition-colors duration-200 font-medium"
+			>
+				<RotateCcw class="w-4 h-4" />
+				Clear all filters
+			</button>
+
+			<div class="text-sm text-gray-500">
+				<p>Still need help?</p>
+				<a
+					href="/contact"
+					class="inline-flex items-center gap-1 text-nexus-primary hover:text-nexus-primary-600 transition-colors duration-200 mt-2"
+				>
+					<HelpCircle class="w-4 h-4" />
+					Contact our support team
+				</a>
+			</div>
+		</div>
+	</div>
 </div>

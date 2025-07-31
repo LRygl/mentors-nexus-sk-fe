@@ -1,58 +1,11 @@
 // src/lib/types/faq.ts
+// FAQ-specific types matching your Spring Boot FAQ model
 
-export interface FAQCategory {
-	id: number;
-	uuid: string;
-	name: string;
-	description?: string;
-	slug: string;
-	iconClass?: string;
-	colorCode?: string;
-	displayOrder: number;
-	isActive: boolean;
-	isVisible: boolean;
-	metaDescription?: string;
-	metaKeywords?: string;
-	faqCount?: number;
-	publishedFaqCount?: number;
-	createdAt: string;
-	updatedAt: string;
-	createdBy?: string;
-	updatedBy?: string;
-}
+import type { FAQCategory } from './faqCategory';
 
-export interface FAQ {
-	id: number;
-	uuid: string;
-	question: string;
-	answer: string;
-	category: FAQCategory;
-	status: FAQStatus;
-	displayOrder: number;
-	isPublished: boolean;
-	isFeatured: boolean;
-	searchKeywords?: string;
-	metaDescription?: string;
-	slug: string;
-	viewCount: number;
-	helpfulVotes: number;
-	notHelpfulVotes: number;
-	priority: FAQPriority;
-	createdAt: string;
-	updatedAt: string;
-	createdBy?: string;
-	updatedBy?: string;
-	// Computed properties
-	helpfulnessRatio?: number;
-	isPopular?: boolean;
-	fullUrl?: string;
-	categoryName?: string;
-	categorySlug?: string;
-}
-
+// Enums for FAQ
 export enum FAQStatus {
 	DRAFT = 'DRAFT',
-	REVIEW = 'REVIEW',
 	PUBLISHED = 'PUBLISHED',
 	ARCHIVED = 'ARCHIVED'
 }
@@ -61,119 +14,81 @@ export enum FAQPriority {
 	LOW = 'LOW',
 	NORMAL = 'NORMAL',
 	HIGH = 'HIGH',
-	URGENT = 'URGENT'
+	CRITICAL = 'CRITICAL'
 }
 
-export interface FAQSearchParams {
-	q?: string;
-	category?: string;
-	limit?: number;
-}
-
-export interface FAQAdminFilters {
-	page?: number;
-	size?: number;
-	status?: FAQStatus;
-	categoryUuid?: string;
-	priority?: FAQPriority;
-	search?: string;
-}
-
-export interface FAQCategoryAdminFilters {
-	page?: number;
-	size?: number;
-	isActive?: boolean;
-	search?: string;
-}
-
-export interface FAQStats {
-	totalFAQs: number;
-	publishedFAQs: number;
-	draftFAQs: number;
-	featuredFAQs: number;
-	totalViews: number;
-	totalHelpfulVotes: number;
-	mostViewedFAQs: FAQ[];
-	mostHelpfulFAQs: FAQ[];
-	faqsByCategory: CategoryFAQCount[];
-}
-
-export interface CategoryFAQCount {
-	categoryName: string;
-	categorySlug: string;
-	totalFAQs: number;
-	publishedFAQs: number;
-}
-
-export interface CategoryStats {
-	totalActiveCategories: number;
-	mostPopularCategories: FAQCategory[];
-}
-
-export interface FAQFormData {
+// Direct 1:1 mapping with your Spring Boot FAQ model
+export interface FAQ {
+	id: number;
+	uuid: string;
 	question: string;
 	answer: string;
-	categoryUuid: string;
+	category: FAQCategory; // Note: your backend uses 'category', not 'faqCategory'
+	status: FAQStatus;
+	displayOrder: number;
+	isPublished: boolean;
+	isFeatured: boolean;
+	searchKeywords: string | null;
+	metaDescription: string | null;
+	slug: string | null;
+	viewCount: number;
+	helpfulVotes: number;
+	notHelpfulVotes: number;
+	priority: FAQPriority;
+	createdAt: string; // LocalDateTime from backend as string
+	updatedAt: string; // LocalDateTime from backend as string
+	createdBy: string | null; // UUID as string
+	updatedBy: string | null; // UUID as string
+
+	// Computed fields from your backend methods
+	helpfulnessRatio?: number;
+	isPopular?: boolean;
+	fullUrl?: string;
+	categoryName?: string;
+	categorySlug?: string;
+}
+
+// DTO types for FAQ operations
+export interface CreateFAQDTO {
+	question: string;
+	answer: string;
+	category: {
+		id: number;
+	};
+	status?: FAQStatus;
+	displayOrder?: number;
+	isPublished?: boolean;
+	isFeatured?: boolean;
 	searchKeywords?: string;
 	metaDescription?: string;
-	priority: FAQPriority;
-	isFeatured: boolean;
+	priority?: FAQPriority;
 }
 
-export interface FAQCategoryFormData {
-	name: string;
-	description?: string;
-	iconClass?: string;
-	colorCode?: string;
-	isVisible: boolean;
+export interface UpdateFAQDTO {
+	question?: string;
+	answer?: string;
+	category?: {
+		id: number;
+	};
+	status?: FAQStatus;
+	displayOrder?: number;
+	isPublished?: boolean;
+	isFeatured?: boolean;
+	searchKeywords?: string;
 	metaDescription?: string;
-	metaKeywords?: string;
+	priority?: FAQPriority;
 }
 
-// API Response types
-export interface PaginatedResponse<T> {
-	content: T[];
-	totalElements: number;
-	totalPages: number;
-	size: number;
-	number: number;
-	first: boolean;
-	last: boolean;
-	numberOfElements: number;
+// FAQ-specific response types
+export interface FAQResponse {
+	httpTimestamp: string;
+	httpStatusCode: number;
+	httpStatus: string;
+	httpStatusReason: string;
+	httpStatusMessage: string;
+	httpDeveloperMessage?: string;
+	httpResponseData?: {
+		faq?: FAQ;
+		faqs?: FAQ[];
+	};
 }
-
-export interface APIResponse<T> {
-	data?: T;
-	message?: string;
-	success: boolean;
-	error?: string;
-}
-
-// Status display helpers
-export const FAQStatusLabels: Record<FAQStatus, string> = {
-	[FAQStatus.DRAFT]: 'Draft',
-	[FAQStatus.REVIEW]: 'Under Review',
-	[FAQStatus.PUBLISHED]: 'Published',
-	[FAQStatus.ARCHIVED]: 'Archived'
-};
-
-export const FAQPriorityLabels: Record<FAQPriority, string> = {
-	[FAQPriority.LOW]: 'Low Priority',
-	[FAQPriority.NORMAL]: 'Normal Priority',
-	[FAQPriority.HIGH]: 'High Priority',
-	[FAQPriority.URGENT]: 'Urgent'
-};
-
-export const FAQStatusColors: Record<FAQStatus, string> = {
-	[FAQStatus.DRAFT]: 'bg-gray-100 text-gray-800',
-	[FAQStatus.REVIEW]: 'bg-yellow-100 text-yellow-800',
-	[FAQStatus.PUBLISHED]: 'bg-green-100 text-green-800',
-	[FAQStatus.ARCHIVED]: 'bg-red-100 text-red-800'
-};
-
-export const FAQPriorityColors: Record<FAQPriority, string> = {
-	[FAQPriority.LOW]: 'bg-blue-100 text-blue-800',
-	[FAQPriority.NORMAL]: 'bg-gray-100 text-gray-800',
-	[FAQPriority.HIGH]: 'bg-orange-100 text-orange-800',
-	[FAQPriority.URGENT]: 'bg-red-100 text-red-800'
-};
