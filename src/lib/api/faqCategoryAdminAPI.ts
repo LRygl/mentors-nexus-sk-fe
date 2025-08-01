@@ -2,12 +2,22 @@
 
 import { buildApiUrl } from '$lib/config/api';
 import type { FAQCategory } from '$lib/types/faq';
+import type { PageResponse, PaginationParams } from '$lib/types/pagination';
+import { buildPaginationParams } from '$lib/types/pagination';
 
 /**
- * Admin-specific FAQ Category API endpoints
- * Extends the public API with admin operations (CRUD)
+ * Query parameters specific to FAQ Category endpoints
+ * Extends base pagination params with category-specific filters
  */
+export interface CategoryQueryParams extends PaginationParams {
+	isActive?: boolean;
+	search?: string;
+	isVisible?: boolean;
+}
 
+/**
+ * Request DTOs for FAQ Category operations
+ */
 export interface CreateFAQCategoryRequest {
 	name: string;
 	description?: string;
@@ -25,22 +35,131 @@ export interface UpdateFAQCategoryRequest extends CreateFAQCategoryRequest {
 	// Inherits all fields from create request
 }
 
+/**
+ * Response DTOs for specific operations
+ */
+export interface SlugValidationResponse {
+	isValid: boolean;
+	suggestion?: string;
+}
+
+export interface SlugGenerationResponse {
+	slug: string;
+}
+
+export interface CategoryAnalyticsResponse {
+	totalCategories: number;
+	activeCategories: number;
+	categoriesWithFAQs: number;
+	averageFAQsPerCategory: number;
+	topCategories: FAQCategory[];
+}
+
+/**
+ * Admin-specific FAQ Category API Service
+ * Handles Spring Boot paginated responses using shared pagination types
+ */
 export class FAQCategoryAdminAPIService {
 
 	/**
-	 * Get all FAQ categories (including inactive ones) for admin management
+	 * Build query parameters for category endpoints
 	 */
-	static async getAllCategoriesForAdmin(): Promise<FAQCategory[]> {
-		const response = await fetch(buildApiUrl('/admin/faq-category'), {
+	private static buildCategoryQueryParams(params: CategoryQueryParams): URLSearchParams {
+		const searchParams = buildPaginationParams(params);
+
+		if (params.isActive !== undefined) {
+			searchParams.append('isActive', params.isActive.toString());
+		}
+
+		if (params.search && params.search.trim()) {
+			searchParams.append('search', params.search.trim());
+		}
+
+		if (params.isVisible !== undefined) {
+			searchParams.append('isVisible', params.isVisible.toString());
+		}
+
+		return searchParams;
+	}
+
+	/**
+	 * Get all FAQ categories (simplified - returns content array only)
+	 * Good for dropdowns, simple lists, etc.
+	 */
+	static async getAllCategoriesForAdmin(params: CategoryQueryParams = {}): Promise<FAQCategory[]> {
+		// Set large page size to get all categories by default
+		const queryParams: CategoryQueryParams = {
+			page: 0,
+			size: 1000, // Large enough to get all categories
+			...params
+		};
+
+		const searchParams = this.buildCategoryQueryParams(queryParams);
+		const url = `${buildApiUrl('/admin/faq-category')}?${searchParams.toString()}`;
+
+		console.log('🌐 Making API call to:', url);
+
+		const response = await fetch(url, {
 			method: 'GET',
 			headers: { 'Content-Type': 'application/json' }
 		});
 
 		if (!response.ok) {
+			const errorText = await response.text().catch(() => 'Unknown error');
+			console.error('❌ API Error:', response.status, errorText);
 			throw new Error(`Failed to fetch FAQ categories: ${response.status} ${response.statusText}`);
 		}
 
-		return response.json();
+		const pageResponse: PageResponse<FAQCategory> = await response.json();
+		console.log('✅ Received paginated response:', {
+			totalElements: pageResponse.totalElements,
+			totalPages: pageResponse.totalPages,
+			currentPage: pageResponse.number,
+			contentLength: pageResponse.content.length
+		});
+
+		// Return just the content array
+		return pageResponse.content;
+	}
+
+	/**
+	 * Get paginated FAQ categories (when you need full pagination info)
+	 * Good for data tables with pagination controls
+	 */
+	static async getPaginatedCategories(params: CategoryQueryParams = {}): Promise<PageResponse<FAQCategory>> {
+		const queryParams: CategoryQueryParams = {
+			page: 0,
+			size: 20,
+			...params
+		};
+
+		const searchParams = this.buildCategoryQueryParams(queryParams);
+		const url = `${buildApiUrl('/admin/faq-category')}?${searchParams.toString()}`;
+
+		console.log('🌐 Making paginated API call to:', url);
+
+		const response = await fetch(url, {
+			method: 'GET',
+			headers: { 'Content-Type': 'application/json' }
+		});
+
+		if (!response.ok) {
+			const errorText = await response.text().catch(() => 'Unknown error');
+			console.error('❌ API Error:', response.status, errorText);
+			throw new Error(`Failed to fetch FAQ categories: ${response.status} ${response.statusText}`);
+		}
+
+		const pageResponse: PageResponse<FAQCategory> = await response.json();
+		console.log('✅ Received full paginated response:', {
+			totalElements: pageResponse.totalElements,
+			totalPages: pageResponse.totalPages,
+			currentPage: pageResponse.number,
+			pageSize: pageResponse.size,
+			hasNext: !pageResponse.last,
+			hasPrevious: !pageResponse.first
+		});
+
+		return pageResponse;
 	}
 
 	/**
@@ -151,13 +270,7 @@ export class FAQCategoryAdminAPIService {
 	/**
 	 * Get category analytics (FAQ counts, popular metrics, etc.)
 	 */
-	static async getCategoryAnalytics(): Promise<{
-		totalCategories: number;
-		activeCategories: number;
-		categoriesWithFAQs: number;
-		averageFAQsPerCategory: number;
-		topCategories: FAQCategory[];
-	}> {
+	static async getCategoryAnalytics(): Promise<CategoryAnalyticsResponse> {
 		const response = await fetch(buildApiUrl('/admin/faq-category/analytics'));
 
 		if (!response.ok) {
@@ -170,7 +283,7 @@ export class FAQCategoryAdminAPIService {
 	/**
 	 * Validate slug uniqueness
 	 */
-	static async validateSlug(slug: string, excludeId?: number): Promise<{ isValid: boolean; suggestion?: string }> {
+	static async validateSlug(slug: string, excludeId?: number): Promise<SlugValidationResponse> {
 		const params = new URLSearchParams({ slug });
 		if (excludeId) {
 			params.append('excludeId', excludeId.toString());
@@ -188,7 +301,7 @@ export class FAQCategoryAdminAPIService {
 	/**
 	 * Generate slug from name
 	 */
-	static async generateSlug(name: string): Promise<{ slug: string }> {
+	static async generateSlug(name: string): Promise<SlugGenerationResponse> {
 		const response = await fetch(buildApiUrl('/admin/faq-category/generate-slug'), {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
