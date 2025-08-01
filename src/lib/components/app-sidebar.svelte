@@ -11,6 +11,7 @@
 	import MapIcon from "@lucide/svelte/icons/map";
 	import Settings2Icon from "@lucide/svelte/icons/settings-2";
 	import SquareTerminalIcon from "@lucide/svelte/icons/square-terminal";
+	import { MessageCircleQuestionMark } from "lucide-svelte";
 	// This is sample data.
 	const data = {
 		user: {
@@ -121,6 +122,21 @@
 						title: "Changelog",
 						url: "#",
 					},
+				],
+			},
+			{
+				title: "Support",
+				url: "#",
+				icon: MessageCircleQuestionMark,
+				items: [
+					{
+						title: "FAQ Categories",
+						url: "/admin/faq-categories",
+					},
+					{
+						title: "FAQs",
+						url: "/admin/faq",
+					}
 				],
 			},
 			{

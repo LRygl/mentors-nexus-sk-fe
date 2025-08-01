@@ -12,7 +12,9 @@ export const API_CONFIG = {
 		FAQ_CATEGORY: '/faq-category',
 		USER: '/user',
 		AUTH: '/auth',
-		EVENT: '/event'
+		EVENT: '/event',
+		ADMIN_FAQ: '/admin/faq',
+		ADMIN_FAQ_CATEGORY: '/admin/faq-category',
 		// Add other endpoints as needed
 	},
 	get FULL_BASE_URL() {
