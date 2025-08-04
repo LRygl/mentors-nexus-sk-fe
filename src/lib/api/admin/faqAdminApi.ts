@@ -1,6 +1,7 @@
 import { BaseApiService } from '$lib/api/baseApi';
 import type { PaginatedResult } from '$lib/types';
 import type { FAQ, FAQPaginationParams } from '$lib/types/entities/faq';
+import { API_CONFIG } from '$lib/config/api';
 
 export class FAQAdminApiService extends BaseApiService {
 	private static instance: FAQAdminApiService;
@@ -8,7 +9,7 @@ export class FAQAdminApiService extends BaseApiService {
 
 	private constructor() {
 		// Base URL for FAQ Admin Endpoints
-		super('http://localhost:8080');
+		super(API_CONFIG.BASE_URL);
 	}
 
 	/**
