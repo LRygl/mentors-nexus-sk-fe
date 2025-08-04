@@ -5,6 +5,7 @@ export const API_CONFIG = {
 	BASE_URL: dev
 		? 'http://localhost:8080'
 		: 'http://localhost:8080',
+	PATH: 'api',
 	VERSION: 'v1',
 	ENDPOINTS: {
 		CATEGORY: '/category',
