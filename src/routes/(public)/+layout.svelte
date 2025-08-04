@@ -1,22 +1,12 @@
 <script lang="ts">
 	import MainNav from "$lib/components/main-nav.svelte";
-	import Banner from "$lib/components/banner.svelte";
 	import Footer from "$lib/components/Footer.svelte";
 	import { ModeWatcher } from 'mode-watcher';
 
 
 	let { children } = $props();
 
-	const bannerContent = {
-		visible: false,
-		dismissable: true,
-		heading: 'Test Heading Content',
-		headingSeparator: '*',
-		paragraph: 'Test Paragraph Content',
-		callToAction: false,
-		callToActionLabel: 'Call to Action',
-		callToActionLink: '/admin/ideas'
-	}
+
 </script>
 
 <!-- Fullscreen wrapper for stacking -->
@@ -32,7 +22,6 @@
 	<div class="absolute bottom-0 left-0 w-72 h-72 -z-10 bg-gradient-to-tr from-indigo-400/20 to-cyan-500/20 rounded-full blur-3xl animate-pulse delay-1000"></div>
 
 	<!-- 🌐 Main app content -->
-	<Banner {...bannerContent} />
 	<MainNav />
 	<ModeWatcher />
 

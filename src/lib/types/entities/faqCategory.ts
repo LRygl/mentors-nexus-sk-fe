@@ -15,18 +15,3 @@ export interface FAQCategory extends BaseEntity {
 	faqCount?: number;           // Number of FAQs in this category
 	publishedFaqCount?: number;  // Number of published FAQs
 }
-
-// Request DTOs for FAQ Category
-export interface CreateFAQCategoryRequest {
-	name: string;
-	description?: string;
-	displayOrder?: number;
-	isVisible?: boolean;
-}
-
-export interface UpdateFAQCategoryRequest {
-	name?: string;
-	description?: string;
-	displayOrder?: number;
-	isVisible?: boolean;
-}

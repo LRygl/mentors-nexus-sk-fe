@@ -2,7 +2,6 @@
 	import * as NavigationMenu from "$lib/components/ui/navigation-menu/index.js";
 	import { cn } from "$lib/utils.js";
 	import { navigationMenuTriggerStyle } from "$lib/components/ui/navigation-menu/navigation-menu-trigger.svelte";
-	import LanguageSwitcher from './language-switcher.svelte'
 	import type { HTMLAttributes } from "svelte/elements";
 	import { Button } from "$lib/components/ui/button/index";
 	import { mode, toggleMode } from "mode-watcher";
@@ -13,7 +12,6 @@
 	} from 'lucide-svelte';
 
 	import { onMount } from 'svelte';
-	import { translation } from '$lib/stores/internalization-store';
 	let currentMode = mode.current;
 	$: logoSrc = currentMode === 'dark' ? '/logo-light.png' : '/logo-dark.png';
 
@@ -123,13 +121,13 @@
 				<NavigationMenu.Item>
 					<NavigationMenu.Link>
 						{#snippet child()}
-							<a href="/" class={navigationMenuTriggerStyle()}>{$translation.nav.home}</a>
+							<a href="/" class={navigationMenuTriggerStyle()}>Home</a>
 						{/snippet}
 					</NavigationMenu.Link>
 				</NavigationMenu.Item>
 
 				<NavigationMenu.Item>
-					<NavigationMenu.Trigger>{$translation.nav.courses}</NavigationMenu.Trigger>
+					<NavigationMenu.Trigger>Course</NavigationMenu.Trigger>
 					<NavigationMenu.Content>
 						<ul
 							class="grid gap-2 p-2 md:w-[400px] lg:w-[500px] lg:grid-cols-[.75fr_1fr]"
@@ -172,26 +170,8 @@
 						</ul>
 					</NavigationMenu.Content>
 				</NavigationMenu.Item>
-				<!--
 				<NavigationMenu.Item>
-					<NavigationMenu.Trigger>{$translation.nav.courses}</NavigationMenu.Trigger>
-					<NavigationMenu.Content>
-						<ul
-							class="grid w-[400px] gap-2 p-2 md:w-[500px] md:grid-cols-2 lg:w-[600px]"
-						>
-							{#each components as component, i (i)}
-								{@render ListItem({
-									href: component.href,
-									title: component.title,
-									content: component.description
-								})}
-							{/each}
-						</ul>
-					</NavigationMenu.Content>
-				</NavigationMenu.Item>
--->
-				<NavigationMenu.Item>
-					<NavigationMenu.Trigger>{$translation.nav.about_us}</NavigationMenu.Trigger>
+					<NavigationMenu.Trigger>About Us</NavigationMenu.Trigger>
 					<NavigationMenu.Content>
 						<ul class="grid w-[300px] gap-4 p-2">
 							<li>
@@ -227,7 +207,7 @@
 				<NavigationMenu.Item>
 					<NavigationMenu.Link>
 						{#snippet child()}
-							<a href="/support" class={navigationMenuTriggerStyle()}>{$translation.nav.support}</a>
+							<a href="/support" class={navigationMenuTriggerStyle()}>Support</a>
 						{/snippet}
 					</NavigationMenu.Link>
 				</NavigationMenu.Item>
@@ -235,7 +215,7 @@
 				<NavigationMenu.Item>
 					<NavigationMenu.Link>
 						{#snippet child()}
-							<a href="/admin/users" class={navigationMenuTriggerStyle()}>{$translation.nav.admin}</a>
+							<a href="/admin/users" class={navigationMenuTriggerStyle()}>Admin</a>
 						{/snippet}
 					</NavigationMenu.Link>
 				</NavigationMenu.Item>
@@ -294,11 +274,9 @@
 			<span class="sr-only">Toggle theme</span>
 		</Button>
 
-		<LanguageSwitcher />
-
 		<Button variant="outline">
 			<LogIn class="h-[1.2rem] w-[1.2rem] rotate-0" />
-			<span>{$translation.common.login}</span>
+			<span>Login</span>
 		</Button>
 	</div>
 </nav>

@@ -17,6 +17,7 @@ export abstract class BaseApiService {
 		config?: RequestConfig
 	): Promise<T> {
 		const url = this.buildUrl(endpoint, params);
+		console.log('Calling URL:' + url);
 		const cacheKey = `GET:${url}`;
 
 		// Check cache first

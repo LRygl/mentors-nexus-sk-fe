@@ -1,13 +1,14 @@
 import { BaseApiService } from '$lib/api/baseApi';
 import type { PaginatedResult } from '$lib/types';
-import type { FAQ } from '$lib/types/entities/faq';
+import type { FAQ, FAQPaginationParams } from '$lib/types/entities/faq';
 
 export class FAQAdminApiService extends BaseApiService {
 	private static instance: FAQAdminApiService;
+	private static readonly ENDPOINT = '/api/v1/admin/faq';
 
 	private constructor() {
 		// Base URL for FAQ Admin Endpoints
-		super('/api/v1/admin/faqs');
+		super('http://localhost:8080');
 	}
 
 	/**
@@ -18,7 +19,83 @@ export class FAQAdminApiService extends BaseApiService {
 	 * @returns Promise<PaginatedResult<FAQ>> - Spring Boot Page<FAQ> response
 	 */
 
-	async getAllFAQs(params: FAQSearchParams = {}): Promise<PaginatedResult<FAQ>> {
+	async getFAQsPage(params: FAQPaginationParams = {}): Promise<PaginatedResult<FAQ>> {
+		// Build query parameters object
+		const queryParams: Record<string, any> = {
+			page: params.page ?? 0,
+			size: params.size ?? 20
+		};
 
+		// Add optional filters only if they have values
+		if (params.status) queryParams.status = params.status;
+		if (params.categoryUuid) queryParams.categoryUuid = params.categoryUuid;
+		if (params.priority) queryParams.priority = params.priority;
+		if (params.search?.trim()) queryParams.search = params.search.trim();
+		if (params.sort) queryParams.sort = params.sort;
+		if (params.direction) queryParams.direction = params.direction;
+
+		console.log('FAQ API: Fetching FAQs with params:', queryParams);
+
+		try {
+			// Use the BaseApiService get method with caching enabled
+			// Spring Boot returns Page<FAQ> which matches your PaginatedResult<T> interface
+			const result = await this.get<PaginatedResult<FAQ>>(FAQAdminApiService.ENDPOINT, queryParams, {
+				cache: true,
+				timeout: 10000
+			});
+
+			// Transform date strings to Date objects for FAQ content
+			result.content = result.content.map(faq => this.transformFAQDates(faq));
+
+			console.log(`FAQ API: Loaded ${result.content.length} FAQs (page ${result.page + 1} of ${result.totalPages})`);
+			return result;
+
+		} catch (error) {
+			console.error('FAQ API: Error fetching FAQs:', error);
+			throw error;
+		}
 	}
+
+	/**
+	 * Gets a single FAQ by UUID
+	 */
+	async getFAQById(uuid: string): Promise<FAQ> {
+		console.log('FAQ API: Fetching FAQ with UUID:', uuid);
+
+		try {
+			const faq = await this.get<FAQ>(`${FAQApiService.ENDPOINT}/${uuid}`, undefined, {
+				cache: true,
+				timeout: 5000
+			});
+
+			// Transform date strings to Date objects
+			return this.transformFAQDates(faq);
+
+		} catch (error) {
+			console.error('FAQ API: Error fetching FAQ:', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Transforms date strings from Spring Boot to Date objects
+	 */
+	private transformFAQDates(faq: any): FAQ {
+		return {
+			...faq,
+			createdAt: new Date(faq.createdAt || faq.createdDate),
+			updatedAt: new Date(faq.updatedAt || faq.lastModifiedDate),
+			publishedDate: faq.publishedDate ? new Date(faq.publishedDate) : undefined
+		};
+	}
+
+	/**
+	 * Clear FAQ-related cache entries
+	 */
+	clearFAQCache(): void {
+		this.clearCache(FAQApiService.ENDPOINT);
+	}
+
 }
+
+export const faqAdminApiService = new FAQAdminApiService;

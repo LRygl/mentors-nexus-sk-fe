@@ -1,6 +1,6 @@
 // Frequently asked Questions entity mapped from BE
 
-import type { BaseEntity } from '$lib/types/common';
+import type { BaseEntity, PaginationParams } from '$lib/types/common';
 import type { FAQStatus } from '$lib/types/enums/faqStatus';
 import type { FAQPriority } from '$lib/types/enums/faqPriority';
 import type { FAQCategory } from '$lib/types/entities/faqCategory';
@@ -35,46 +35,10 @@ export interface FAQ extends BaseEntity {
 	categorySlug?: string;
 }
 
-// Request DTOs for FAQ
-export interface CreateFAQRequest {
-	question: string;
-	answer: string;
-	categoryId: string;
+export interface FAQPaginationParams extends PaginationParams {
 	status?: FAQStatus;
-	displayOrder?: number;
-	isPublished?: boolean;
-	isFeatured?: boolean;
-	searchKeywords?: string;
-	metaDescription?: string;
+	categoryUuid?:string;
 	priority?: FAQPriority;
-}
+	search?: string;
 
-export interface UpdateFAQRequest {
-	question?: string;
-	answer?: string;
-	categoryId?: string;
-	status?: FAQStatus;
-	displayOrder?: number;
-	isPublished?: boolean;
-	isFeatured?: boolean;
-	searchKeywords?: string;
-	metaDescription?: string;
-	priority?: FAQPriority;
-}
-
-// Bulk operation DTOs
-export interface BulkUpdateFAQStatusRequest {
-	ids: string[];
-	status: FAQStatus;
-}
-
-export interface BulkDeleteFAQRequest {
-	ids: string[];
-}
-
-export interface ReorderFAQsRequest {
-	faqOrders: Array<{
-		id: string;
-		displayOrder: number;
-	}>;
 }

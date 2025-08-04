@@ -2,7 +2,7 @@ import type { BaseEntity, PaginatedResult, PaginationParams } from '$lib/types/c
 import type { BaseApiService } from '$lib/api/baseApi';
 import { untrack } from 'svelte';
 
-export abstract class BaseStore<
+export abstract class BaseStoreSvelte<
 	TEntity extends BaseEntity = BaseEntity,
 	TApiService extends BaseApiService = BaseApiService
 > {
