@@ -1,6 +1,6 @@
 <!-- src/lib/components/FAQ/FAQCard.svelte -->
 <script lang="ts">
-	import type { FAQ } from '$lib/types/faq';
+	import type { FAQ } from '$lib/types/entities/faq';
 	import { ChevronDown, ThumbsUp, ThumbsDown, Eye, Star } from 'lucide-svelte';
 	import { faqActions } from '$lib/stores/faq-store';
 

@@ -1,4 +1,4 @@
-import type { BreadcrumbItem, PageMap, PageInfo} from '$lib/types/breadcumb';
+import type { BreadcrumbItem, PageMap, PageInfo} from '$lib/types/entities/breadcumb';
 
 export const PAGE_MAP: PageMap = {
 	'/': { title: 'Home' },

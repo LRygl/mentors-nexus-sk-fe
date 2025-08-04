@@ -13,20 +13,9 @@ async function reloadLessons() { await lessonStore.load(true) }
 
 </script>
 
-<DataTableAsyncWrapper
-	store={$lessonStore}
-	errorKey="errors.loading_lessons"
-	loadingKey="loading.lessons"
-	onRetry={loadLessons}
->
-
-	{#snippet children()}
 		<DataTable
 			columns={columns}
 			data={$lessonStore.data}
 			loading={$lessonStore.loading}
 			loadTableData={reloadLessons}
 		/>
-	{/snippet}
-
-</DataTableAsyncWrapper>

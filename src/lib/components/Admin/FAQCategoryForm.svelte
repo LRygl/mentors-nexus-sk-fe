@@ -1,7 +1,7 @@
 <!-- src/lib/components/admin/FAQCategoryForm.svelte -->
 <script lang="ts">
 	import { faqCategoryAdminStore } from '$lib/stores/faqCategoryAdminStore';
-	import type { FAQCategory } from '$lib/types/faq';
+	import type { FAQCategory } from '$lib/types/entities/faq';
 	import type { CreateFAQCategoryRequest, UpdateFAQCategoryRequest } from '$lib/api/faqCategoryAdminAPI';
 	import * as Icon from 'lucide-svelte';
 

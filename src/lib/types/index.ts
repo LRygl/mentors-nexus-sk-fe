@@ -1,10 +1,27 @@
-// lib/types/index.ts - Global/shared types
+/**
+ * Central type exports - keep it simple!
+ *
+*/
 
-// Entity types that might be used across multiple components
-export type EntityType =
-	'user' |
-	'category' |
-	'lesson' |
-	'invoice' |
-	'course'
-	;
+
+// Common base types
+export type {
+	BaseEntity,
+	PaginationParams,
+	PaginatedResult,
+	ApiError,
+	RequestConfig
+} from './common';
+
+export {
+	FAQStatus,
+	getFAQStatusLabel,
+	getFAQStatusColor
+} from './enums/faqStatus';
+
+export {
+	FAQPriority,
+	getFAQPriorityLabel,
+	getFAQPriorityColor
+} from './enums/faqPriority';
+
