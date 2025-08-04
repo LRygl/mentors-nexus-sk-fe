@@ -1,10 +1,13 @@
 import type { RequestConfig } from '$lib/types/common';
+import { API_CONFIG } from '$lib/config/api';
 
 export abstract class BaseApiService {
 	protected readonly baseUrl: string;
 	private readonly defaultTimeout = 30000;
 	private readonly defaultRetries = 3;
 	private cache = new Map<string, { data: any; timestamp: number; ttl: number}>();
+
+	private readonly API_PATH = API_CONFIG.PATH + "/" + API_CONFIG.VERSION;
 
 	constructor(baseUrl: string) {
 		this.baseUrl = baseUrl;
@@ -82,7 +85,7 @@ export abstract class BaseApiService {
 	}
 
 	private buildUrl(endpoint: string, params?: Record<string, any>): string {
-		const url = new URL(endpoint, this.baseUrl);
+		const url = new URL(this.API_PATH + endpoint, this.baseUrl);
 
 		if (params) {
 			Object.entries(params).forEach(([key, value]) => {

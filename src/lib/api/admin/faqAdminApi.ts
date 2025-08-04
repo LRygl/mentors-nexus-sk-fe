@@ -5,10 +5,9 @@ import { API_CONFIG } from '$lib/config/api';
 
 export class FAQAdminApiService extends BaseApiService {
 	private static instance: FAQAdminApiService;
-	private static readonly ENDPOINT = '/api/v1/admin/faq';
+	private static readonly ENDPOINT = API_CONFIG.ENDPOINTS.ADMIN.ADMIN_FAQ;
 
-	private constructor() {
-		// Base URL for FAQ Admin Endpoints
+	constructor() {
 		super(API_CONFIG.BASE_URL);
 	}
 
@@ -64,7 +63,7 @@ export class FAQAdminApiService extends BaseApiService {
 		console.log('FAQ API: Fetching FAQ with UUID:', uuid);
 
 		try {
-			const faq = await this.get<FAQ>(`${FAQApiService.ENDPOINT}/${uuid}`, undefined, {
+			const faq = await this.get<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}`, undefined, {
 				cache: true,
 				timeout: 5000
 			});
@@ -94,7 +93,7 @@ export class FAQAdminApiService extends BaseApiService {
 	 * Clear FAQ-related cache entries
 	 */
 	clearFAQCache(): void {
-		this.clearCache(FAQApiService.ENDPOINT);
+		this.clearCache(FAQAdminApiService.ENDPOINT);
 	}
 
 }
