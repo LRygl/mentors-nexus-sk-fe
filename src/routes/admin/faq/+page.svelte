@@ -2,19 +2,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { faqStore } from '$lib/stores/defaults/faqStore.svelte';
-	import { FAQStatus, FAQPriority, getFAQStatusLabel, getFAQPriorityLabel, getFAQStatusIcon } from '$lib/types';
+	import { getFAQStatusLabel, getFAQPriorityLabel, getFQAPriorityStyle, getFAQStatusStyle } from '$lib/types';
 	import { formatDateTime } from '$lib/utils/dateTimeFormat';
-	import {
-		Search, RotateCcw, Eye, Plus, MoreHorizontal, Filter, X, ChevronDown,
-		TrendingUp, Users, Clock, AlertCircle, CheckCircle, Archive,
-		Star, MessageSquare, BarChart3, Calendar, Settings, Download,
-		Grid3X3, List, SortAsc, SortDesc, Bookmark, Tag, History, Share2, FilePen, Trash2, Edit3
-	} from 'lucide-svelte';
-	import { getFAQStatusStyle } from '$lib/types/enums/faqStatus';
-	import { getFQAPriorityStyle } from '$lib/types/enums/faqPriority';
-	import  ActionDropdown  from '$lib/components/ui/ActionDropdown.svelte';
+	import {Eye, Plus, X, Clock, AlertCircle, Archive, Settings, Download	} from 'lucide-svelte';
+	import ActionDropdown from '$lib/components/ui/ActionDropdown.svelte';
 	import { goto } from '$app/navigation';
-	import type { FAQ } from '$lib/types/entities/faq';
+	import type { FAQ } from '$lib/types';
 	import { getFAQActions } from './faqActions';
 
 	// View State
@@ -38,9 +31,7 @@
 		await faqStore.loadFAQs();
 	});
 
-
 	// Dropdown //
-
 	// Action handlers for the dropdown
 	function handleFAQAction(event: { actionId: string; itemId: string }) {
 		const { actionId, itemId } = event;
@@ -121,9 +112,6 @@
 		openDropdownId = null;
 	}
 
-
-
-
 	async function refreshData() {
 		await faqStore.refresh();
 	}
@@ -156,7 +144,6 @@
 
 </script>
 
-
 <!-- Main Container -->
 <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
 	<div class="max-w-8xl mx-auto p-6">
@@ -174,22 +161,22 @@
 					<!-- Unified Button Group - All Three Buttons -->
 					<div class="inline-flex items-center bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
 						<button
-							onclick={() => console.log('Export data')}
 							class="flex items-center gap-2 px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors border-r border-slate-200 text-sm font-medium"
+							onclick={() => console.log('Export data')}
 						>
 							<Download class="w-4 h-4" />
 							Export
 						</button>
 						<button
-							onclick={() => console.log('Settings')}
 							class="flex items-center gap-2 px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors border-r border-slate-200 text-sm font-medium"
+							onclick={() => console.log('Settings')}
 						>
 							<Settings class="w-4 h-4" />
 							Settings
 						</button>
 						<button
-							onclick={() => console.log('Create FAQ')}
 							class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 text-sm font-medium"
+							onclick={() => console.log('Create FAQ')}
 						>
 							<Plus class="w-4 h-4" />
 							Create FAQ
@@ -223,7 +210,8 @@
 
 					<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-12">
 						<div class="text-center">
-							<div class="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
+							<div
+								class="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
 							<p class="text-slate-600">Loading your FAQs...</p>
 						</div>
 					</div>
@@ -232,7 +220,7 @@
 
 					<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-12">
 						<div class="text-center max-w-md mx-auto">
-								FAQs Are empty - Create one
+							FAQs Are empty - Create one
 						</div>
 					</div>
 
@@ -305,185 +293,98 @@
 							</div>
 						</div>
 
-							<!-- List View -->
-							<div class="divide-y divide-slate-200 overflow-visible relative">
-								<!-- Replace your existing FAQ list item with this enhanced version -->
-								{#each faqStore.data as faq, index (faq.uuid)}
-									<button
-										type="button"
-										class="w-full p-6 hover:bg-slate-50 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset"
-										onclick={() => handleRowClick(faq.id)}
-									>
-										<div class="flex items-start gap-4">
-											<!-- Checkbox -->
-											<div
-												class="flex items-center mt-1"
+						<!-- List View -->
+						<div class="divide-y divide-slate-200 overflow-visible relative">
+							<!-- Replace your existing FAQ list item with this enhanced version -->
+							{#each faqStore.data as faq, index (faq.uuid)}
+								<button
+									type="button"
+									class="w-full p-6 hover:bg-slate-50 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset"
+									onclick={() => handleRowClick(faq.id)}
+								>
+									<div class="flex items-start gap-4">
+										<!-- Checkbox -->
+										<div
+											class="flex items-center mt-1"
+											onclick={(e) => e.stopPropagation()}
+											role="none"
+										>
+											<input
+												type="checkbox"
+												checked={selectedFAQs.has(faq.uuid)}
+												onchange={() => toggleSelectFAQ(faq.uuid)}
 												onclick={(e) => e.stopPropagation()}
-												role="none"
-											>
-												<input
-													type="checkbox"
-													checked={selectedFAQs.has(faq.uuid)}
-													onchange={() => toggleSelectFAQ(faq.uuid)}
-													onclick={(e) => e.stopPropagation()}
-													class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
-													aria-label={`Select FAQ: ${faq.question}`}
-												/>
-											</div>
+												class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+												aria-label={`Select FAQ: ${faq.question}`}
+											/>
+										</div>
 
-											<div class="flex-1 min-w-0">
-												<div class="flex items-start justify-between gap-4 mb-3">
-													<div class="flex-1">
-														<h3 class="text-lg font-medium text-slate-900 mb-1 hover:text-indigo-600 transition-colors">
-															{faq.question}
-														</h3>
-														<p class="text-sm text-slate-600 line-clamp-2">
-															{faq.answer}
-														</p>
-													</div>
-
-													<!-- Reusable Action Dropdown Component -->
-													<div onclick={(e) => e.stopPropagation()} role="none">
-														<ActionDropdown
-															bind:this={dropdownRefs[faq.uuid]}
-															itemId={faq.uuid}
-															itemTitle={faq.question}
-															actions={getFAQActionsConfig(faq)}
-															buttonVariant="outline"
-															buttonSize="sm"
-															dropdownWidth="w-64"
-															position="right"
-															onaction={handleFAQAction}
-															onopen={handleDropdownOpen}
-															onclose={handleDropdownClose}
-														/>
-													</div>
+										<div class="flex-1 min-w-0">
+											<div class="flex items-start justify-between gap-4 mb-3">
+												<div class="flex-1">
+													<h3 class="text-lg font-medium text-slate-900 mb-1 hover:text-indigo-600 transition-colors">
+														{faq.question}
+													</h3>
+													<p class="text-sm text-slate-600 line-clamp-2">
+														{faq.answer}
+													</p>
 												</div>
 
-												<!-- FAQ metadata (keep your existing code) -->
-												<div class="flex items-center justify-between">
-													<div class="flex items-center gap-4">
-						<span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-sm border {getFAQStatusStyle(faq.status)}">
+												<!-- Reusable Action Dropdown Component -->
+												<div onclick={(e) => e.stopPropagation()} role="none">
+													<ActionDropdown
+														bind:this={dropdownRefs[faq.uuid]}
+														itemId={faq.uuid}
+														itemTitle={faq.question}
+														actions={getFAQActionsConfig(faq)}
+														buttonVariant="outline"
+														buttonSize="sm"
+														dropdownWidth="w-64"
+														position="right"
+														onaction={handleFAQAction}
+														onopen={handleDropdownOpen}
+														onclose={handleDropdownClose}
+													/>
+												</div>
+											</div>
+
+											<!-- FAQ metadata (keep your existing code) -->
+											<div class="flex items-center justify-between">
+												<div class="flex items-center gap-4">
+						<span
+							class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-sm border {getFAQStatusStyle(faq.status)}">
 							{getFAQStatusLabel(faq.status)}
 						</span>
-														<span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-sm border {getFQAPriorityStyle(faq.priority)}">
+													<span
+														class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-sm border {getFQAPriorityStyle(faq.priority)}">
 							{getFAQPriorityLabel(faq.priority)}
 						</span>
-														{#if faq.category?.name}
+													{#if faq.category?.name}
 							<span class="inline-flex items-center px-2 py-1 text-xs bg-slate-100 text-slate-700 rounded-sm">
 								{faq.category.name}
 							</span>
-														{/if}
-													</div>
+													{/if}
+												</div>
 
-													<div class="flex items-center gap-4 text-sm text-slate-500">
-														<div class="flex items-center gap-1">
-															<Eye class="w-4 h-4" />
-															{faq.viewCount.toLocaleString()}
-														</div>
-														<div class="flex items-center gap-1">
-															<Clock class="w-4 h-4" />
-															<time>{formatDateTime(faq.createdAt)}</time>
-														</div>
+												<div class="flex items-center gap-4 text-sm text-slate-500">
+													<div class="flex items-center gap-1">
+														<Eye class="w-4 h-4" />
+														{faq.viewCount.toLocaleString()}
+													</div>
+													<div class="flex items-center gap-1">
+														<Clock class="w-4 h-4" />
+														<time>{formatDateTime(faq.createdAt)}</time>
 													</div>
 												</div>
 											</div>
 										</div>
-									</button>
-								{/each}
-							</div>
+									</div>
+								</button>
+							{/each}
+						</div>
 					</div>
 				{/if}
 			</div>
 		</div>
 	</div>
 </div>
-
-<!-- Add this to your <style> section -->
-<style>
-    /* Modern dropdown animations */
-    .dropdown-container [role="menu"] {
-        animation: modernDropdownIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        transform-origin: top right;
-    }
-
-    @keyframes modernDropdownIn {
-        0% {
-            opacity: 0;
-            transform: scale(0.92) translateY(-12px) translateX(4px);
-            filter: blur(4px);
-        }
-        100% {
-            opacity: 1;
-            transform: scale(1) translateY(0) translateX(0);
-            filter: blur(0);
-        }
-    }
-
-    /* Enhanced button interactions */
-    .dropdown-container button[role="menuitem"] {
-        transform: translateX(0);
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .dropdown-container button[role="menuitem"]:hover {
-        transform: translateX(4px);
-    }
-
-    .dropdown-container button[role="menuitem"]:active {
-        transform: translateX(2px) scale(0.98);
-    }
-
-    /* Icon container animations */
-    .dropdown-container button[role="menuitem"] > div:first-of-type {
-        transform: scale(1) rotate(0deg);
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .dropdown-container button[role="menuitem"]:hover > div:first-of-type {
-        transform: scale(1.05) rotate(2deg);
-    }
-
-    /* Focus improvements */
-    .dropdown-container button[role="menuitem"]:focus {
-        box-shadow: inset 3px 0 0 currentColor;
-        outline: none;
-    }
-
-    /* Backdrop blur effect */
-    .dropdown-container [role="menu"] {
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-    }
-
-    /* Ensure dropdown appears above everything */
-    .dropdown-container {
-        z-index: 50;
-    }
-
-    /* Prevent text selection in dropdown */
-    .dropdown-container [role="menu"] {
-        user-select: none;
-        -webkit-user-select: none;
-    }
-
-    /* Smooth color transitions */
-    .dropdown-container button[role="menuitem"] * {
-        transition: color 0.2s ease, background-color 0.2s ease;
-    }
-
-    /* Header gradient animation */
-    .dropdown-container [role="menu"] > div:first-child {
-        background: linear-gradient(135deg, rgb(248 250 252) 0%, rgb(241 245 249) 100%);
-        transition: background 0.3s ease;
-    }
-
-    /* Responsive adjustments */
-    @media (max-width: 640px) {
-        .dropdown-container [role="menu"] {
-            right: -1rem;
-            left: -1rem;
-            width: auto;
-        }
-    }
-</style>

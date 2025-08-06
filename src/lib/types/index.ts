@@ -13,6 +13,10 @@ export type {
 	RequestConfig
 } from './common';
 
+export type {
+	FAQ
+} from './entities/faq'
+
 export {
 	FAQStatus,
 	getFAQStatusLabel,
