@@ -24,7 +24,7 @@ export function formatDate(dateString: Date | string): string {
 		return 'Invalid Date';
 	}
 
-	return date.toLocaleDateString('en-US', {
+	return date.toLocaleDateString('cs_CZ', {
 		year: 'numeric',
 		month: 'short',
 		day: 'numeric'
@@ -38,10 +38,10 @@ export function formatTime(dateString: Date | string): string {
 		return 'Invalid Time';
 	}
 
-	return date.toLocaleTimeString('en-US', {
-		hour: 'numeric',
+	return date.toLocaleTimeString('cs_CZ', {
+		hour: '2-digit',
 		minute: '2-digit',
-		hour12: true
+		hour12: false
 	});
 }
 

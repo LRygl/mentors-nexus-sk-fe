@@ -20,11 +20,11 @@ export const FAQ_PRIORITY_WEIGHTS: Record<FAQPriority, number> = {
 	[FAQPriority.URGENT]: 4
 };
 
-export const FAQ_PRIORITY_COLORS: Record<FAQPriority, string> = {
-	[FAQPriority.LOW]: '#28a745',
-	[FAQPriority.NORMAL]: '#6c757d',
-	[FAQPriority.HIGH]: '#fd7e14',
-	[FAQPriority.URGENT]: '#dc3545'
+export const FAQ_PRIORITY_STYLE: Record<FAQPriority, string> = {
+	[FAQPriority.LOW]: 'text-green-600 bg-green-50 border-green-200',
+	[FAQPriority.NORMAL]: 'text-blue-600 bg-blue-50 border-blue-200',
+	[FAQPriority.HIGH]: 'text-orange-600 bg-orange-50 border-orange-200',
+	[FAQPriority.URGENT]: 'text-red-600 bg-red-50 border-red-200'
 };
 
 export function getFAQPriorityLabel(priority: FAQPriority): string {
@@ -35,8 +35,8 @@ export function getFAQPriorityWeight(priority: FAQPriority): number {
 	return FAQ_PRIORITY_WEIGHTS[priority] || 0;
 }
 
-export function getFAQPriorityColor(priority: FAQPriority): string {
-	return FAQ_PRIORITY_COLORS[priority] || '#666';
+export function getFQAPriorityStyle(priority: FAQPriority): string {
+	return FAQ_PRIORITY_STYLE[priority] || 'text-slate-600 bg-slate-50 border-slate-200';
 }
 
 // Sort priorities by weight (urgent first)

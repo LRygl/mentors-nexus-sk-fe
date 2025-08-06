@@ -100,7 +100,7 @@ export abstract class BaseStoreSvelte<
 			const result = await this.fetchPage(params);
 
 			this._data = result.content;
-			this._currentPage = result.page;
+			this._currentPage = result.number;
 			this._pageSize = result.size;
 			this._totalElements = result.totalElements;
 			this._totalPages = result.totalPages;

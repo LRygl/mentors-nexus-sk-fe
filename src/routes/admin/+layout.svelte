@@ -1,7 +1,7 @@
 <script lang="ts">
 
  export const reset = true;
-
+ import "../../app.css";
  import * as Sidebar from "$lib/components/ui/sidebar/index"
  import AppSidebar from "$lib/components/app-sidebar.svelte";
  import { Separator } from "$lib/components/ui/separator/index"
@@ -28,3 +28,7 @@
 		</main>
 	</Sidebar.Inset>
 </Sidebar.Provider>
+
+<style>
+	@reference "tailwindcss";
+</style>

@@ -16,12 +16,26 @@ export type {
 export {
 	FAQStatus,
 	getFAQStatusLabel,
-	getFAQStatusColor
+	getFAQStatusStyle,
+	getFAQStatusIcon,
 } from './enums/faqStatus';
 
 export {
 	FAQPriority,
 	getFAQPriorityLabel,
-	getFAQPriorityColor
+	getFQAPriorityStyle
 } from './enums/faqPriority';
 
+export {
+	ActionType,
+	getActionLabel,
+	getActionStyle,
+} from './enums/actionType'
+
+export type {
+	ActionItem,
+	ActionGroup,
+	ActionDropdownProps,
+	ActionEvent,
+	DropdownEvent
+} from './ui/actionDropdown'

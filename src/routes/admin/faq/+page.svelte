@@ -2,179 +2,160 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { faqStore } from '$lib/stores/defaults/faqStore.svelte';
-	import { FAQStatus, FAQPriority, getFAQStatusLabel, getFAQPriorityLabel } from '$lib/types';
+	import { FAQStatus, FAQPriority, getFAQStatusLabel, getFAQPriorityLabel, getFAQStatusIcon } from '$lib/types';
 	import { formatDateTime } from '$lib/utils/dateTimeFormat';
-
-	// Lucide Icons
 	import {
 		Search, RotateCcw, Eye, Plus, MoreHorizontal, Filter, X, ChevronDown,
 		TrendingUp, Users, Clock, AlertCircle, CheckCircle, Archive,
 		Star, MessageSquare, BarChart3, Calendar, Settings, Download,
-		Grid3X3, List, SortAsc, SortDesc, Bookmark, Tag
+		Grid3X3, List, SortAsc, SortDesc, Bookmark, Tag, History, Share2, FilePen, Trash2, Edit3
 	} from 'lucide-svelte';
-
-	// Import the Analytics Dashboard component
-
-	// Import custom checkbox component
-	import CustomCheckbox from '$lib/components/ui/CustomCheckbox.svelte';
-	import AnalyticsCard from '$lib/components/Analytics/AnalyticsCard.svelte';
+	import { getFAQStatusStyle } from '$lib/types/enums/faqStatus';
+	import { getFQAPriorityStyle } from '$lib/types/enums/faqPriority';
+	import  ActionDropdown  from '$lib/components/ui/ActionDropdown.svelte';
+	import { goto } from '$app/navigation';
+	import type { FAQ } from '$lib/types/entities/faq';
+	import { getFAQActions } from './faqActions';
 
 	// View State
-	let viewMode = $state<'grid' | 'list'>('list');
-	let sortBy = $state<'created' | 'views' | 'priority' | 'updated'>('created');
-	let sortOrder = $state<'asc' | 'desc'>('desc');
 	let selectedFAQs = $state<Set<string>>(new Set());
-	let showFilters = $state(false);
-	let selectedCategory = $state('');
 
-	// Filters
-	let searchInput = $state('');
-	let statusFilter = $state('');
-	let priorityFilter = $state('');
-	let dateRange = $state('');
+	// Dropdown state
+	let openDropdownId = $state<string | null>(null);
 
-	// Bulk actions
-	let showBulkActions = $state(true);
+	// References to dropdown components for external control
+	let dropdownRefs: { [key: string]: ActionDropdown } = {};
 
 	// Derived states
-	const hasActiveFilters = $derived(searchInput || statusFilter || priorityFilter || dateRange || selectedCategory);
-	const hasSelectedFAQs = $derived(selectedFAQs.size > 0);
-	const isAllSelected = $derived(faqStore.data.length > 0 && selectedFAQs.size === faqStore.data.length);
+	const hasData = $derived(faqStore.data.length > 0);
+	const isAllSelected = $derived(hasData && selectedFAQs.size === faqStore.data.length);
 	const isPartiallySelected = $derived(selectedFAQs.size > 0 && selectedFAQs.size < faqStore.data.length);
-
-	// Mock analytics data
-	const analytics = {
-		totalFAQs: 247,
-		publishedFAQs: 198,
-		draftFAQs: 32,
-		archivedFAQs: 17,
-		totalViews: 15420,
-		avgViews: 62,
-		todayViews: 342,
-		topCategories: ['Product', 'Billing', 'Support', 'Technical'],
-		recentActivity: [
-			{ action: 'Created', item: 'How to reset password?', time: '2 hours ago' },
-			{ action: 'Updated', item: 'Billing FAQ updated', time: '4 hours ago' },
-			{ action: 'Published', item: 'New product features', time: '6 hours ago' }
-		]
-	};
+	const selectedCount = $derived(selectedFAQs.size);
+	const hasSelection = $derived(selectedCount > 0);
 
 	// Load data
 	onMount(async () => {
 		await faqStore.loadFAQs();
 	});
 
-	// Actions
-	async function handleSearch() {
-		await faqStore.setSearch(searchInput);
-	}
 
-	async function handleSort(field: typeof sortBy) {
-		if (sortBy === field) {
-			sortOrder = sortOrder === 'asc' ? 'desc' : 'asc';
-		} else {
-			sortBy = field;
-			sortOrder = 'desc';
+	// Dropdown //
+
+	// Action handlers for the dropdown
+	function handleFAQAction(event: { actionId: string; itemId: string }) {
+		const { actionId, itemId } = event;
+		const faq = faqStore.data.find(f => f.uuid === itemId);
+
+		if (!faq) {
+			console.error('FAQ not found:', itemId);
+			return;
 		}
-		// Apply sorting logic here
+
+		switch (actionId) {
+			case 'view':
+				goto(`/admin/faq/${faq.id}`);
+				break;
+			case 'edit':
+				goto(`/admin/faq/${faq.id}/edit`);
+				break;
+			case 'duplicate':
+				console.log('Duplicate FAQ:', faq.question);
+				// TODO: Implement duplication
+				break;
+			case 'share':
+				if (navigator.clipboard) {
+					navigator.clipboard.writeText(`${window.location.origin}/faq/${faq.slug || faq.id}`);
+					// TODO: Show success toast
+				}
+				break;
+			case 'history':
+				goto(`/admin/faq/${faq.id}/history`);
+				break;
+			case 'export':
+				console.log('Export FAQ:', faq.question);
+				// TODO: Implement export
+				break;
+			case 'archive':
+				if (confirm(`Are you sure you want to archive "${faq.question}"?`)) {
+					console.log('Archive FAQ:', faq.question);
+					// TODO: Call API to archive
+				}
+				break;
+			case 'delete':
+				if (confirm(`Are you sure you want to permanently delete "${faq.question}"?`)) {
+					console.log('Delete FAQ:', faq.question);
+					// TODO: Call API to delete
+				}
+				break;
+			default:
+				console.warn('Unknown action:', actionId);
+		}
 	}
 
-	async function handleStatusFilter() {
-		const status = statusFilter === '' ? undefined : statusFilter as FAQStatus;
-		await faqStore.setStatus(status);
+	// Handle dropdown open/close events
+	function handleDropdownOpen(event: { itemId: string }) {
+		const { itemId } = event;
+		// Close all other dropdowns when one opens
+		Object.keys(dropdownRefs).forEach(key => {
+			if (key !== itemId && dropdownRefs[key]) {
+				dropdownRefs[key].close();
+			}
+		});
 	}
 
-	async function handlePriorityFilter() {
-		const priority = priorityFilter === '' ? undefined : priorityFilter as FAQPriority;
-		await faqStore.setPriority(priority);
+	function handleDropdownClose(event: { itemId: string }) {
+		console.log('Dropdown closed for:', event.itemId);
 	}
 
-	async function handlePageChange(page: number) {
-		await faqStore.gotoPage(page);
+	// Get actions configuration for each FAQ
+	function getFAQActionsConfig(faq: FAQ) {
+		// You can customize permissions based on FAQ properties
+		const canEdit = faq.status !== 'ARCHIVED';
+		const canDelete = faq.status === 'DRAFT';
+
+		return getFAQActions(canEdit, canDelete);
 	}
 
-	async function handlePageSizeChange(event: Event) {
-		const target = event.target as HTMLSelectElement;
-		const size = parseInt(target.value);
-		await faqStore.changePageSize(size);
+	// Close Dropdown
+	function closeDropdown() {
+		openDropdownId = null;
 	}
 
-	async function resetAllFilters() {
-		searchInput = '';
-		statusFilter = '';
-		priorityFilter = '';
-		dateRange = '';
-		selectedCategory = '';
-		await faqStore.resetFilters();
-	}
+
+
 
 	async function refreshData() {
 		await faqStore.refresh();
 	}
 
-	// Selection handlers
+	// Selection handlers for checkbox handling
 	function toggleSelectAll() {
 		if (isAllSelected) {
-			selectedFAQs.clear();
+			selectedFAQs = new Set();
 		} else {
 			selectedFAQs = new Set(faqStore.data.map(faq => faq.uuid));
 		}
 	}
 
 	function toggleSelectFAQ(uuid: string) {
-		if (selectedFAQs.has(uuid)) {
-			selectedFAQs.delete(uuid);
+		const newSelection = new Set(selectedFAQs);
+		if (newSelection.has(uuid)) {
+			newSelection.delete(uuid);
 		} else {
-			selectedFAQs.add(uuid);
+			newSelection.add(uuid);
 		}
-		selectedFAQs = selectedFAQs; // Trigger reactivity
+
+		selectedFAQs = newSelection;
 	}
 
-	// Bulk actions
-	async function bulkDelete() {
-		console.log('Bulk delete:', Array.from(selectedFAQs));
-		selectedFAQs.clear();
+	// Action Menu Handling
+	function handleRowClick(faqId: string) {
+		console.log('Navigating to FAQ:', faqId); // Debug log
+		goto(`/admin/faq/${faqId}`);
 	}
 
-	async function bulkPublish() {
-		console.log('Bulk publish:', Array.from(selectedFAQs));
-		selectedFAQs.clear();
-	}
-
-	async function bulkArchive() {
-		console.log('Bulk archive:', Array.from(selectedFAQs));
-		selectedFAQs.clear();
-	}
-
-	// Utility functions
-	function getStatusColor(status: FAQStatus) {
-		const colors = {
-			[FAQStatus.PUBLISHED]: 'text-emerald-600 bg-emerald-50 border-emerald-200',
-			[FAQStatus.DRAFT]: 'text-amber-600 bg-amber-50 border-amber-200',
-			[FAQStatus.ARCHIVED]: 'text-slate-600 bg-slate-50 border-slate-200'
-		};
-		return colors[status] || 'text-slate-600 bg-slate-50 border-slate-200';
-	}
-
-	function getPriorityColor(priority: FAQPriority) {
-		const colors = {
-			[FAQPriority.URGENT]: 'text-red-600 bg-red-50 border-red-200',
-			[FAQPriority.HIGH]: 'text-orange-600 bg-orange-50 border-orange-200',
-			[FAQPriority.NORMAL]: 'text-blue-600 bg-blue-50 border-blue-200',
-			[FAQPriority.LOW]: 'text-green-600 bg-green-50 border-green-200'
-		};
-		return colors[priority] || 'text-slate-600 bg-slate-50 border-slate-200';
-	}
-
-	function getStatusIcon(status: FAQStatus) {
-		const icons = {
-			[FAQStatus.PUBLISHED]: CheckCircle,
-			[FAQStatus.DRAFT]: Clock,
-			[FAQStatus.ARCHIVED]: Archive
-		};
-		return icons[status] || AlertCircle;
-	}
 </script>
+
 
 <!-- Main Container -->
 <div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
@@ -218,329 +199,12 @@
 			</div>
 		</div>
 
+
 		<!-- Main Content Area -->
 		<div class="grid grid-cols-1 gap-6">
 
 			<!-- Main Content -->
 			<div class="col-span-1">
-				<AnalyticsCard/>
-
-
-
-				<!-- Control Bar -->
-				<div class="bg-white rounded-2xl shadow-sm border border-slate-200 mb-6">
-					<div class="p-6 border-b border-slate-200">
-						<div class="flex flex-col gap-6">
-
-
-
-							<!-- Primary Search Row -->
-							<div class="flex flex-col lg:flex-row lg:items-center gap-4">
-
-								<!-- Search Input -->
-								<div class="flex-1 relative">
-									<Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-									<input
-										type="text"
-										bind:value={searchInput}
-										placeholder="Search FAQs, answers, categories..."
-										class="w-full pl-10 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-slate-50 text-sm placeholder:text-slate-500 transition-all duration-200"
-										onkeydown={(e) => e.key === 'Enter' && handleSearch()}
-									/>
-									{#if searchInput}
-										<button
-											onclick={() => searchInput = ''}
-											class="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-slate-200 rounded-md transition-colors"
-										>
-											<X class="w-4 h-4 text-slate-400" />
-										</button>
-									{/if}
-								</div>
-
-								<!-- Primary Action -->
-								<button
-									onclick={handleSearch}
-									disabled={faqStore.loading}
-									class="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 font-medium text-sm min-w-[100px]"
-								>
-									{#if faqStore.loading}
-										<div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mx-auto"></div>
-									{:else}
-										Search
-									{/if}
-								</button>
-							</div>
-
-
-
-							<!-- Advanced Filters Row -->
-							<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-4">
-
-								<!-- Category Filter -->
-								<div class="lg:col-span-2">
-									<label class="block text-xs font-medium text-slate-700 mb-2">Category</label>
-									<div class="relative">
-										<select
-											bind:value={selectedCategory}
-											onchange={() => console.log('Category changed:', selectedCategory)}
-											class="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm appearance-none transition-colors duration-200"
-										>
-											<option value="">All Categories</option>
-											{#each analytics.topCategories as category}
-												<option value={category}>{category}</option>
-											{/each}
-										</select>
-										<ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-									</div>
-								</div>
-
-								<!-- Status Filter -->
-								<div>
-									<label class="block text-xs font-medium text-slate-700 mb-2">Status</label>
-									<div class="relative">
-										<select
-											bind:value={statusFilter}
-											onchange={handleStatusFilter}
-											class="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm appearance-none transition-colors duration-200"
-										>
-											<option value="">All Status</option>
-											{#each Object.values(FAQStatus) as status}
-												<option value={status}>{getFAQStatusLabel(status)}</option>
-											{/each}
-										</select>
-										<ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-									</div>
-								</div>
-
-								<!-- Priority Filter -->
-								<div>
-									<label class="block text-xs font-medium text-slate-700 mb-2">Priority</label>
-									<div class="relative">
-										<select
-											bind:value={priorityFilter}
-											onchange={handlePriorityFilter}
-											class="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm appearance-none transition-colors duration-200"
-										>
-											<option value="">All Priority</option>
-											{#each Object.values(FAQPriority) as priority}
-												<option value={priority}>{getFAQPriorityLabel(priority)}</option>
-											{/each}
-										</select>
-										<ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-									</div>
-								</div>
-
-								<!-- Date Range Filter -->
-								<div>
-									<label class="block text-xs font-medium text-slate-700 mb-2">Date Range</label>
-									<div class="relative">
-										<select
-											bind:value={dateRange}
-											class="w-full px-3 py-2.5 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 bg-white text-sm appearance-none transition-colors duration-200"
-										>
-											<option value="">All Time</option>
-											<option value="today">Today</option>
-											<option value="week">This Week</option>
-											<option value="month">This Month</option>
-											<option value="quarter">This Quarter</option>
-											<option value="year">This Year</option>
-										</select>
-										<ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-									</div>
-								</div>
-
-								<!-- Clear Filters & View Controls -->
-								<div class="flex items-end gap-2">
-									{#if hasActiveFilters}
-										<button
-											onclick={resetAllFilters}
-											class="px-3 py-2.5 bg-slate-100 text-slate-700 rounded-xl hover:bg-slate-200 transition-colors text-sm font-medium border border-slate-200"
-											title="Clear all filters"
-										>
-											<X class="w-4 h-4" />
-										</button>
-									{/if}
-
-									<!-- View Toggle -->
-									<div class="inline-flex items-center border border-slate-200 rounded-xl bg-white">
-										<button
-											onclick={() => viewMode = 'list'}
-											class="p-2.5 rounded-l-xl transition-colors {viewMode === 'list' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:text-slate-700'}"
-											title="List View"
-										>
-											<List class="w-4 h-4" />
-										</button>
-										<button
-											onclick={() => viewMode = 'grid'}
-											class="p-2.5 rounded-r-xl transition-colors {viewMode === 'grid' ? 'bg-indigo-100 text-indigo-600' : 'text-slate-500 hover:text-slate-700'}"
-											title="Grid View"
-										>
-											<Grid3X3 class="w-4 h-4" />
-										</button>
-									</div>
-								</div>
-							</div>
-
-							<!-- Sort & Pagination Controls -->
-							<div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pt-4 border-t border-slate-200">
-
-								<!-- Sort Controls -->
-								<div class="flex items-center gap-4">
-									<div class="flex items-center gap-2">
-										<label class="text-xs font-medium text-slate-700">Sort by:</label>
-										<select
-											bind:value={sortBy}
-											onchange={() => handleSort(sortBy)}
-											class="px-3 py-1.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
-										>
-											<option value="created">Date Created</option>
-											<option value="views">View Count</option>
-											<option value="priority">Priority</option>
-											<option value="updated">Last Updated</option>
-										</select>
-
-										<button
-											onclick={() => sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'}
-											class="p-1.5 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
-											title="Toggle sort order"
-										>
-											{#if sortOrder === 'asc'}
-												<SortAsc class="w-4 h-4 text-slate-600" />
-											{:else}
-												<SortDesc class="w-4 h-4 text-slate-600" />
-											{/if}
-										</button>
-									</div>
-
-									<div class="hidden sm:block w-px h-6 bg-slate-300"></div>
-
-									<!-- Results per page -->
-									<div class="flex items-center gap-2">
-										<label class="text-xs font-medium text-slate-700">Show:</label>
-										<select
-											value={faqStore.pageSize}
-											onchange={handlePageSizeChange}
-											class="px-2 py-1.5 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 bg-white text-sm"
-										>
-											<option value="10">10</option>
-											<option value="20">20</option>
-											<option value="50">50</option>
-											<option value="100">100</option>
-										</select>
-									</div>
-								</div>
-
-								<!-- Action Controls -->
-								<div class="flex items-center gap-3">
-									<button
-										onclick={refreshData}
-										disabled={faqStore.loading}
-										class="p-2.5 border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors disabled:opacity-50"
-										title="Refresh data"
-									>
-										<RotateCcw class="w-4 h-4 {faqStore.loading ? 'animate-spin' : ''} text-slate-600" />
-									</button>
-
-									<div class="w-px h-6 bg-slate-300"></div>
-
-									<!-- Bulk Actions Trigger -->
-									{#if hasSelectedFAQs}
-										<button
-											onclick={() => showBulkActions = !showBulkActions}
-											class="px-3 py-2 bg-indigo-100 text-indigo-700 rounded-xl hover:bg-indigo-200 transition-colors text-sm font-medium"
-										>
-											{selectedFAQs.size} selected
-										</button>
-									{/if}
-								</div>
-							</div>
-						</div>
-
-						<!-- Active Filters Display -->
-						{#if hasActiveFilters}
-							<div class="flex items-center gap-2 mt-6 pt-4 border-t border-slate-200">
-								<span class="text-xs font-medium text-slate-600">Active filters:</span>
-								<div class="flex items-center gap-2 flex-wrap">
-									{#if searchInput}
-										<span class="inline-flex items-center gap-1 px-2.5 py-1 bg-indigo-100 text-indigo-800 rounded-lg text-xs font-medium border border-indigo-200">
-											<Search class="w-3 h-3" />
-											{searchInput}
-											<button onclick={() => searchInput = ''} class="hover:bg-indigo-200 rounded p-0.5 transition-colors">
-												<X class="w-3 h-3" />
-											</button>
-										</span>
-									{/if}
-									{#if selectedCategory}
-										<span class="inline-flex items-center gap-1 px-2.5 py-1 bg-emerald-100 text-emerald-800 rounded-lg text-xs font-medium border border-emerald-200">
-											<Tag class="w-3 h-3" />
-											{selectedCategory}
-											<button onclick={() => selectedCategory = ''} class="hover:bg-emerald-200 rounded p-0.5 transition-colors">
-												<X class="w-3 h-3" />
-											</button>
-										</span>
-									{/if}
-									{#if statusFilter}
-										<span class="px-2.5 py-1 bg-purple-100 text-purple-800 rounded-lg text-xs font-medium border border-purple-200">
-											Status: {getFAQStatusLabel(statusFilter)}
-										</span>
-									{/if}
-									{#if priorityFilter}
-										<span class="px-2.5 py-1 bg-orange-100 text-orange-800 rounded-lg text-xs font-medium border border-orange-200">
-											Priority: {getFAQPriorityLabel(priorityFilter)}
-										</span>
-									{/if}
-									{#if dateRange}
-										<span class="inline-flex items-center gap-1 px-2.5 py-1 bg-blue-100 text-blue-800 rounded-lg text-xs font-medium border border-blue-200">
-											<Calendar class="w-3 h-3" />
-											{dateRange === 'today' ? 'Today' :
-												dateRange === 'week' ? 'This Week' :
-													dateRange === 'month' ? 'This Month' :
-														dateRange === 'quarter' ? 'This Quarter' :
-															dateRange === 'year' ? 'This Year' : dateRange}
-										</span>
-									{/if}
-								</div>
-								<button onclick={resetAllFilters} class="text-xs text-slate-500 hover:text-slate-700 ml-2 font-medium">
-									Clear all
-								</button>
-							</div>
-						{/if}
-					</div>
-
-					<!-- Bulk Actions Bar -->
-					{#if hasSelectedFAQs && showBulkActions}
-						<div class="px-6 py-4 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-200">
-							<div class="flex items-center justify-between">
-								<div class="flex items-center gap-4">
-									<p class="text-sm font-medium text-indigo-900">
-										{selectedFAQs.size} FAQ{selectedFAQs.size > 1 ? 's' : ''} selected
-									</p>
-									<div class="w-px h-4 bg-indigo-300"></div>
-									<button onclick={() => selectedFAQs.clear()} class="text-xs text-indigo-600 hover:text-indigo-800 font-medium">
-										Clear selection
-									</button>
-								</div>
-								<div class="flex items-center gap-2">
-									<button onclick={bulkPublish} class="px-3 py-1.5 bg-emerald-600 text-white rounded-lg text-sm hover:bg-emerald-700 transition-colors font-medium">
-										<CheckCircle class="w-4 h-4 inline mr-1" />
-										Publish
-									</button>
-									<button onclick={bulkArchive} class="px-3 py-1.5 bg-slate-600 text-white rounded-lg text-sm hover:bg-slate-700 transition-colors font-medium">
-										<Archive class="w-4 h-4 inline mr-1" />
-										Archive
-									</button>
-									<button onclick={bulkDelete} class="px-3 py-1.5 bg-red-600 text-white rounded-lg text-sm hover:bg-red-700 transition-colors font-medium">
-										<X class="w-4 h-4 inline mr-1" />
-										Delete
-									</button>
-									<button onclick={() => showBulkActions = false} class="p-1.5 hover:bg-indigo-200 rounded-lg transition-colors">
-										<X class="w-4 h-4 text-indigo-600" />
-									</button>
-								</div>
-							</div>
-						</div>
-					{/if}
-				</div>
 
 				<!-- Content Area -->
 				{#if faqStore.error}
@@ -554,54 +218,83 @@
 							</button>
 						</div>
 					</div>
+
 				{:else if faqStore.loading}
+
 					<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-12">
 						<div class="text-center">
 							<div class="w-8 h-8 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4"></div>
 							<p class="text-slate-600">Loading your FAQs...</p>
 						</div>
 					</div>
+
 				{:else if faqStore.isEmpty}
+
 					<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-12">
 						<div class="text-center max-w-md mx-auto">
-							<MessageSquare class="w-16 h-16 text-slate-300 mx-auto mb-6" />
-							<h3 class="text-xl font-medium text-slate-900 mb-3">
-								{hasActiveFilters ? 'No matching FAQs' : 'No FAQs yet'}
-							</h3>
-							<p class="text-slate-600 mb-6">
-								{hasActiveFilters
-									? 'Try adjusting your filters or search terms.'
-									: 'Create your first FAQ to help users get instant answers.'
-								}
-							</p>
-							<div class="flex items-center justify-center gap-3">
-								{#if hasActiveFilters}
-									<button onclick={resetAllFilters} class="btn-secondary">
-										Clear Filters
-									</button>
-								{/if}
-								<button class="btn-primary">
-									<Plus class="w-4 h-4" />
-									Create Your First FAQ
-								</button>
-							</div>
+								FAQs Are empty - Create one
 						</div>
 					</div>
-				{:else}
-					<!-- FAQ Content -->
-					<div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
 
+				{:else}
+
+					<!-- FAQ Content -->
+					<div class="bg-white rounded-md shadow-sm border border-slate-200 overflow-visible">
 						<!-- Results Header -->
 						<div class="px-6 py-4 bg-slate-50 border-b border-slate-200">
 							<div class="flex items-center justify-between">
 								<div class="flex items-center gap-4">
-									<CustomCheckbox
-										checked={isAllSelected}
-										indeterminate={isPartiallySelected}
-										onchange={toggleSelectAll}
-										size="md"
-										variant="primary"
-									/>
+									<div class="flex items-center gap-3">
+										<!-- Select All Checkbox -->
+										<label class="flex items-center gap-2 cursor-pointer">
+											<div class="relative">
+												<input
+													type="checkbox"
+													checked={isAllSelected}
+													indeterminate={isPartiallySelected}
+													onchange={toggleSelectAll}
+													class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500 focus:ring-2 transition-all duration-200"
+												/>
+												{#if isPartiallySelected}
+													<!-- Custom indeterminate state indicator -->
+													<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+														<div class="w-2 h-0.5 bg-indigo-600 rounded-full"></div>
+													</div>
+												{/if}
+											</div>
+											<span class="text-sm font-medium text-slate-700">
+
+		</span>
+										</label>
+
+										<!-- Selection Actions (only show when FAQs are selected) -->
+										{#if selectedFAQs.size > 0}
+											<div class="flex items-center gap-2 ml-4 pl-4 border-l border-slate-200">
+												<button
+													onclick={() => console.log('Bulk edit:', selectedFAQs)}
+													class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
+												>
+													<Settings class="w-3 h-3" />
+													Edit
+												</button>
+												<button
+													onclick={() => console.log('Bulk archive:', selectedFAQs)}
+													class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 rounded-md transition-colors"
+												>
+													<Archive class="w-3 h-3" />
+													Archive
+												</button>
+												<button
+													onclick={() => console.log('Bulk delete:', selectedFAQs)}
+													class="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium text-red-700 bg-red-50 hover:bg-red-100 rounded-md transition-colors"
+												>
+													<X class="w-3 h-3" />
+													Delete
+												</button>
+											</div>
+										{/if}
+									</div>
+
 									<span class="text-sm text-slate-600">
 										{faqStore.totalElements} FAQs found
 									</span>
@@ -612,51 +305,74 @@
 							</div>
 						</div>
 
-						{#if viewMode === 'list'}
 							<!-- List View -->
-							<div class="divide-y divide-slate-200">
+							<div class="divide-y divide-slate-200 overflow-visible relative">
+								<!-- Replace your existing FAQ list item with this enhanced version -->
 								{#each faqStore.data as faq, index (faq.uuid)}
-									{@const StatusIcon = getStatusIcon(faq.status)}
-									<div class="p-6 hover:bg-slate-50 transition-colors">
+									<button
+										type="button"
+										class="w-full p-6 hover:bg-slate-50 transition-colors text-left focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-inset"
+										onclick={() => handleRowClick(faq.id)}
+									>
 										<div class="flex items-start gap-4">
-											<label class="flex items-center mt-1">
+											<!-- Checkbox -->
+											<div
+												class="flex items-center mt-1"
+												onclick={(e) => e.stopPropagation()}
+												role="none"
+											>
 												<input
 													type="checkbox"
 													checked={selectedFAQs.has(faq.uuid)}
 													onchange={() => toggleSelectFAQ(faq.uuid)}
+													onclick={(e) => e.stopPropagation()}
 													class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+													aria-label={`Select FAQ: ${faq.question}`}
 												/>
-											</label>
+											</div>
 
 											<div class="flex-1 min-w-0">
 												<div class="flex items-start justify-between gap-4 mb-3">
 													<div class="flex-1">
-														<h3 class="text-lg font-medium text-slate-900 mb-1">{faq.question}</h3>
+														<h3 class="text-lg font-medium text-slate-900 mb-1 hover:text-indigo-600 transition-colors">
+															{faq.question}
+														</h3>
 														<p class="text-sm text-slate-600 line-clamp-2">
-															Answer preview would go here...
+															{faq.answer}
 														</p>
 													</div>
 
-													<div class="flex items-center gap-2">
-														<StatusIcon class="w-4 h-4 text-slate-400" />
-														<button class="p-2 hover:bg-slate-100 rounded-lg">
-															<MoreHorizontal class="w-4 h-4 text-slate-400" />
-														</button>
+													<!-- Reusable Action Dropdown Component -->
+													<div onclick={(e) => e.stopPropagation()} role="none">
+														<ActionDropdown
+															bind:this={dropdownRefs[faq.uuid]}
+															itemId={faq.uuid}
+															itemTitle={faq.question}
+															actions={getFAQActionsConfig(faq)}
+															buttonVariant="outline"
+															buttonSize="sm"
+															dropdownWidth="w-64"
+															position="right"
+															onaction={handleFAQAction}
+															onopen={handleDropdownOpen}
+															onclose={handleDropdownClose}
+														/>
 													</div>
 												</div>
 
+												<!-- FAQ metadata (keep your existing code) -->
 												<div class="flex items-center justify-between">
 													<div class="flex items-center gap-4">
-														<span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border {getStatusColor(faq.status)}">
-															{getFAQStatusLabel(faq.status)}
-														</span>
-														<span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border {getPriorityColor(faq.priority)}">
-															{getFAQPriorityLabel(faq.priority)}
-														</span>
+						<span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-sm border {getFAQStatusStyle(faq.status)}">
+							{getFAQStatusLabel(faq.status)}
+						</span>
+														<span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-sm border {getFQAPriorityStyle(faq.priority)}">
+							{getFAQPriorityLabel(faq.priority)}
+						</span>
 														{#if faq.category?.name}
-															<span class="inline-flex items-center px-2 py-1 text-xs bg-slate-100 text-slate-700 rounded-md">
-																{faq.category.name}
-															</span>
+							<span class="inline-flex items-center px-2 py-1 text-xs bg-slate-100 text-slate-700 rounded-sm">
+								{faq.category.name}
+							</span>
 														{/if}
 													</div>
 
@@ -665,153 +381,17 @@
 															<Eye class="w-4 h-4" />
 															{faq.viewCount.toLocaleString()}
 														</div>
-														<time>{formatDateTime(faq.createdAt)}</time>
+														<div class="flex items-center gap-1">
+															<Clock class="w-4 h-4" />
+															<time>{formatDateTime(faq.createdAt)}</time>
+														</div>
 													</div>
 												</div>
 											</div>
 										</div>
-									</div>
+									</button>
 								{/each}
 							</div>
-						{:else}
-							<!-- Grid View -->
-							<div class="p-6">
-								<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-									{#each faqStore.data as faq (faq.uuid)}
-										<div class="bg-slate-50 rounded-xl p-6 hover:bg-slate-100 transition-colors border border-slate-200">
-											<div class="flex items-start justify-between mb-4">
-												<CustomCheckbox
-													checked={selectedFAQs.has(faq.uuid)}
-													onchange={() => toggleSelectFAQ(faq.uuid)}
-													size="md"
-													variant="primary"
-												/>
-												<button class="p-1 hover:bg-slate-200 rounded">
-													<MoreHorizontal class="w-4 h-4 text-slate-400" />
-												</button>
-											</div>
-
-											<h3 class="font-medium text-slate-900 mb-2 line-clamp-2">{faq.question}</h3>
-											<p class="text-sm text-slate-600 mb-4 line-clamp-3">
-												Answer preview would go here... This is where we would show the first few lines of the FAQ answer.
-											</p>
-
-											<div class="flex items-center justify-between mb-4">
-												<div class="flex items-center gap-2">
-													<span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border {getStatusColor(faq.status)}">
-														{getFAQStatusLabel(faq.status)}
-													</span>
-													<span class="inline-flex items-center px-2 py-1 text-xs font-medium rounded-md border {getPriorityColor(faq.priority)}">
-														{getFAQPriorityLabel(faq.priority)}
-													</span>
-												</div>
-											</div>
-
-											<div class="flex items-center justify-between text-xs text-slate-500">
-												<div class="flex items-center gap-1">
-													<Eye class="w-3 h-3" />
-													{faq.viewCount.toLocaleString()}
-												</div>
-												<time>{formatDateTime(faq.createdAt)}</time>
-											</div>
-										</div>
-									{/each}
-								</div>
-							</div>
-						{/if}
-
-						<!-- Enhanced Pagination -->
-						{#if faqStore.totalPages > 1}
-							<div class="px-6 py-5 bg-gradient-to-r from-slate-50 to-blue-50 border-t border-slate-200">
-								<div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-									<!-- Page Size & Info -->
-									<div class="flex items-center gap-4">
-										<div class="flex items-center gap-2">
-											<span class="text-sm text-slate-600">Show:</span>
-											<select
-												value={faqStore.pageSize}
-												onchange={handlePageSizeChange}
-												class="px-3 py-1.5 border border-slate-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-											>
-												<option value="10">10</option>
-												<option value="20">20</option>
-												<option value="50">50</option>
-												<option value="100">100</option>
-											</select>
-											<span class="text-sm text-slate-600">per page</span>
-										</div>
-
-										<div class="hidden sm:block w-px h-6 bg-slate-300"></div>
-
-										<div class="text-sm text-slate-600">
-											Showing <span class="font-medium text-slate-900">{faqStore.currentPage * faqStore.pageSize + 1}</span> to <span class="font-medium text-slate-900">{Math.min((faqStore.currentPage + 1) * faqStore.pageSize, faqStore.totalElements)}</span> of <span class="font-medium text-slate-900">{faqStore.totalElements.toLocaleString()}</span> results
-										</div>
-									</div>
-
-									<!-- Page Navigation -->
-									<div class="flex items-center gap-1">
-										<!-- First Page -->
-										{#if faqStore.currentPage > 2}
-											<button
-												onclick={() => handlePageChange(0)}
-												class="w-9 h-9 flex items-center justify-center text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-slate-200"
-											>
-												1
-											</button>
-											{#if faqStore.currentPage > 3}
-												<span class="px-2 text-slate-400">…</span>
-											{/if}
-										{/if}
-
-										<!-- Previous Button -->
-										<button
-											onclick={() => handlePageChange(faqStore.currentPage - 1)}
-											disabled={!faqStore.hasPreviousPage}
-											class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-										>
-											Previous
-										</button>
-
-										<!-- Page Numbers -->
-										{#each Array(Math.min(faqStore.totalPages, 5)) as _, i}
-											{@const pageNum = faqStore.currentPage <= 2 ? i : faqStore.currentPage - 2 + i}
-											{#if pageNum < faqStore.totalPages && pageNum >= 0}
-												<button
-													onclick={() => handlePageChange(pageNum)}
-													class="w-9 h-9 flex items-center justify-center text-sm font-medium rounded-lg transition-all duration-200 {pageNum === faqStore.currentPage
-														? 'bg-indigo-600 text-white shadow-lg hover:bg-indigo-700'
-														: 'text-slate-600 hover:text-slate-900 hover:bg-white border border-transparent hover:border-slate-200'}"
-												>
-													{pageNum + 1}
-												</button>
-											{/if}
-										{/each}
-
-										<!-- Next Button -->
-										<button
-											onclick={() => handlePageChange(faqStore.currentPage + 1)}
-											disabled={!faqStore.hasNextPage}
-											class="px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-slate-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
-										>
-											Next
-										</button>
-
-										<!-- Last Page -->
-										{#if faqStore.currentPage < faqStore.totalPages - 3}
-											{#if faqStore.currentPage < faqStore.totalPages - 4}
-												<span class="px-2 text-slate-400">…</span>
-											{/if}
-											<button
-												onclick={() => handlePageChange(faqStore.totalPages - 1)}
-												class="w-9 h-9 flex items-center justify-center text-sm font-medium text-slate-600 hover:text-slate-900 hover:bg-white rounded-lg transition-colors border border-transparent hover:border-slate-200"
-											>
-												{faqStore.totalPages}
-											</button>
-										{/if}
-									</div>
-								</div>
-							</div>
-						{/if}
 					</div>
 				{/if}
 			</div>
@@ -819,26 +399,91 @@
 	</div>
 </div>
 
+<!-- Add this to your <style> section -->
 <style>
-    .btn-primary {
-        @apply inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 shadow-lg hover:shadow-xl font-medium;
+    /* Modern dropdown animations */
+    .dropdown-container [role="menu"] {
+        animation: modernDropdownIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        transform-origin: top right;
     }
 
-    .btn-secondary {
-        @apply inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl hover:bg-slate-50 transition-colors font-medium;
+    @keyframes modernDropdownIn {
+        0% {
+            opacity: 0;
+            transform: scale(0.92) translateY(-12px) translateX(4px);
+            filter: blur(4px);
+        }
+        100% {
+            opacity: 1;
+            transform: scale(1) translateY(0) translateX(0);
+            filter: blur(0);
+        }
     }
 
-    .line-clamp-2 {
-        display: -webkit-box;
-        -webkit-line-clamp: 2;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+    /* Enhanced button interactions */
+    .dropdown-container button[role="menuitem"] {
+        transform: translateX(0);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    .line-clamp-3 {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
+    .dropdown-container button[role="menuitem"]:hover {
+        transform: translateX(4px);
+    }
+
+    .dropdown-container button[role="menuitem"]:active {
+        transform: translateX(2px) scale(0.98);
+    }
+
+    /* Icon container animations */
+    .dropdown-container button[role="menuitem"] > div:first-of-type {
+        transform: scale(1) rotate(0deg);
+        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .dropdown-container button[role="menuitem"]:hover > div:first-of-type {
+        transform: scale(1.05) rotate(2deg);
+    }
+
+    /* Focus improvements */
+    .dropdown-container button[role="menuitem"]:focus {
+        box-shadow: inset 3px 0 0 currentColor;
+        outline: none;
+    }
+
+    /* Backdrop blur effect */
+    .dropdown-container [role="menu"] {
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+    }
+
+    /* Ensure dropdown appears above everything */
+    .dropdown-container {
+        z-index: 50;
+    }
+
+    /* Prevent text selection in dropdown */
+    .dropdown-container [role="menu"] {
+        user-select: none;
+        -webkit-user-select: none;
+    }
+
+    /* Smooth color transitions */
+    .dropdown-container button[role="menuitem"] * {
+        transition: color 0.2s ease, background-color 0.2s ease;
+    }
+
+    /* Header gradient animation */
+    .dropdown-container [role="menu"] > div:first-child {
+        background: linear-gradient(135deg, rgb(248 250 252) 0%, rgb(241 245 249) 100%);
+        transition: background 0.3s ease;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 640px) {
+        .dropdown-container [role="menu"] {
+            right: -1rem;
+            left: -1rem;
+            width: auto;
+        }
     }
 </style>
