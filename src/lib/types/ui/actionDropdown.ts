@@ -35,6 +35,7 @@ export interface ActionDropdownProps {
 	disabled?: boolean;
 	dropdownWidth?: string;
 	position?: 'left' | 'right';
+	isOpen?: boolean;
 
 	// Callback props for Svelte 5
 	onaction?: (event: ActionEvent) => void;

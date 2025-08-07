@@ -3,6 +3,7 @@
 	import { type ActionDropdownProps, getActionStyle } from '$lib/types';
 	import { MoreHorizontal } from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
+	import type { Component } from 'svelte';
 
 	let {
 		itemId,
@@ -13,27 +14,35 @@
 		disabled = false,
 		dropdownWidth = 'w-64',
 		position = 'right',
+		isOpen: controlledIsOpen = undefined,
 		onaction,
 		onopen,
 		onclose
 	}: ActionDropdownProps = $props();
 
-	// State
-	let isOpen = $state(false);
+	// State - use controlled state if provided, otherwise internal state
+	let internalIsOpen = $state(false);
+	// Computed: Use controlled state if provided, otherwise internal
+	const isOpen = $derived(controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen);
+
 	let dropdownElement: HTMLDivElement;
 
-	// Methods to control dropdown externally
+	// Methods to control dropdown
 	export function open() {
 		console.log("open");
 		if (!disabled) {
-			isOpen = true;
+			if (controlledIsOpen === undefined) {
+				internalIsOpen = true;
+			}
 			onopen?.({ itemId });
 		}
 	}
 
 	export function close() {
 		if (isOpen) {
-			isOpen = false;
+			if (controlledIsOpen === undefined) {
+				internalIsOpen = false;
+			}
 			onclose?.({ itemId });
 		}
 	}
@@ -72,8 +81,10 @@
 	}
 
 	// Safe icon rendering helper
-	function isValidComponent(component: any): boolean {
-		return component && (typeof component === 'function' || (component.$render && typeof component.$render === 'function'));
+	function isValidComponent(component: any): component is Component {
+		return component && (
+			typeof component === 'function' ||
+			(typeof component === 'object' && component.$$typeof));
 	}
 </script>
 
@@ -151,7 +162,8 @@
 							<div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center transition-all duration-200 {action.disabled ? 'opacity-50' : ''}">
 								<!-- Safe icon rendering with error handling -->
 								{#if isValidComponent(action.icon)}
-									<svelte:component this={action.icon} class="w-4 h-4 text-slate-500" />
+									{@const IconComponent = action.icon}
+									<IconComponent class="w-4 h-4 text-slate-500" />
 								{:else}
 									<!-- Fallback icon -->
 									<div class="w-4 h-4 bg-slate-400 rounded-sm"></div>

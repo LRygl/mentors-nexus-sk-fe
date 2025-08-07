@@ -6,6 +6,7 @@ import Download from 'lucide-svelte/icons/download';
 import Archive from 'lucide-svelte/icons/archive';
 import Trash2 from 'lucide-svelte/icons/trash-2';
 import History from 'lucide-svelte/icons/history';
+import BookCheck from 'lucide-svelte/icons/book-check';
 import type { ActionGroup } from '$lib/types';
 import { ActionType} from '$lib/types';
 export function getFAQActions(canEdit: boolean = true, canDelete: boolean = true): ActionGroup[] {
@@ -33,6 +34,14 @@ export function getFAQActions(canEdit: boolean = true, canDelete: boolean = true
 					label: 'Duplicate',
 					description: 'Create a copy',
 					icon: Copy,
+					variant: ActionType.DEFAULT,
+					separator: false
+				},
+				{
+					id: 'publish',
+					label: 'Publish',
+					description: 'Publish the answer',
+					icon: BookCheck,
 					variant: ActionType.DEFAULT,
 					separator: true
 				}

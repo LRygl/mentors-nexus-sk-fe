@@ -16,9 +16,6 @@
 	// Dropdown state
 	let openDropdownId = $state<string | null>(null);
 
-	// References to dropdown components for external control
-	let dropdownRefs: { [key: string]: ActionDropdown } = {};
-
 	// Derived states
 	const hasData = $derived(faqStore.data.length > 0);
 	const isAllSelected = $derived(hasData && selectedFAQs.size === faqStore.data.length);
@@ -59,6 +56,9 @@
 					// TODO: Show success toast
 				}
 				break;
+			case 'publish':
+				console.log('Publish FAQ:', faq.question);
+				break;
 			case 'history':
 				goto(`/admin/faq/${faq.id}/history`);
 				break;
@@ -83,19 +83,16 @@
 		}
 	}
 
-	// Handle dropdown open/close events
+	// Handle dropdown open/close events (simplified)
 	function handleDropdownOpen(event: { itemId: string }) {
-		const { itemId } = event;
-		// Close all other dropdowns when one opens
-		Object.keys(dropdownRefs).forEach(key => {
-			if (key !== itemId && dropdownRefs[key]) {
-				dropdownRefs[key].close();
-			}
-		});
+		openDropdownId = event.itemId;
 	}
 
 	function handleDropdownClose(event: { itemId: string }) {
 		console.log('Dropdown closed for:', event.itemId);
+		if (openDropdownId === event.itemId) {
+			openDropdownId = null;
+		}
 	}
 
 	// Get actions configuration for each FAQ
@@ -108,6 +105,10 @@
 	}
 
 	// Close Dropdown
+	function closeAllDropdowns() {
+		openDropdownId = null;
+	}
+
 	function closeDropdown() {
 		openDropdownId = null;
 	}
@@ -333,7 +334,6 @@
 												<!-- Reusable Action Dropdown Component -->
 												<div onclick={(e) => e.stopPropagation()} role="none">
 													<ActionDropdown
-														bind:this={dropdownRefs[faq.uuid]}
 														itemId={faq.uuid}
 														itemTitle={faq.question}
 														actions={getFAQActionsConfig(faq)}
@@ -341,6 +341,7 @@
 														buttonSize="sm"
 														dropdownWidth="w-64"
 														position="right"
+														isOpen={openDropdownId === faq.uuid}
 														onaction={handleFAQAction}
 														onopen={handleDropdownOpen}
 														onclose={handleDropdownClose}
