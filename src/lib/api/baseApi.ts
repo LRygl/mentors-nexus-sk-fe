@@ -50,6 +50,36 @@ export abstract class BaseApiService {
 		return data;
 	}
 
+	/*
+	* Base HTTP PATCH method for partial updates
+	*/
+
+	protected async patch<T>(
+		endpoint: string,
+		params?: Record<string, any>,
+		config?: RequestConfig
+	): Promise<T> {
+		const url = this.buildUrl(endpoint, params);
+		console.log('Calling URL:' + url);
+		const cacheKey = `PUT:${url}`;
+
+		// Prepare headers for the request
+		const headers = await this.getHeaders(config);
+
+		const response = await this.executeRequest(
+			() =>
+				fetch(url, {
+					method: 'PATCH',
+					headers,
+					signal: this.createAbortSignal(config?.timeout)
+				}),
+			config
+		);
+
+		return await this.parseResponse<T>(response);
+	}
+
+
 
 	///////////////////////////////////////////////
 	/// UTILITY METHODS

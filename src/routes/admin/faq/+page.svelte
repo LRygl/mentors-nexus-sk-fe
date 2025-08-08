@@ -12,16 +12,14 @@
 
 	// View State
 	let selectedFAQs = $state<Set<string>>(new Set());
-
 	// Dropdown state
 	let openDropdownId = $state<string | null>(null);
-
+	// Loading state for actions
+	let actionLoading = $state<Record<string, boolean>>({});
 	// Derived states
 	const hasData = $derived(faqStore.data.length > 0);
 	const isAllSelected = $derived(hasData && selectedFAQs.size === faqStore.data.length);
 	const isPartiallySelected = $derived(selectedFAQs.size > 0 && selectedFAQs.size < faqStore.data.length);
-	const selectedCount = $derived(selectedFAQs.size);
-	const hasSelection = $derived(selectedCount > 0);
 
 	// Load data
 	onMount(async () => {
@@ -30,7 +28,7 @@
 
 	// Dropdown //
 	// Action handlers for the dropdown
-	function handleFAQAction(event: { actionId: string; itemId: string }) {
+	async function handleFAQAction(event: { actionId: string; itemId: string }) {
 		const { actionId, itemId } = event;
 		const faq = faqStore.data.find(f => f.uuid === itemId);
 
@@ -38,6 +36,8 @@
 			console.error('FAQ not found:', itemId);
 			return;
 		}
+
+		actionLoading[itemId] = true;
 
 		switch (actionId) {
 			case 'view':
@@ -58,6 +58,11 @@
 				break;
 			case 'publish':
 				console.log('Publish FAQ:', faq.question);
+				await faqStore.publishFAQ(faq.uuid);
+				break;
+			case 'unpublish':
+				console.log('Unpublish FAQ:', faq.question);
+				await faqStore.unpublishFAQ(faq.uuid);
 				break;
 			case 'history':
 				goto(`/admin/faq/${faq.id}/history`);
@@ -97,20 +102,7 @@
 
 	// Get actions configuration for each FAQ
 	function getFAQActionsConfig(faq: FAQ) {
-		// You can customize permissions based on FAQ properties
-		const canEdit = faq.status !== 'ARCHIVED';
-		const canDelete = faq.status === 'DRAFT';
-
-		return getFAQActions(canEdit, canDelete);
-	}
-
-	// Close Dropdown
-	function closeAllDropdowns() {
-		openDropdownId = null;
-	}
-
-	function closeDropdown() {
-		openDropdownId = null;
+		return getFAQActions(faq);
 	}
 
 	async function refreshData() {
