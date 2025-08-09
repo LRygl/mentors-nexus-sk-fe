@@ -51,6 +51,69 @@ export abstract class BaseApiService {
 	}
 
 	/*
+	* Base HTTP POST method for partial updates
+	*/
+	protected async post<T>(
+		endpoint: string,
+		body?: any,
+		config?: RequestConfig
+	): Promise<T> {
+		const url = this.buildUrl(endpoint);
+		console.log('Calling POST:', url);
+
+		const headers = await this.getHeaders(config);
+		const response = await this.executeRequest(
+			() =>
+				fetch(url, {
+					method: 'POST',
+					headers,
+					body: body ? JSON.stringify(body) : undefined,
+					signal: this.createAbortSignal(config?.timeout)
+				}),
+			config
+		);
+
+		const data = await this.parseResponse<T>(response);
+
+		// Invalidate related cache entries
+		this.invalidateCache('GET');
+		return data;
+	}
+
+	/*
+	* Base HTTP PUT method for partial updates
+	*/
+
+	protected async put<T>(
+		endpoint: string,
+		body?: any,
+		config?: RequestConfig
+	): Promise<T> {
+		const url = this.buildUrl(endpoint);
+		console.log('Calling PUT:', url);
+
+		const headers = await this.getHeaders(config);
+
+		const response = await this.executeRequest(
+			() =>
+				fetch(url, {
+					method: 'PUT',
+					headers,
+					body: body ? JSON.stringify(body) : undefined,
+					signal: this.createAbortSignal(config?.timeout)
+				}),
+			config
+		);
+
+		const data = await this.parseResponse<T>(response);
+
+		//Invalidate related cache entries
+		this.invalidateCache('GET');
+
+		return data;
+	}
+
+	/*
 	* Base HTTP PATCH method for partial updates
 	*/
 
@@ -76,9 +139,43 @@ export abstract class BaseApiService {
 			config
 		);
 
-		return await this.parseResponse<T>(response);
+		const data = await this.parseResponse<T>(response);
+
+		// Invalidate related Cache entries
+		this.invalidateCache('GET');
+		return data;
+
 	}
 
+	/*
+	* Base HTTP DELETE method for partial updates
+	*/
+	protected async delete<T = void>(
+		endpoint: string,
+		config?: RequestConfig
+	): Promise<T> {
+		const url = this.buildUrl(endpoint);
+		console.log('DELETE to URL:', url);
+
+		const headers = await this.getHeaders(config);
+
+		const response = await this.executeRequest(
+			() =>
+				fetch(url, {
+					method: 'DELETE',
+					headers,
+					signal: this.createAbortSignal(config?.timeout),
+				}),
+			config
+		);
+
+		const data = await this.parseResponse<T>(response);
+
+		// Invalidate related cache entries
+		this.invalidateCache('GET');
+
+		return data;
+	}
 
 
 	///////////////////////////////////////////////
@@ -257,13 +354,15 @@ export abstract class BaseApiService {
 		});
 	}
 
-	protected clearCache(pattern?: string): void {
+	private invalidateCache(pattern?: string): void {
 		if (pattern) {
-			for (const key in this.cache.keys()) {
+			const keysToDelete: string[] = [];
+			for (const key of this.cache.keys()) {
 				if (key.includes(pattern)) {
-					this.cache.delete(key);
+					keysToDelete.push(key);
 				}
 			}
+			keysToDelete.forEach(key => this.cache.delete(key));
 		} else {
 			this.cache.clear();
 		}

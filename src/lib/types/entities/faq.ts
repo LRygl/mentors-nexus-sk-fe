@@ -40,5 +40,4 @@ export interface FAQPaginationParams extends PaginationParams {
 	categoryUuid?:string;
 	priority?: FAQPriority;
 	search?: string;
-
 }

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import HeroSection from "$lib/components/Sections/hero-section.svelte";
+	import HeroSection from "$lib/components/Sections/Public/hero-section.svelte";
 
 
 
