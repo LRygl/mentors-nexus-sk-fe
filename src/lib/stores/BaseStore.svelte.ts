@@ -70,7 +70,7 @@ export abstract class BaseStoreSvelte<
 	}
 
 	get hasSelectedItem(): boolean {
-		return this._selectedItem === null;
+		return this._selectedItem != null;
 	}
 
 	// CRUD operation getters
@@ -197,7 +197,7 @@ export abstract class BaseStoreSvelte<
 	}
 
 	// UPDATE OPERATION
-	async update(updateRequest: TUpdateRequest): Promise<TEntity | null> {
+	async update(id: string, updateRequest: TUpdateRequest): Promise<TEntity | null> {
 		if (this._updating) return null;
 
 		this._updating = true;
@@ -360,8 +360,8 @@ export abstract class BaseStoreSvelte<
 		this._error = null;
 		this._itemError = null;
 		this._createError = null;
-		this._updateError = false;
-		this._deleteError = false;
+		this._updateError = null;
+		this._deleteError = null;
 	}
 
 	// Abstract methods - to be implemented in any given store

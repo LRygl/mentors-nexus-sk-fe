@@ -1,18 +1,27 @@
 <script lang="ts">
 	import AdminHeaderSection from '$lib/components/Sections/Admin/AdminHeaderSection.svelte';
 	import { onMount } from 'svelte';
-	import { Check, Download, Plus, Settings } from 'lucide-svelte';
+	import { Check, Download, FileText, Plus, Settings } from 'lucide-svelte';
 	import type { FAQCategory } from '$lib/types/entities/faqCategory';
 	import { faqCategoryStore } from '$lib/stores/defaults/faqCategoryStore.svelte';
 	import ActionDropdown from '$lib/components/ui/ActionDropdown.svelte';
 	import { goto } from '$app/navigation';
 	import { getFAQCategoryActions } from './faqCategoryActions';
+	import UniversalCreateModal from '$lib/components/ui/UniversalCreateModal.svelte';
+	import FAQCategoryForm from '$lib/components/Forms/FAQCategoryForm.svelte';
 
+
+	// Modal State
+	let isCreateModalOpen = $state(false);
+	let formIsValid = $state(false);
+	let categoryFormRef: any;
+
+	// Table State
 	let selectedFAQCategories = $state<Set<string>>(new Set());
 	let openDropdownId = $state<string | null>(null);
 	let actionLoading = $state<Record<string, boolean>>({});
 
-
+	// Derived states
 	const hasData = $derived(faqCategoryStore.data.length > 0);
 	const isAllSelected = $derived(hasData && selectedFAQCategories.size === faqCategoryStore.data.length);
 	const isPartiallySelected = $derived(selectedFAQCategories.size > 0 && selectedFAQCategories.size < faqCategoryStore.data.length);
@@ -23,6 +32,40 @@
 
 	async function refreshData() {
 		await faqCategoryStore.refresh();
+	}
+
+	function openCreateModal() {
+		isCreateModalOpen = true;
+	}
+
+	function closeCreateModal() {
+		isCreateModalOpen = false;
+		formIsValid = false;
+	}
+
+	function handleFormValidation(data: { isValid: boolean } ) {
+		formIsValid = data.isValid;
+	}
+
+	async function handleCreateSubmit(event: Event) {
+		event.preventDefault();
+
+		if (!categoryFormRef || !categoryFormRef.validateForm()) {
+			return;
+		}
+
+		const formData = categoryFormRef.getFormData();
+
+		try {
+			const newCategory = await faqCategoryStore.createItem(formData);
+
+			if (newCategory) {
+				closeCreateModal();
+				console.log('Category created sucessfully:', newCategory);
+			}
+		} catch (error) {
+			console.log(error);
+		}
 	}
 
 
@@ -115,7 +158,8 @@
 						</button>
 						<button
 							class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 text-sm font-medium"
-							onclick={() => console.log('Create FAQ')}
+							onclick={openCreateModal}
+							disabled={faqCategoryStore.creating}
 						>
 							<Plus class="w-4 h-4" />
 							Create Category
@@ -252,3 +296,25 @@
 		</table>
 	</div>
 </section>
+
+
+<!-- Create Category Modal -->
+<UniversalCreateModal
+	isOpen={isCreateModalOpen}
+	title="Create FAQ Category"
+	subtitle="Add a new category to organize your FAQs"
+	icon={FileText}
+	iconBgColor="from-indigo-500 to-purple-600"
+	loading={faqCategoryStore.creating}
+	error={faqCategoryStore.createError}
+	submitLabel="Create Category"
+	onclose={closeCreateModal}
+	onsubmit={handleCreateSubmit}
+>
+	{#snippet children()}
+		<FAQCategoryForm
+			bind:this={categoryFormRef}
+			onvalidate={handleFormValidation}
+		/>
+	{/snippet}
+</UniversalCreateModal>

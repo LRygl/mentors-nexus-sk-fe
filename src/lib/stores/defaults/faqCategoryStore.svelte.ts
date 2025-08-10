@@ -1,5 +1,10 @@
 import { BaseStoreSvelte } from '$lib/stores/BaseStore.svelte';
-import type { FAQCategory, FAQCategoryPaginationParams } from '$lib/types/entities/faqCategory';
+import type {
+	CreateFAQCategoryRequest,
+	FAQCategory,
+	FAQCategoryPaginationParams,
+	UpdateFAQCategoryRequest
+} from '$lib/types/entities/faqCategory';
 import {
 	faqCategoryAdminApiService,
 	type FAQCategoryAdminApiService
@@ -8,7 +13,11 @@ import type { PaginatedResult, PaginationParams } from '$lib/types';
 
 
 
-export class FaqCategoryStoreSvelte extends BaseStoreSvelte<FAQCategory, FAQCategoryAdminApiService> {
+export class FaqCategoryStoreSvelte extends BaseStoreSvelte<
+	FAQCategory,
+	CreateFAQCategoryRequest,
+	UpdateFAQCategoryRequest,
+	FAQCategoryAdminApiService> {
 
 	private _filters = $state<FAQCategoryPaginationParams>({
 		page: 0,
@@ -34,6 +43,12 @@ export class FaqCategoryStoreSvelte extends BaseStoreSvelte<FAQCategory, FAQCate
 	async loadFAQCategories(): Promise<void> {
 		await this.loadPage(this._filters.page, this._filters.size);
 	}
+
+
+	protected async createItem(createRequest: CreateFAQCategoryRequest): Promise<FAQCategory> {
+		return await this.apiService.createFAQCategory(createRequest);
+	}
+
 
 }
 

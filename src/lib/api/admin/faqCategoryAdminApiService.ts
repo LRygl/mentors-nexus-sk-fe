@@ -1,6 +1,10 @@
 import { BaseApiService } from '$lib/api/baseApi';
 import { API_CONFIG } from '$lib/config/api';
-import type { FAQCategory, FAQCategoryPaginationParams } from '$lib/types/entities/faqCategory';
+import type {
+	CreateFAQCategoryRequest,
+	FAQCategory,
+	FAQCategoryPaginationParams
+} from '$lib/types/entities/faqCategory';
 import type { FAQ, PaginatedResult } from '$lib/types';
 
 
@@ -46,6 +50,21 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 	}
 
 	/**
+	 * Create new FAQ category
+	 */
+	async createFAQCategory(createRequest: CreateFAQCategoryRequest): Promise<FAQCategory> {
+		// Generate slug if not provided
+		const requestData = {
+			...createRequest,
+			slug: createRequest.slug || this.generateSlug(createRequest.name)
+		};
+
+		return await this.post<FAQCategory>(FAQCategoryAdminApiService.ENDPOINT, requestData);
+	}
+
+
+
+	/**
 	 * Transforms date strings from Spring Boot to Date objects
 	 */
 	private transformFAQDates(faq: any): FAQ {
@@ -57,6 +76,18 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 		};
 	}
 
+
+	/**
+	 * Private helper to generate URL-friendly slug
+	 */
+	private generateSlug(name: string): string {
+		return name
+			.toLowerCase()
+			.replace(/[^a-z0-9\s-]/g, '') // Remove special characters
+			.replace(/\s+/g, '-')         // Replace spaces with hyphens
+			.replace(/-+/g, '-')          // Replace multiple hyphens with single
+			.trim();
+	}
 }
 
 export const faqCategoryAdminApiService = new FAQCategoryAdminApiService;
