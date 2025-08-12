@@ -367,7 +367,7 @@ export abstract class BaseStoreSvelte<
 	// Abstract methods - to be implemented in any given store
 	protected abstract fetchPage(params: PaginationParams): Promise<PaginatedResult<TEntity>>;
 	protected abstract fetchItem(id: string): Promise<TEntity>;
-	protected abstract createItem(createRequest: TCreateRequest): Promise<TEntity>;
+	abstract createItem(createRequest: TCreateRequest): Promise<TEntity>;
 	protected abstract updateItem(id: string, updateRequest: TUpdateRequest): Promise<TEntity>;
 	protected abstract deleteItem(id: string): Promise<void>;
 }

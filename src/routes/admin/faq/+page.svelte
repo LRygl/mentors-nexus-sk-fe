@@ -211,10 +211,18 @@
 
 				{:else if faqStore.isEmpty}
 
-					<div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-12">
+					<div class="flex flex-col bg-white rounded-2xl shadow-sm border border-slate-200 p-12">
 						<div class="text-center max-w-md mx-auto">
 							FAQs Are empty - Create one
+
 						</div>
+						<button
+							class="flex items-center gap-2 rounded-xl px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 text-sm font-medium"
+							onclick={() => console.log('Create FAQ')}
+						>
+							<Plus class="w-4 h-4" />
+							Create FAQ
+						</button>
 					</div>
 
 				{:else}

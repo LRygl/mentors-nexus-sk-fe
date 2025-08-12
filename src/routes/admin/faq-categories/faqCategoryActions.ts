@@ -75,6 +75,13 @@ export function getFAQCategoryActions(faqCategory: FAQCategory): ActionGroup[] {
 	const managementItems: ActionItem[] = [];
 
 	// Archive/Restore - conditional based on status
+	managementItems.push({
+		id: 'archive',
+		label: 'Archive',
+		description: 'Hide and Archive this category',
+		icon: Archive,
+		variant: ActionType.DEFAULT,
+	});
 
 	// Push all action items above to 'Actions' group
 	groups.push({

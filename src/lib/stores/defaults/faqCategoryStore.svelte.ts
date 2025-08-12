@@ -45,7 +45,7 @@ export class FaqCategoryStoreSvelte extends BaseStoreSvelte<
 	}
 
 
-	protected async createItem(createRequest: CreateFAQCategoryRequest): Promise<FAQCategory> {
+	async createItem(createRequest: CreateFAQCategoryRequest): Promise<FAQCategory> {
 		return await this.apiService.createFAQCategory(createRequest);
 	}
 

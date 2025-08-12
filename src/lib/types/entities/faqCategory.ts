@@ -8,7 +8,7 @@ export interface FAQCategory extends BaseEntity {
 	name: string;
 	description?: string;
 	slug: string;
-	iconClass: Component;
+	iconClass: string;
 	colorCode: string;
 	displayOrder: number;
 	isActive: boolean;
