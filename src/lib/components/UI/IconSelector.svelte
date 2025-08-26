@@ -89,7 +89,7 @@
 	{#if label}
 		<label class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
 			{#if currentIconComponent}
-				<DynamicIcon iconName={selectedIcon} class="w-4 h-4" />
+				<DynamicIcon iconName={selectedIcon} size={20} />
 			{/if}
 			{label}
 			{#if required}
@@ -108,7 +108,7 @@
 		>
 			{#if selectedIcon}
 				<div class="w-8 h-8 rounded-md flex items-center justify-center flex-shrink-0" style="background-color: {previewColor}">
-					<DynamicIcon iconName={selectedIcon} class="text-white" size={10} />
+					<DynamicIcon iconName={selectedIcon} class="text-white" size={20} />
 				</div>
 				<span class="flex-1 truncate">
 					{getIconDisplayName(selectedIcon)}

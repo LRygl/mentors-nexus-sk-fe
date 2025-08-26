@@ -4,11 +4,33 @@
 	import { faqStore } from '$lib/stores/defaults/faqStore.svelte';
 	import { getFAQStatusLabel, getFAQPriorityLabel, getFQAPriorityStyle, getFAQStatusStyle } from '$lib/types';
 	import { formatDateTime } from '$lib/utils/dateTimeFormat';
-	import {Eye, Plus, X, Clock, AlertCircle, Archive, Settings, Download	} from 'lucide-svelte';
+	import { Eye, Plus, X, Clock, AlertCircle, Archive, Settings, Download, Filter, Search } from 'lucide-svelte';
 	import ActionDropdown from '$lib/components/ui/ActionDropdown.svelte';
 	import { goto } from '$app/navigation';
 	import type { FAQ } from '$lib/types';
 	import { getFAQActions } from './faqActions';
+	import AdminHeaderSection from '$lib/components/Sections/Admin/AdminHeaderSection.svelte';
+	import { faqCategoryStore } from '$lib/stores/defaults/faqCategoryStore.svelte';
+
+
+
+
+
+	// Search and Filter State
+	let searchQuery = $state('');
+	let filteredData = $derived(() => {
+		if (!searchQuery.trim()) return faqStore.data;
+		return faqStore.data.filter(faq =>
+			faq.question.toLowerCase().includes(searchQuery.toLowerCase())
+		);
+	});
+
+
+	// Derived states
+	const hasData = $derived(filteredData.length > 0);
+	const hasOriginalData = $derived(faqStore.data.length > 0);
+
+
 
 	// View State
 	let selectedFAQs = $state<Set<string>>(new Set());
@@ -17,7 +39,6 @@
 	// Loading state for actions
 	let actionLoading = $state<Record<string, boolean>>({});
 	// Derived states
-	const hasData = $derived(faqStore.data.length > 0);
 	const isAllSelected = $derived(hasData && selectedFAQs.size === faqStore.data.length);
 	const isPartiallySelected = $derived(selectedFAQs.size > 0 && selectedFAQs.size < faqStore.data.length);
 
@@ -138,46 +159,69 @@
 </script>
 
 <!-- Main Container -->
-<div class="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
-	<div class="max-w-8xl mx-auto p-6">
+<section class="h-dvh">
+	<div class="m-5">
 
-		<!-- Dashboard Header -->
+		<!-- Header Section -->
 		<div class="mb-8">
-			<div class="flex items-center justify-between mb-6">
-				<div>
-					<h1 class="text-4xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-						FAQ Command Center
-					</h1>
-					<p class="text-slate-600 mt-2">Manage, analyze, and optimize your knowledge base</p>
-				</div>
-				<div class="flex items-center gap-4">
-					<!-- Unified Button Group - All Three Buttons -->
-					<div class="inline-flex items-center bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
-						<button
-							class="flex items-center gap-2 px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors border-r border-slate-200 text-sm font-medium"
-							onclick={() => console.log('Export data')}
-						>
-							<Download class="w-4 h-4" />
-							Export
-						</button>
-						<button
-							class="flex items-center gap-2 px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors border-r border-slate-200 text-sm font-medium"
-							onclick={() => console.log('Settings')}
-						>
-							<Settings class="w-4 h-4" />
-							Settings
-						</button>
-						<button
-							class="flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 transition-all duration-200 text-sm font-medium"
-							onclick={() => console.log('Create FAQ')}
-						>
-							<Plus class="w-4 h-4" />
-							Create FAQ
-						</button>
+			<AdminHeaderSection
+				heading="FAQ's"
+				subHeading="Organize Questions and Answers"
+			/>
+
+			<!-- Action Bar with Search and Controls -->
+			<div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mt-6">
+				<!-- Search and Filter Section -->
+				<div class="flex flex-1 items-center gap-3">
+					<div class="relative max-w-md flex-1">
+						<Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+						<input
+							type="text"
+							placeholder="Search FAQs..."
+							bind:value={searchQuery}
+							class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all duration-200"
+						/>
 					</div>
+					<button class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors duration-200">
+						<Filter class="h-4 w-4 text-slate-600" />
+					</button>
+				</div>
+
+				<!-- Action Buttons -->
+				<div class="flex items-center gap-3">
+					{#if hasOriginalData}
+						<div class="inline-flex items-center bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+							<button
+								class="flex items-center gap-2 px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors border-r border-slate-200 text-sm font-medium"
+								onclick={() => console.log('Export data')}
+							>
+								<Download class="w-4 h-4" />
+								Export
+							</button>
+							<button
+								class="flex items-center gap-2 px-4 py-2.5 text-slate-700 hover:bg-slate-50 transition-colors text-sm font-medium"
+								onclick={() => console.log('Settings')}
+							>
+								<Settings class="w-4 h-4" />
+								Settings
+							</button>
+						</div>
+					{/if}
+
+					<button
+						class="flex items-center gap-2 px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 text-white rounded-xl hover:from-indigo-700 hover:to-indigo-800 transition-all duration-200 text-sm font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+						disabled={faqCategoryStore.creating}
+					>
+						<Plus class="w-4 h-4" />
+						Create FAQ
+					</button>
 				</div>
 			</div>
 		</div>
+
+
+
+
 
 
 		<!-- Main Content Area -->
@@ -388,4 +432,4 @@
 			</div>
 		</div>
 	</div>
-</div>
+</section>

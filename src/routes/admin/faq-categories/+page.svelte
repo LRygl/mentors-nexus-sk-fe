@@ -15,7 +15,6 @@
 
 	// Modal State
 	let isCreateModalOpen = $state(false);
-	let formIsValid = $state(false);
 	let categoryFormRef: any;
 
 	// Table State
@@ -164,11 +163,11 @@
 
 
 
-<!-- Main Container with Modern Gradient Background -->
+<!-- Main Container -->
 <section class="h-dvh">
 	<div class="m-5">
 
-		<!-- Modern Header Section -->
+		<!-- Header Section -->
 		<div class="mb-8">
 			<AdminHeaderSection
 				heading="FAQ Categories"

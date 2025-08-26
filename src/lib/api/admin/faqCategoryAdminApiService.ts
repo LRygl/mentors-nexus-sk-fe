@@ -7,9 +7,7 @@ import type {
 } from '$lib/types/entities/faqCategory';
 import type { FAQ, PaginatedResult } from '$lib/types';
 
-
 export class FAQCategoryAdminApiService extends BaseApiService {
-	private static instance: FAQCategoryAdminApiService;
 	private static readonly ENDPOINT = API_CONFIG.ENDPOINTS.ADMIN.ADMIN_FAQ_CATEGORY;
 
 	constructor() {
@@ -31,7 +29,7 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 		console.log('FAQ CATEGORY API: Fetching FAQ Categories with params:', queryParams);
 
 		try {
-			const result = await this.get<PaginatedResult<FAQCategory>>(
+			return await this.get<PaginatedResult<FAQCategory>>(
 				FAQCategoryAdminApiService.ENDPOINT,
 				queryParams,
 				{
@@ -39,10 +37,6 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 					timeout: 10000
 				}
 			);
-
-			result.content = result.content.map((faqCategory) => this.transformFAQDates(faqCategory));
-
-			return result;
 		} catch (error) {
 			console.error('FAQ CATEGORY API: Error fetching FAQs:', error);
 			throw error;
@@ -61,21 +55,6 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 
 		return await this.post<FAQCategory>(FAQCategoryAdminApiService.ENDPOINT, requestData);
 	}
-
-
-
-	/**
-	 * Transforms date strings from Spring Boot to Date objects
-	 */
-	private transformFAQDates(faq: any): FAQ {
-		return {
-			...faq,
-			createdAt: new Date(faq.createdAt || faq.createdDate),
-			updatedAt: new Date(faq.updatedAt || faq.lastModifiedDate),
-			publishedDate: faq.publishedDate ? new Date(faq.publishedDate) : undefined
-		};
-	}
-
 
 	/**
 	 * Private helper to generate URL-friendly slug

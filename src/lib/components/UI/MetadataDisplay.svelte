@@ -1,6 +1,4 @@
 <script lang="ts">
-
-	import type { Component } from 'svelte';
 	import DynamicIcon from '$lib/components/UI/DynamicIcon.svelte';
 
 	type MetadataItem = {
@@ -13,7 +11,6 @@
 	export let variant: 'row' | 'column' = 'row';
 
 </script>
-
 
 <section>
 	<div
