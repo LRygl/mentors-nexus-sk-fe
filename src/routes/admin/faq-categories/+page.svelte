@@ -8,14 +8,19 @@
 	import { goto } from '$app/navigation';
 	import { getFAQCategoryActions } from './faqCategoryActions';
 	import UniversalCreateModal from '$lib/components/ui/UniversalCreateModal.svelte';
-	import FAQCategoryForm from '$lib/components/Forms/FAQCategoryForm.svelte';
 	import { AlertCircle, Filter, RefreshCw, Search } from 'lucide-svelte';
 	import DynamicIcon from '$lib/components/UI/DynamicIcon.svelte';
+	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
+	import { getFAQCategoryFormSchema, transformToCreateRequest } from '$lib/components/Forms/FAQCategoryFormSchema';
 
 
 	// Modal State
 	let isCreateModalOpen = $state(false);
-	let categoryFormRef: any;
+	let formRef: any;
+	let formIsValid = $state(false);
+
+	// Get form schema (can easily switch between variants)
+	const formSchema = getFAQCategoryFormSchema('admin'); // or 'minimal', 'standard'
 
 	// Table State
 	let selectedFAQCategories = $state<Set<string>>(new Set());
@@ -51,35 +56,8 @@
 
 	function closeCreateModal() {
 		isCreateModalOpen = false;
-		formIsValid = false;
+		formRef?.reset();
 	}
-
-	function handleFormValidation(data: { isValid: boolean } ) {
-		formIsValid = data.isValid;
-	}
-
-	async function handleCreateSubmit(event: Event) {
-		event.preventDefault();
-
-		if (!categoryFormRef || !categoryFormRef.validateForm()) {
-			return;
-		}
-
-		const formData = categoryFormRef.getFormData();
-
-		try {
-			const newCategory = await faqCategoryStore.createItem(formData);
-
-			if (newCategory) {
-				closeCreateModal();
-				console.log('Category created sucessfully:', newCategory);
-				await refreshData();
-			}
-		} catch (error) {
-			console.log(error);
-		}
-	}
-
 
   // Checkbox Toggle
 	function toggleSelectAll() {
@@ -158,7 +136,40 @@
 		goto(`/admin/faq-categories/${categoryId}`);
 	}
 
+	// Form handlers
+	function handleFormValidation(result: { isValid: boolean }) {
+		formIsValid = result.isValid;
+	}
 
+	async function handleCreateSubmit(event: Event) {
+		event.preventDefault();
+
+		if (!formRef?.validateFormExternal()) {
+			return;
+		}
+
+		const formData = formRef.getFormData();
+		const requestData = transformToCreateRequest(formData);
+
+		try {
+			const newCategory = await faqCategoryStore.createItem(requestData);
+			if (newCategory) {
+				closeCreateModal();
+				await faqCategoryStore.refresh();
+			}
+		} catch (error) {
+			console.error('Failed to create category:', error);
+		}
+	}
+
+	// Form callbacks
+	const formCallbacks = {
+		onValidate: handleFormValidation,
+		onChange: (field: string, value: any, formState: any) => {
+			// Handle real-time form changes if needed
+			console.log(`Field ${field} changed to:`, value);
+		}
+	};
 </script>
 
 
@@ -226,7 +237,7 @@
 		</div>
 
 		<!-- Content Area -->
-		<div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden">
+		<div class="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden table-container">
 
 			{#if faqCategoryStore.loading}
 				<!-- Loading State -->
@@ -305,7 +316,7 @@
 
 			{:else}
 				<!-- Data Table -->
-				<div class="overflow-x-auto">
+				<div class="table-wrapper">
 					<table class="w-full">
 						<thead class="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
 						<tr>
@@ -419,7 +430,7 @@
 								<td class="px-6 py-4 text-sm text-slate-600">
 									{category.createdAt}
 								</td>
-								<td class="px-6 py-4">
+								<td class="px-6 py-4 table-cell-with-dropdown">
 									<div onclick={(e) => e.stopPropagation()} role="none">
 										<ActionDropdown
 											itemId={category.uuid}
@@ -466,6 +477,7 @@
 </section>
 
 <!-- Create Category Modal -->
+<!-- Create Category Modal -->
 <UniversalCreateModal
 	isOpen={isCreateModalOpen}
 	title="Create FAQ Category"
@@ -475,13 +487,41 @@
 	loading={faqCategoryStore.creating}
 	error={faqCategoryStore.createError}
 	submitLabel="Create Category"
+	submitDisabled={!formIsValid}
 	onclose={closeCreateModal}
 	onsubmit={handleCreateSubmit}
 >
 	{#snippet children()}
-		<FAQCategoryForm
-			bind:this={categoryFormRef}
-			onvalidate={handleFormValidation}
+		<!-- Universal Form - No more custom form component needed! -->
+		<UniversalForm
+			bind:this={formRef}
+			schema={formSchema}
+			callbacks={formCallbacks}
+			className="space-y-6"
 		/>
 	{/snippet}
 </UniversalCreateModal>
+
+
+<style>
+    /* Add these styles to your page */
+    .table-container {
+        position: relative;
+        overflow: visible;
+    }
+
+    .table-wrapper {
+        overflow-x: auto; /* Move horizontal scroll here */
+        position: static;
+    }
+
+    .table-cell-with-dropdown {
+        position: static !important;
+        overflow: visible !important;
+    }
+
+    /* Ensure dropdowns appear above everything */
+    :global(.action-dropdown-menu) {
+        z-index: 9999 !important;
+    }
+</style>

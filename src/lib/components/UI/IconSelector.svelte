@@ -85,18 +85,6 @@
 </script>
 
 <div class={`relative ${className}`}>
-	<!-- Label -->
-	{#if label}
-		<label class="flex items-center gap-2 text-sm font-medium text-slate-700 mb-2">
-			{#if currentIconComponent}
-				<DynamicIcon iconName={selectedIcon} size={20} />
-			{/if}
-			{label}
-			{#if required}
-				<span class="text-red-500">*</span>
-			{/if}
-		</label>
-	{/if}
 
 	<!-- Selector Button -->
 	<div class="relative" bind:this={dropdownRef}>

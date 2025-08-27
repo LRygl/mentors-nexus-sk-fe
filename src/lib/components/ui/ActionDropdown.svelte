@@ -88,7 +88,7 @@
 	}
 </script>
 
-<!-- Document event listeners -->
+<!-- Document and window event listeners -->
 <svelte:document onclick={handleDocumentClick} onkeydown={handleKeydown} />
 
 <!-- Dropdown Container -->
