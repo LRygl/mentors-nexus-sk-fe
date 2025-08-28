@@ -4,6 +4,10 @@
 	import ActionDropdown from '$lib/components/ui/ActionDropdown.svelte';
 	import type { TableColumn, TableAction, TableConfig, TableCallbacks } from '$lib/types/ui/table';
 
+	//FIXME Checking the checkbox in the header does not check all checkboxes in the table page
+	//FIXME Bulk Edit and Delete Selected should have propper formatting
+	//FIXME
+
 	// Fixed Props interface - remove the generic parameter from the interface itself
 	interface Props {
 		data: T[];

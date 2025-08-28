@@ -16,21 +16,6 @@
 	import { faqCategoryStore } from '$lib/stores/defaults/faqCategoryStore.svelte';
 	import { getFAQCategoryActions } from './faqCategoryActions';
 	import { getFAQCategoryFormSchema, transformToCreateRequest } from '$lib/components/Forms/FAQCategoryFormSchema';
-	import DynamicIcon from '$lib/components/UI/DynamicIcon.svelte';
-
-	// Debug with proper Svelte 5 state inspection
-	$effect(() => {
-		console.log('FAQ Store State:');
-		console.log('- Data length:', faqCategoryStore.data.length);
-		console.log('- Loading:', faqCategoryStore.loading);
-		console.log('- Error:', faqCategoryStore.error);
-		console.log('- Total elements:', faqCategoryStore.totalElements);
-
-		if (faqCategoryStore.data.length > 0) {
-			console.log('- First item:', $state.snapshot(faqCategoryStore.data[0]));
-			console.log('- First item keys:', Object.keys(faqCategoryStore.data[0]));
-		}
-	});
 
 	// Modal and Form State
 	let isCreateModalOpen = $state(false);
@@ -38,6 +23,7 @@
 	let formIsValid = $state(false);
 	let selectedItems = $state<Set<string>>(new Set());
 
+	// TODO Move to separate configuration file
 	// Table Configuration - Check your FAQCategory interface for correct field names
 	const tableConfig: TableConfig<FAQCategory> = {
 		idField: 'id', // or 'id' - check what your API returns
@@ -49,6 +35,7 @@
 		itemNamePlural: 'categories'
 	};
 
+	// TODO Move to separate column definition file
 	// Simple columns for debugging - expand once working
 	const columns: TableColumn<FAQCategory>[] = [
 		{
