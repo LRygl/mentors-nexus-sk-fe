@@ -35,8 +35,9 @@ export class FAQCategoryStore extends BaseStoreSvelte<
 		return await this.apiService.getFAQCategoryPage(faqCategoryParams);
 	}
 
-	protected async fetchItem(id: string): Promise<FAQCategory> {
-		return await this.apiService.getFAQCategory(id);
+	//TODO Check local storage first before querying api
+	async fetchItem(id: string): Promise<FAQCategory> {
+		return await this.apiService.getFAQCategoryById(id);
 	}
 
 	async createItem(createRequest: CreateFAQCategoryRequest): Promise<FAQCategory> {

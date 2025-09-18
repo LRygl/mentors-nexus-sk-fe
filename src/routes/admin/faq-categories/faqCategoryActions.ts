@@ -1,77 +1,84 @@
 import { type ActionGroup, type ActionItem, ActionType, type FAQ, FAQStatus } from '$lib/types';
 import {
-	BookX,
-	ArchiveRestore,
-	BookCheck,
-	History,
 	Trash2,
-	Archive,
-	Download,
-	Share2,
 	Eye,
-	Edit3,
 	Edit,
 	Copy,
-	ShieldOff,
-	Shield,
 	RotateCcw,
 	Mail
 } from '@lucide/svelte';
 import type { FAQCategory } from '$lib/types/entities/faqCategory';
-import type { TableAction } from '$lib/types/ui/table';
 
-export function getFAQCategoryActions(category: FAQCategory): TableAction[] {
-	return [
-		// Primary actions group
+//TODO Fix the implementation to use ActionGroup[] instead of TableAction
+
+export function getFAQCategoryActions(category: FAQCategory): ActionGroup[] {
+	const groups: ActionGroup[] = [];
+
+	/*
+	 * PRIMARY ACTIONS
+	 */
+	const primary: ActionItem[] = [
 		{
 			id: 'view',
 			label: 'View Details',
+			description: 'Open category details',
 			icon: Eye,
-			variant: 'default'
+			variant: ActionType.DEFAULT
 		},
 		{
 			id: 'edit',
 			label: 'Edit Category',
+			description: 'Modify category info',
 			icon: Edit,
-			variant: 'default'
+			variant: ActionType.DEFAULT
 		},
 		{
 			id: 'duplicate',
 			label: 'Duplicate',
+			description: 'Create a copy',
 			icon: Copy,
-			variant: 'default'
-		},
-		// Divider between primary and secondary actions
-		{
-			id: 'divider-1',
-			label: '',
-			divider: true
-		},
-		// Secondary actions group
+			variant: ActionType.DEFAULT
+		}
+	];
+
+	groups.push({ title: 'Actions', items: primary });
+
+	/*
+	 * UTILITIES
+	 */
+	const utilities: ActionItem[] = [
 		{
 			id: 'reset-password',
 			label: 'Reset Password',
+			description: 'Force reset linked account',
 			icon: RotateCcw,
-			variant: 'outline'
+			variant: ActionType.WARNING
 		},
 		{
 			id: 'send-email',
 			label: 'Send Email',
+			description: 'Notify related users',
 			icon: Mail,
-			variant: 'outline'
-		},
-		// Divider before destructive actions
-		{
-			id: 'divider-2',
-			label: '',
-			divider: true
-		},
-		// Destructive actions group
-		{
-			id: 'delete',
-			label: 'Delete Category', // Fixed: was "Delete User"
-			icon: Trash2,
-			variant: 'destructive'
+			variant: ActionType.DEFAULT
 		}
 	];
+
+	groups.push({ title: 'Utilities', items: utilities });
+
+	/*
+	 * MANAGEMENT
+	 */
+	const management: ActionItem[] = [
+		{
+			id: 'delete',
+			label: 'Delete Category',
+			description: 'Permanent removal',
+			icon: Trash2,
+			variant: ActionType.DANGER
+		}
+	];
+
+	groups.push({ title: 'Management', items: management });
+
+	return groups;
 }

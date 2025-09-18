@@ -3,6 +3,7 @@
 	import { Check, Download, Settings, Plus, AlertCircle, Filter, RefreshCw, Search, FileText } from 'lucide-svelte';
 	import ActionDropdown from '$lib/components/ui/ActionDropdown.svelte';
 	import type { TableColumn, TableAction, TableConfig, TableCallbacks } from '$lib/types/ui/table';
+	import type { ActionGroup } from '$lib/types';
 
 	//FIXME Checking the checkbox in the header does not check all checkboxes in the table page
 	//FIXME Bulk Edit and Delete Selected should have propper formatting
@@ -21,7 +22,7 @@
 		exportable?: boolean;
 		callbacks?: TableCallbacks<T>;
 		selectedItems?: Set<string>;
-		getActions?: (item: T) => TableAction[];
+		getActions?: (item: T) => ActionGroup[];
 		emptyTitle?: string;
 		emptyDescription?: string;
 		emptyActionLabel?: string;
@@ -114,46 +115,6 @@
 		}
 		selectedItems = newSelection;
 		callbacks.onSelectionChange?.(Array.from(selectedItems));
-	}
-
-	// Transform TableActions to ActionDropdown format with proper icon handling
-	function transformTableActionsToGroups(actions: TableAction[]) {
-		const groups = [];
-		let currentGroup = { items: [] as any[] };
-
-		for (const action of actions) {
-			// Check if this action is a divider
-			if (action.divider === true) {
-				// If we have items in current group, push it and start new group
-				if (currentGroup.items.length > 0) {
-					groups.push(currentGroup);
-					currentGroup = { items: [] };
-				}
-				// Skip adding the divider itself to items
-				continue;
-			}
-
-			// Add regular action to current group - fix the description property
-			const actionItem = {
-				id: action.id,
-				label: action.label,
-				description: action.description || undefined, // Make it optional
-				icon: action.icon,
-				variant: action.variant || 'default',
-				disabled: action.disabled || false,
-				separator: false
-			};
-
-			currentGroup.items.push(actionItem);
-		}
-
-		// Don't forget to push the last group if it has items
-		if (currentGroup.items.length > 0) {
-			groups.push(currentGroup);
-		}
-
-		console.log('Transformed action groups:', groups);
-		return groups;
 	}
 
 
@@ -489,7 +450,7 @@
 							item[config.idField] ||
 							'Item'
 						)}
-										actions={transformTableActionsToGroups(getActions(item))}
+										actions={getActions(item)}
 										buttonVariant="outline"
 										buttonSize="sm"
 										dropdownWidth="w-64"

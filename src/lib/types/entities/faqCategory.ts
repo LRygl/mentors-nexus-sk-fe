@@ -1,12 +1,11 @@
 import type { BaseEntity, PaginationParams } from '$lib/types/common';
 import type { Component } from 'svelte';
-import type { FAQPriority, FAQStatus } from '$lib/types';
 
 export interface FAQCategory extends BaseEntity {
 	id: string;
 	uuid: string;
 	name: string;
-	description?: string;
+	description: string;
 	slug: string;
 	iconClass: string;
 	colorCode: string;
@@ -15,7 +14,8 @@ export interface FAQCategory extends BaseEntity {
 	isVisible: boolean;
 	createdAt: Date;
 	updatedAt: Date;
-
+	metaDescription: string;
+	metaKeywords: string;
 	// Computed fields
 	faqCount?: number;           // Number of FAQs in this category
 	publishedFaqCount?: number;  // Number of published FAQs

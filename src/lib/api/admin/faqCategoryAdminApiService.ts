@@ -15,7 +15,6 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 	}
 
 	async getFAQCategoryPage(params: FAQCategoryPaginationParams = {}): Promise<PaginatedResult<FAQCategory>> {
-
 		const queryParams: Record<string, any> = {
 			page: params.page ?? 0,
 			size: params.size ?? 20
@@ -43,6 +42,15 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 		}
 	}
 
+	async getFAQCategoryById(id: string): Promise<FAQCategory> {
+		try {
+			console.log("API CALL", id)
+			return this.get<FAQCategory>(`${FAQCategoryAdminApiService.ENDPOINT}/${id}`);
+		} catch (error) {
+			throw error;
+		}
+	}
+
 	/**
 	 * Create new FAQ category
 	 */
@@ -55,6 +63,8 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 
 		return await this.post<FAQCategory>(FAQCategoryAdminApiService.ENDPOINT, requestData);
 	}
+
+
 
 	/**
 	 * Private helper to generate URL-friendly slug

@@ -78,15 +78,14 @@
 	// Table callbacks adapted for BaseStoreSvelte
 	const tableCallbacks: TableCallbacks<FAQCategory> = {
 		onRowClick: (category) => {
-			console.log('Row clicked:', category);
+			console.log("Clicked row", category.id);
 			goto(`/admin/faq-categories/${category.id}`);
 		},
 
 		onAction: async (actionId, category) => {
-			console.log('Action triggered:', actionId, category);
-
 			switch (actionId) {
 				case 'view':
+					console.log("View Action was called by the user in the dropdown")
 					await goto(`/admin/faq-categories/${category.id}`);
 					break;
 				case 'edit':
@@ -124,12 +123,10 @@
 		},
 
 		onSelectionChange: (selectedIds) => {
-			console.log('Selection changed:', selectedIds);
 			selectedItems = new Set(selectedIds);
 		},
 
 		onRefresh: async () => {
-			console.log('Refresh triggered');
 			await faqCategoryStore.refresh();
 		},
 
@@ -139,7 +136,6 @@
 		},
 
 		onExport: (data) => {
-			console.log('Export triggered with data:', data);
 			exportToCSV(data, 'faq-categories.csv');
 		},
 
@@ -155,7 +151,6 @@
 						await faqCategoryStore.delete(id);
 					}
 					selectedItems = new Set();
-					console.log('Bulk delete completed');
 				} catch (error) {
 					console.error('Failed to delete categories:', error);
 				}
@@ -171,9 +166,7 @@
 		console.log('Component mounted, loading FAQ categories...');
 		try {
 			await faqCategoryStore.loadFAQCategories();
-			console.log('Data loaded successfully');
 		} catch (error) {
-			console.error('Failed to load data:', error);
 		}
 	});
 
@@ -190,29 +183,21 @@
 	// Form handlers
 	function handleFormValidation(result: { isValid: boolean }) {
 		formIsValid = result.isValid;
-		console.log('Form validation:', result);
 	}
 
 	async function handleCreateSubmit(event: Event) {
 		event.preventDefault();
-		console.log('Form submit triggered');
 
 		if (!formRef?.validateFormExternal()) {
-			console.log('Form validation failed');
 			return;
 		}
 
 		const formData = formRef.getFormData();
-		console.log('Form data:', formData);
-
 		const requestData = transformToCreateRequest(formData);
-		console.log('Transformed request data:', requestData);
 
 		try {
 			// Use the store's create method
 			const newCategory = await faqCategoryStore.create(requestData);
-			console.log('Category created:', newCategory);
-
 			if (newCategory) {
 				closeCreateModal();
 				// No need to refresh - the store automatically updates the data array
@@ -232,8 +217,6 @@
 
 	// Export utility
 	function exportToCSV(data: FAQCategory[], filename: string): void {
-		console.log('Exporting CSV with data:', data);
-
 		if (data.length === 0) return;
 
 		const csvData = data.map(item => ({
