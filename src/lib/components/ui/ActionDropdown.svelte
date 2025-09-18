@@ -1,9 +1,9 @@
 <script lang="ts">
-
-	import { type ActionDropdownProps, getActionStyle } from '$lib/types';
+	import type { ActionDropdownProps } from '$lib/types';
+	import { getActionStyle } from '$lib/types';
 	import { MoreHorizontal } from 'lucide-svelte';
-	import { Button } from '$lib/components/ui/button';
 	import type { Component } from 'svelte';
+	import Portal from 'svelte-portal';
 
 	let {
 		itemId,
@@ -20,35 +20,62 @@
 		onclose
 	}: ActionDropdownProps = $props();
 
-	// State - use controlled state if provided, otherwise internal state
 	let internalIsOpen = $state(false);
-	// Computed: Use controlled state if provided, otherwise internal
 	const isOpen = $derived(controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen);
 
-	let dropdownElement: HTMLDivElement;
+	let buttonElement = $state<HTMLElement>();
+	let dropdownPosition = $state({ top: 0, left: 0 });
 
-	// Methods to control dropdown
+	function calculatePosition() {
+		if (!buttonElement) return;
+
+		const rect = buttonElement.getBoundingClientRect();
+		const dropdownWidthPx = 256;
+		const gap = 8;
+
+		// Use fixed positioning relative to viewport
+		let top = rect.bottom + gap;
+		let left = rect.right - dropdownWidthPx;
+
+		// Keep dropdown on screen
+		const viewportWidth = window.innerWidth;
+		const viewportHeight = window.innerHeight;
+
+		if (left < 8) {
+			left = rect.left;
+		}
+		if (left + dropdownWidthPx > viewportWidth - 8) {
+			left = viewportWidth - dropdownWidthPx - 8;
+		}
+
+		if (top + 300 > viewportHeight) {
+			top = rect.top - gap - 300;
+		}
+
+		dropdownPosition = { top, left };
+	}
+
 	export function open() {
-		console.log("open");
 		if (!disabled) {
-			if (controlledIsOpen === undefined) {
+			calculatePosition();
+
+			if (controlledIsOpen !== undefined) {
+				onopen?.({ itemId });
+			} else {
 				internalIsOpen = true;
 			}
-			onopen?.({ itemId });
 		}
 	}
 
 	export function close() {
-		if (isOpen) {
-			if (controlledIsOpen === undefined) {
-				internalIsOpen = false;
-			}
+		if (controlledIsOpen !== undefined) {
 			onclose?.({ itemId });
+		} else {
+			internalIsOpen = false;
 		}
 	}
 
 	export function toggle() {
-		console.log("Action Dropdown Toggled")
 		if (isOpen) {
 			close();
 		} else {
@@ -56,21 +83,25 @@
 		}
 	}
 
-	// Internal Handlers
 	function handleButtonClick(event: MouseEvent) {
+		event.preventDefault();
 		event.stopPropagation();
 		toggle();
 	}
 
 	function handleActionClick(actionId: string, event: MouseEvent) {
+		event.preventDefault();
 		event.stopPropagation();
 		close();
-		onaction?.({ actionId, itemId})
+		onaction?.({ actionId, itemId });
 	}
 
 	function handleDocumentClick(event: MouseEvent) {
-		if (isOpen && dropdownElement && !dropdownElement.contains(event.target as Node)) {
-			close()
+		if (isOpen) {
+			const target = event.target as Element;
+			if (!target.closest('.dropdown-content') && !target.closest('.action-dropdown')) {
+				close();
+			}
 		}
 	}
 
@@ -80,167 +111,86 @@
 		}
 	}
 
-	// Safe icon rendering helper
 	function isValidComponent(component: any): component is Component {
 		return component && (
 			typeof component === 'function' ||
-			(typeof component === 'object' && component.$$typeof));
+			(typeof component === 'object' && component.$$typeof)
+		);
 	}
 </script>
 
-<!-- Document and window event listeners -->
 <svelte:document onclick={handleDocumentClick} onkeydown={handleKeydown} />
 
-<!-- Dropdown Container -->
-<div
-	bind:this={dropdownElement}
-	class="dropdown-container relative"
-	class:z-50={isOpen}
-	class:z-10={!isOpen}
-	onclick={(e) => e.stopPropagation()}
-	role="none"
->
-	<!-- Trigger Button -->
-	<Button
-		variant={buttonVariant}
-		size={buttonSize}
+<!-- Button container -->
+<div class="action-dropdown relative" data-item-id={itemId}>
+	<button
+		bind:this={buttonElement}
+		type="button"
 		onclick={handleButtonClick}
 		{disabled}
-		class="relative transition-all duration-200 {isOpen
-			? 'ring-2 ring-indigo-500 bg-indigo-50 border-indigo-300 shadow-md'
-			: 'hover:bg-slate-50 hover:border-slate-300'}"
+		class="relative inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors border border-slate-300 bg-white hover:bg-slate-50 h-9 px-3 {isOpen
+			? 'ring-2 ring-indigo-500 bg-indigo-50 border-indigo-300'
+			: ''}"
 		aria-label="Actions for {itemTitle}"
 		aria-expanded={isOpen}
 		aria-haspopup="menu"
 	>
 		<MoreHorizontal class="w-4 h-4 transition-transform duration-200 {isOpen ? 'rotate-90' : ''}" />
-	</Button>
+	</button>
+</div>
 
-	<!-- Dropdown Menu -->
-	{#if isOpen}
-		<!-- Backdrop -->
-		<div
-			class="fixed inset-0 bg-transparent z-40"
-			onclick={close}
-			aria-hidden="true"
-		></div>
+<!-- Portal dropdown content to document body when open -->
+{#if isOpen}
+	<Portal>
+	<div
+		class="dropdown-content fixed w-64 bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden"
+		style="top: {dropdownPosition.top}px; left: {dropdownPosition.left}px; z-index: 99999;"
+		role="menu"
+	>
+		{#if itemTitle}
+			<div class="px-4 py-3 bg-slate-50 border-b border-slate-200">
+				<h4 class="text-sm font-semibold text-slate-800 truncate">
+					{itemTitle}
+				</h4>
+			</div>
+		{/if}
 
-		<div
-			class="absolute {position === 'right' ? 'right-0' : 'left-0'} top-full mt-3 {dropdownWidth} bg-white border border-slate-200/60 rounded-xl shadow-xl backdrop-blur-sm overflow-hidden z-50 action-dropdown-menu"
-			role="menu"
-			aria-orientation="vertical"
-		>
-			<!-- Header (if itemTitle is provided) -->
-			{#if itemTitle}
-				<div class="px-4 py-3 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200/60">
-					<h4 class="text-sm font-semibold text-slate-800 truncate">
-						{itemTitle}
-					</h4>
-					<p class="text-xs text-slate-500 mt-1">Choose an action</p>
-				</div>
-			{/if}
-
-			<!-- Action Groups -->
-			{#each actions as group, groupIndex}
-				<div class="py-2">
-					<!-- Group Title -->
+		<div class="max-h-80 overflow-y-auto">
+			{#each actions as group}
+				<div class="py-1">
 					{#if group.title}
-						<div class="px-3 py-1.5 text-xs font-medium text-slate-500 uppercase tracking-wider">
+						<div class="px-3 py-2 text-xs font-medium text-slate-500 uppercase">
 							{group.title}
 						</div>
 					{/if}
 
-					<!-- Group Items -->
 					{#each group.items as action}
 						<button
 							type="button"
 							onclick={(e) => handleActionClick(action.id, e)}
 							disabled={action.disabled}
-							class="group flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-700 transition-all duration-200 text-left focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed {getActionStyle(action.variant)}"
+							class="flex items-center gap-3 w-full px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 text-left transition-colors disabled:opacity-50 {getActionStyle(action.variant)}"
 							role="menuitem"
 						>
-							<div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center transition-all duration-200 {action.disabled ? 'opacity-50' : ''}">
-								<!-- Safe icon rendering with error handling -->
+							<div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
 								{#if isValidComponent(action.icon)}
 									{@const IconComponent = action.icon}
 									<IconComponent class="w-4 h-4 text-slate-500" />
 								{:else}
-									<!-- Fallback icon -->
-									<div class="w-4 h-4 bg-slate-400 rounded-sm"></div>
+									<div class="w-3 h-3 bg-slate-400 rounded"></div>
 								{/if}
 							</div>
-							<div class="flex-1">
-								<span class="font-medium">{action.label}</span>
+							<div class="flex-1 min-w-0">
+								<div class="font-medium truncate">{action.label}</div>
 								{#if action.description}
-									<p class="text-xs text-slate-500">{action.description}</p>
+									<div class="text-xs text-slate-500 truncate">{action.description}</div>
 								{/if}
 							</div>
 						</button>
-
-						<!-- Separator -->
-						{#if action.separator}
-							<div class="border-t border-slate-200/60 my-1"></div>
-						{/if}
 					{/each}
 				</div>
-
-				<!-- Group Separator -->
-				{#if groupIndex < actions.length - 1}
-					<div class="border-t border-slate-200/60 my-1"></div>
-				{/if}
 			{/each}
 		</div>
-	{/if}
-</div>
-
-
-<style>
-    /* Animation for dropdown */
-    .action-dropdown-menu {
-        animation: dropdownFadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        transform-origin: top right;
-    }
-
-    @keyframes dropdownFadeIn {
-        0% {
-            opacity: 0;
-            transform: scale(0.92) translateY(-12px) translateX(4px);
-            filter: blur(4px);
-        }
-        100% {
-            opacity: 1;
-            transform: scale(1) translateY(0) translateX(0);
-            filter: blur(0);
-        }
-    }
-
-    /* Enhanced hover effects */
-    .action-dropdown-menu button[role="menuitem"] {
-        transform: translateX(0);
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .action-dropdown-menu button[role="menuitem"]:hover:not(:disabled) {
-        transform: translateX(4px);
-    }
-
-    .action-dropdown-menu button[role="menuitem"]:active:not(:disabled) {
-        transform: translateX(2px) scale(0.98);
-    }
-
-    /* Icon container animations */
-    .action-dropdown-menu button[role="menuitem"] > div:first-of-type {
-        transform: scale(1) rotate(0deg);
-        transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .action-dropdown-menu button[role="menuitem"]:hover:not(:disabled) > div:first-of-type {
-        transform: scale(1.05) rotate(2deg);
-    }
-
-    /* Focus styles */
-    .action-dropdown-menu button[role="menuitem"]:focus {
-        box-shadow: inset 3px 0 0 currentColor;
-        outline: none;
-    }
-</style>
+	</div>
+	</Portal>
+{/if}

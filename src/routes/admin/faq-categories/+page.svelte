@@ -45,10 +45,9 @@
 			cellClassName: 'font-mono text-xs text-slate-500'
 		},
 		{
-			key: 'uuid',
-			header: 'UUID',
-			searchable: false,
-			cellClassName: 'font-mono text-xs text-slate-500'
+			key: 'name',
+			header: 'Name',
+			searchable: true,
 		},
 		{
 			key: 'iconClass',
@@ -57,11 +56,7 @@
 			renderType: 'custom',
 			cellClassName: 'font-semibold text-slate-900'
 		},
-		{
-			key: 'name',
-			header: 'Name',
-			searchable: true,
-		},
+
 		{
 			key: 'displayOrder',
 			header: 'Order',

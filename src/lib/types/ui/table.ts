@@ -4,6 +4,7 @@ import type { Component, Snippet } from 'svelte';
 export interface TableAction {
 	id: string;
 	label: string;
+	description?: string;
 	icon?: Component;
 	variant?: 'default' | 'destructive' | 'outline' | 'secondary';
 	disabled?: boolean;

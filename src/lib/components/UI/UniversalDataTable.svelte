@@ -53,8 +53,20 @@
 	let searchQuery = $state('');
 	let openDropdownId = $state<string | null>(null);
 
+
+	// Add this helper function
+	function getItemTitle(item: T): string {
+		if (config.titleField && config.titleField in item) {
+			const titleValue = item[config.titleField as keyof T];
+			if (titleValue !== undefined && titleValue !== null) {
+				return String(titleValue);
+			}
+		}
+		return String(item[config.idField] || 'Item');
+	}
+
 	// Filtered data based on search - fixed type assertion with debug
-	let filteredData = $derived(() => {
+	let filteredData = $derived.by(() => {
 		console.log('UniversalDataTable - Computing filteredData:', {
 			originalDataLength: data.length,
 			searchQuery: searchQuery.trim(),
@@ -62,15 +74,14 @@
 		});
 
 		if (!searchQuery.trim()) {
-			console.log('UniversalDataTable - No search, returning all data:', data);
 			return data;
 		}
 
-		const filtered = data.filter((item: T) => {
+		const filtered = data.filter((item) => {
 			return columns.some(column => {
 				if (!column.searchable) return false;
 				const value = column.accessor ? column.accessor(item) : item[column.key as keyof T];
-				return String(value).toLowerCase().includes(searchQuery.toLowerCase());
+				return String(value || '').toLowerCase().includes(searchQuery.toLowerCase());
 			});
 		});
 
@@ -79,19 +90,9 @@
 	});
 
 	// Selection state helpers with debug - fix function call issue
-	const hasData = $derived(() => {
-		const result = filteredData.length > 0;
-		console.log('UniversalDataTable - hasData:', result, 'filteredData.length:', filteredData.length);
-		return result;
-	});
-
-	const hasOriginalData = $derived(() => {
-		const result = data.length > 0;
-		console.log('UniversalDataTable - hasOriginalData:', result, 'data.length:', data.length);
-		return result;
-	});
-
-	const isAllSelected = $derived(hasData() && selectedItems.size === data.length);
+	const hasData = $derived(filteredData.length > 0);
+	const hasOriginalData = $derived(data.length > 0);
+	const isAllSelected = $derived(hasData && selectedItems.size === data.length);
 	const isPartiallySelected = $derived(selectedItems.size > 0 && selectedItems.size < data.length);
 
 	// Selection functions
@@ -118,28 +119,43 @@
 	// Transform TableActions to ActionDropdown format with proper icon handling
 	function transformTableActionsToGroups(actions: TableAction[]) {
 		const groups = [];
-		let currentGroup = { items: [] as any[] }; // Use any[] to avoid strict typing issues
+		let currentGroup = { items: [] as any[] };
 
 		for (const action of actions) {
-			if (action.divider && currentGroup.items.length > 0) {
-				groups.push(currentGroup);
-				currentGroup = { items: [] };
-			} else if (!action.divider) {
-				// Ensure icon is defined for ActionDropdown compatibility
-				const actionItem = {
-					...action,
-					icon: action.icon || (() => null) // Provide fallback if no icon
-				};
-				currentGroup.items.push(actionItem);
+			// Check if this action is a divider
+			if (action.divider === true) {
+				// If we have items in current group, push it and start new group
+				if (currentGroup.items.length > 0) {
+					groups.push(currentGroup);
+					currentGroup = { items: [] };
+				}
+				// Skip adding the divider itself to items
+				continue;
 			}
+
+			// Add regular action to current group - fix the description property
+			const actionItem = {
+				id: action.id,
+				label: action.label,
+				description: action.description || undefined, // Make it optional
+				icon: action.icon,
+				variant: action.variant || 'default',
+				disabled: action.disabled || false,
+				separator: false
+			};
+
+			currentGroup.items.push(actionItem);
 		}
 
+		// Don't forget to push the last group if it has items
 		if (currentGroup.items.length > 0) {
 			groups.push(currentGroup);
 		}
 
+		console.log('Transformed action groups:', groups);
 		return groups;
 	}
+
 
 	// Action handlers
 	async function handleAction(event: { actionId: string; itemId: string }) {
@@ -245,8 +261,7 @@
 </script>
 
 <!-- Main Container -->
-<div class={`bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden ${className}`}>
-
+<div class={`bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 ${className}`}>
 	<!-- Search and Action Bar -->
 	{#if hasOriginalData || searchQuery}
 		<div class="p-6 bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
@@ -274,7 +289,7 @@
 
 				<!-- Action Buttons -->
 				<div class="flex items-center gap-3">
-					{#if exportable && hasOriginalData()}
+					{#if exportable && hasOriginalData}
 						<button
 							class="flex items-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors text-sm font-medium"
 							onclick={() => callbacks.onExport?.(data)}
@@ -378,7 +393,7 @@
 
 	{:else}
 		<!-- Data Table -->
-		<div class="table-wrapper overflow-x-auto">
+		<div class="table-wrapper overflow-x-auto" class:dropdown-open={openDropdownId !== null}>
 			<table class="w-full">
 				<thead class="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
 				<tr>
@@ -423,22 +438,22 @@
 				</tr>
 				</thead>
 				<tbody class="divide-y divide-slate-100">
-				{#each filteredData() as item, index (item[config.idField])}
+				{#each filteredData as item, index (item[config.idField])}
 					<tr
 						class={`
-								hover:bg-slate-50/50 transition-all duration-200 group cursor-pointer
-								${selectedItems.has(String(item[config.idField])) ? 'bg-indigo-50/50' : ''}
-								hover:shadow-sm hover:scale-[1.002] transform-gpu
-							`}
-						onclick={(e) => handleRowClick(e, item as T)}
+			hover:bg-slate-50/50 transition-all duration-200 group cursor-pointer
+			${selectedItems.has(String(item[config.idField])) ? 'bg-indigo-50/50' : ''}
+			hover:shadow-sm hover:scale-[1.002] transform-gpu
+		`}
+						onclick={(e) => handleRowClick(e, item)}
 						role="button"
 						tabindex="0"
 						onkeydown={(e) => {
-								if (e.key === 'Enter' || e.key === ' ') {
-									e.preventDefault();
-									handleRowClick(e, item as T);
-								}
-							}}
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				handleRowClick(e, item);
+			}
+		}}
 					>
 						{#if selectable}
 							<td class="px-6 py-4">
@@ -457,10 +472,9 @@
 						{#each columns as column}
 							<td class={`px-6 py-4 ${column.cellClassName || ''}`}>
 								{#if column.renderType === 'custom'}
-									<!-- For truly custom content, you'd need to handle this in your specific page -->
-									{@html renderCell(column, item as T, column.accessor ? column.accessor(item as T) : item[column.key as keyof T])}
+									{@html renderCell(column, item, column.accessor ? column.accessor(item) : item[column.key as keyof T])}
 								{:else}
-									{@html renderCell(column, item as T, column.accessor ? column.accessor(item as T) : item[column.key as keyof T])}
+									{@html renderCell(column, item, column.accessor ? column.accessor(item) : item[column.key as keyof T])}
 								{/if}
 							</td>
 						{/each}
@@ -470,8 +484,12 @@
 								<div onclick={(e) => e.stopPropagation()} role="none">
 									<ActionDropdown
 										itemId={String(item[config.idField])}
-										itemTitle={String(item[config.titleField] || item[config.idField])}
-										actions={transformTableActionsToGroups(getActions(item as T))}
+										itemTitle={String(
+							(config.titleField && item[config.titleField as keyof T]) ||
+							item[config.idField] ||
+							'Item'
+						)}
+										actions={transformTableActionsToGroups(getActions(item))}
 										buttonVariant="outline"
 										buttonSize="sm"
 										dropdownWidth="w-64"
@@ -520,18 +538,3 @@
 		{/if}
 	{/if}
 </div>
-
-<style>
-    .table-wrapper {
-        position: static;
-    }
-
-    .table-cell-with-dropdown {
-        position: static !important;
-        overflow: visible !important;
-    }
-
-    :global(.action-dropdown-menu) {
-        z-index: 9999 !important;
-    }
-</style>

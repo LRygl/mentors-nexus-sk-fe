@@ -22,6 +22,7 @@ import type { TableAction } from '$lib/types/ui/table';
 
 export function getFAQCategoryActions(category: FAQCategory): TableAction[] {
 	return [
+		// Primary actions group
 		{
 			id: 'view',
 			label: 'View Details',
@@ -40,11 +41,13 @@ export function getFAQCategoryActions(category: FAQCategory): TableAction[] {
 			icon: Copy,
 			variant: 'default'
 		},
+		// Divider between primary and secondary actions
 		{
-			id: 'divider',
+			id: 'divider-1',
 			label: '',
 			divider: true
 		},
+		// Secondary actions group
 		{
 			id: 'reset-password',
 			label: 'Reset Password',
@@ -57,16 +60,18 @@ export function getFAQCategoryActions(category: FAQCategory): TableAction[] {
 			icon: Mail,
 			variant: 'outline'
 		},
+		// Divider before destructive actions
 		{
-			id: 'divider2',
+			id: 'divider-2',
 			label: '',
 			divider: true
 		},
+		// Destructive actions group
 		{
 			id: 'delete',
-			label: 'Delete User',
+			label: 'Delete Category', // Fixed: was "Delete User"
 			icon: Trash2,
-			variant: 'destructive',
+			variant: 'destructive'
 		}
 	];
 }
