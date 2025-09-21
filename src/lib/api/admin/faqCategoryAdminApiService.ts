@@ -44,7 +44,7 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 
 	async getFAQCategoryById(id: string): Promise<FAQCategory> {
 		try {
-			console.log("API CALL", id)
+			console.log("API CALL for Category ID", id)
 			return this.get<FAQCategory>(`${FAQCategoryAdminApiService.ENDPOINT}/${id}`);
 		} catch (error) {
 			throw error;

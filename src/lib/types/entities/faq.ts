@@ -6,7 +6,7 @@ import type { FAQPriority } from '$lib/types/enums/faqPriority';
 import type { FAQCategory } from '$lib/types/entities/faqCategory';
 
 export interface FAQ extends BaseEntity {
-	id: string;
+	id: number;
 	uuid: string;
 	question: string;
 	answer: string;
@@ -22,8 +22,8 @@ export interface FAQ extends BaseEntity {
 	helpfulVotes: number;
 	notHelpfulVotes: number;
 	priority: FAQPriority;
-	createdAt: Date;
-	updatedAt: Date;
+	createdAt: string;
+	updatedAt: string;
 	createdBy?: string;
 	updatedBy?: string;
 

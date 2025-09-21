@@ -37,6 +37,7 @@ export class FAQCategoryStore extends BaseStoreSvelte<
 
 	//TODO Check local storage first before querying api
 	async fetchItem(id: string): Promise<FAQCategory> {
+		console.log("Getting FAQ category");
 		return await this.apiService.getFAQCategoryById(id);
 	}
 
