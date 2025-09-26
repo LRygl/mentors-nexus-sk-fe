@@ -175,6 +175,12 @@ export class FaqStoreSvelte extends BaseStoreSvelte<
 		return allFaqs.filter(faq => !linkedSet.has(faq.uuid))
 	}
 
+
+get allFaqsLoaded(): boolean {
+		return this._allFaqsLoaded;
+}
+
+
 }
 
 export const faqStore = new FaqStoreSvelte();

@@ -81,6 +81,19 @@ export class FAQAdminApiService extends BaseApiService {
 		}
 	}
 
+	async createFAQ(createRequest: Partial<FAQ>) {
+		try {
+			const faq = await this.post<Partial<FAQ>>(
+				FAQAdminApiService.ENDPOINT,
+				createRequest
+				)
+			return faq;
+		} catch(e) {
+			console.error('FAQ API: Error creating FAQ:', e);
+		}
+		return undefined;
+	}
+
 	/**
 	 * PUBLISH FAQ
 	 * Maps to Spring Boot controller: PATCH /api/v1/admin/faq/{uuid}/publish
@@ -90,7 +103,6 @@ export class FAQAdminApiService extends BaseApiService {
 
 	async publishFAQ(uuid: string): Promise<FAQ> {
 		try {
-			this.clearFAQCache();
 			const faq = await this.patch<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}/publish`);
 			// Transform date strings to Date objects
 			return this.transformFAQDates(faq);
@@ -103,7 +115,6 @@ export class FAQAdminApiService extends BaseApiService {
 
 	async unpublishFAQ(uuid: string): Promise<FAQ> {
 		try {
-			this.clearFAQCache();
 			const faq = await this.patch<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}/unpublish`);
 			return this.transformFAQDates(faq);
 		} catch (error) {
@@ -146,16 +157,6 @@ export class FAQAdminApiService extends BaseApiService {
 		};
 	}
 
-	/**
-	 * Clear FAQ-related cache entries
-	 */
-	clearFAQCache(): void {
-		this.invalidate(FAQAdminApiService.ENDPOINT);
-	}
-
-	static async unlinkFAQFromFAQCategory(faqUuid: string) {
-
-	}
 }
 
 export const faqAdminApiService = new FAQAdminApiService;

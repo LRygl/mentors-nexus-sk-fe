@@ -4,6 +4,7 @@
 	import { MoreHorizontal } from 'lucide-svelte';
 	import type { Component } from 'svelte';
 	import Portal from 'svelte-portal';
+	import DynamicIcon from '$lib/components/UI/DynamicIcon.svelte';
 
 	let {
 		itemId,
@@ -191,7 +192,12 @@
 							<div class="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center">
 								{#if isValidComponent(action.icon)}
 									{@const IconComponent = action.icon}
+									<DynamicIcon
+										iconName={action.icon}
+									/>
+									<!--
 									<IconComponent class="w-4 h-4 text-slate-500" />
+									-->
 								{:else}
 									<div class="w-3 h-3 bg-slate-400 rounded"></div>
 								{/if}

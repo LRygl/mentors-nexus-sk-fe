@@ -76,7 +76,7 @@
 		const filtered = data.filter((item) => {
 			return columns.some(column => {
 				if (!column.searchable) return false;
-				const value = column.accessor ? column.accessor(item) : item[column.key as keyof T];
+				const value = column.accessor ? column.accessor(item) : getNestedValue(item, String(column.key));
 				return String(value || '').toLowerCase().includes(searchQuery.toLowerCase());
 			});
 		});
@@ -217,6 +217,12 @@
 		if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
 
 		return date.toLocaleDateString();
+	}
+
+	function getNestedValue(obj: any, path: string): any {
+		return path.split('.').reduce((current, key) => {
+			return current && current[key] !== undefined ? current[key] : undefined;
+		}, obj);
 	}
 </script>
 
@@ -435,9 +441,9 @@
 						{#each columns as column}
 							<td class={`px-6 py-4 ${column.cellClassName || ''}`}>
 								{#if column.renderType === 'custom'}
-									{@html renderCell(column, item, column.accessor ? column.accessor(item) : item[column.key as keyof T])}
+									{@html renderCell(column, item, column.accessor ? column.accessor(item) : getNestedValue(item, String(column.key)))}
 								{:else}
-									{@html renderCell(column, item, column.accessor ? column.accessor(item) : item[column.key as keyof T])}
+									{@html renderCell(column, item, column.accessor ? column.accessor(item) : getNestedValue(item, String(column.key)))}
 								{/if}
 							</td>
 						{/each}

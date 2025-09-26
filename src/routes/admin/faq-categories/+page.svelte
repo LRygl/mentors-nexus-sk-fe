@@ -23,6 +23,17 @@
 	let formIsValid = $state(false);
 	let selectedItems = $state<Set<string>>(new Set());
 
+	// Form schema
+	const formSchema = getFAQCategoryFormSchema('admin');
+
+	// Initialize data on component mount
+	onMount(async () => {
+		try {
+			await faqCategoryStore.loadFAQCategories();
+		} catch (error) {
+		}
+	});
+
 	// Table callbacks adapted for BaseStoreSvelte
 	const tableCallbacks: TableCallbacks<FAQCategory> = {
 		onRowClick: (category) => {
@@ -106,17 +117,7 @@
 		}
 	};
 
-	// Form schema
-	const formSchema = getFAQCategoryFormSchema('admin');
 
-	// Lifecycle - load data properly
-	onMount(async () => {
-		console.log('Component mounted, loading FAQ categories...');
-		try {
-			await faqCategoryStore.loadFAQCategories();
-		} catch (error) {
-		}
-	});
 
 	// Modal functions
 	function openCreateModal() {

@@ -35,7 +35,8 @@ import {
 	Award,
 	Trophy,
 	Flag,
-	Hash
+	Hash,
+	Eye
 } from '@lucide/svelte';
 import type { Component, ComponentType } from 'svelte';
 
@@ -97,7 +98,8 @@ export const availableIcons: IconData[] = [
 	{ name: 'Award', displayName: 'Achievement', component: Award, category: 'general' },
 	{ name: 'Trophy', displayName: 'Success', component: Trophy, category: 'general' },
 	{ name: 'Flag', displayName: 'Important', component: Flag, category: 'general' },
-	{ name: 'Hash', displayName: 'Hash', component: Hash, category: 'general' }
+	{ name: 'Hash', displayName: 'Hash', component: Hash, category: 'general' },
+	{ name: 'Eye', displayName: 'View', component: Eye, category: 'general'}
 
 
 ];

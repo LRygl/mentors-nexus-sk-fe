@@ -42,7 +42,17 @@ export interface FAQPaginationParams extends PaginationParams {
 	search?: string;
 }
 
+export interface FAQCreateFormData {
+	question: string;
+	answer: string;
+	categoryId?: number;
+	isPublished: boolean;
+	isFeatured: boolean;
+}
+
+
 export interface FAQLinkFormData {
 	faqId: string;
 	faqUuid: string;
 }
+

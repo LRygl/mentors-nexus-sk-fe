@@ -45,25 +45,7 @@
 		IconComponent = HelpCircle;
 	});
 
-/*
-	// Get the icon component, fallback to HelpCircle if not found
-	let IconComponent = $state<Component>();
-
-	$effect(() => {
-		IconComponent = getIconComponent(iconName || '');
-	});
-*/
 </script>
-<!--
-{#if IconComponent}
-	<IconComponent
-		class={className}
-		width={size}
-		height={size}
-		style={`${color ? `color: ${color};` : ''} width:${size}px; height:${size}px;`}
-	/>
-{/if}
--->
 
 {#if IconComponent}
 	<IconComponent

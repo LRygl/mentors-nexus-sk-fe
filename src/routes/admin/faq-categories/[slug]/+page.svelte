@@ -71,7 +71,7 @@
 
 	async function loadAllFAQs(): Promise<void> {
 		try {
-			await faqStore.fetchAllFAQs();
+			await faqStore.fetchAll();
 		} catch (e) {
 			console.error('Failed to load FAQs:', e);
 			error = e instanceof Error ? e.message : 'Failed to load FAQs';
@@ -157,9 +157,9 @@
 
 	// Reactive effect to update availableFAQs when dependencies change
 	$effect(() => {
-		if (faqStore.allFaqsLoaded && faqStore.allFaqs.length > 0) {
+		if (faqStore.allFaqsLoaded && faqStore.data.length > 0) {
 			const linkedUuids = new Set(faqs.map(f => f.uuid));
-			availableFAQs = faqStore.allFaqs.filter(f => !linkedUuids.has(f.uuid));
+			availableFAQs = faqStore.data.filter(f => !linkedUuids.has(f.uuid));
 		} else {
 			availableFAQs = [];
 		}
@@ -264,14 +264,14 @@
 	subtitle="Select an FAQ to add to this category"
 	icon="Link2"
 	iconBgColor="from-blue-500 to-indigo-600"
-	loading={loading || faqStore.allFaqsLoading}
+	loading={loading || faqStore.loading}
 	error={faqCategoryStore.createError}
 	submitLabel="Link FAQ"
 	onclose={closeLinkModal}
 	onsubmit={handleLinkSubmit}
 >
 	{#snippet children()}
-		{#if faqStore.allFaqsLoading}
+		{#if faqStore.loading}
 			<div class="text-center py-6 text-gray-500">
 				<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-400 mx-auto mb-2"></div>
 				<p>Loading FAQs...</p>
