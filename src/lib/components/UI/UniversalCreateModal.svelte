@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { type Component, type Snippet } from 'svelte';
 	import { Loader, Save, X } from 'lucide-svelte';
+	import DynamicIcon from '$lib/components/UI/DynamicIcon.svelte';
 
 	// Props interface
 	interface Props {
 		isOpen: boolean;
 		title: string;
 		subtitle?: string;
-		icon?: Component;
+		icon?: string;
 		iconBgColor?: string;
 		loading?: boolean;
 		error?: string | null;
@@ -102,7 +103,13 @@
 				<div class="flex items-center gap-3">
 					{#if icon}
 						<div class="w-10 h-10 bg-gradient-to-r {iconBgColor} rounded-lg flex items-center justify-center">
-							<svelte:component this={icon} class="w-5 h-5 text-white" />
+							{#if icon}
+								<DynamicIcon
+									iconName={icon}
+									class="w-4 h-4"
+									size={16}
+								/>
+							{/if}
 						</div>
 					{/if}
 

@@ -6,7 +6,7 @@ import type { FAQPriority } from '$lib/types/enums/faqPriority';
 import type { FAQCategory } from '$lib/types/entities/faqCategory';
 
 export interface FAQ extends BaseEntity {
-	id: number;
+	id: string;
 	uuid: string;
 	question: string;
 	answer: string;
@@ -22,8 +22,8 @@ export interface FAQ extends BaseEntity {
 	helpfulVotes: number;
 	notHelpfulVotes: number;
 	priority: FAQPriority;
-	createdAt: string;
-	updatedAt: string;
+	createdAt: Date;
+	updatedAt: Date;
 	createdBy?: string;
 	updatedBy?: string;
 
@@ -40,4 +40,9 @@ export interface FAQPaginationParams extends PaginationParams {
 	categoryUuid?:string;
 	priority?: FAQPriority;
 	search?: string;
+}
+
+export interface FAQLinkFormData {
+	faqId: string;
+	faqUuid: string;
 }

@@ -237,6 +237,9 @@ export class FormBuilder<T = Record<string, any>> {
 			validationRules.push(FormValidator.rules.required());
 		}
 
+		// Filter out placeholder options from validation if they exist
+		const hasPlaceholder = optionsArray.some((opt) => opt.value === '');
+
 		return this.addField({
 			name,
 			label,
@@ -246,7 +249,13 @@ export class FormBuilder<T = Record<string, any>> {
 			options: optionsArray,
 			colSpan: options.colSpan,
 			helpText: options.helpText,
-			defaultValue: options.defaultValue,
+			// Don't set defaultValue to empty string if required and has placeholder
+			defaultValue:
+				options.defaultValue !== undefined
+					? options.defaultValue
+					: hasPlaceholder && options.required
+						? ''
+						: optionsArray[0]?.value || '',
 			validationRules
 		});
 	}

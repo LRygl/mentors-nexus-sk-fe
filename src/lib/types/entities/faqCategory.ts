@@ -1,5 +1,6 @@
 import type { BaseEntity, PaginationParams } from '$lib/types/common';
 import type { Component } from 'svelte';
+import type { FAQ } from '$lib/types';
 
 export interface FAQCategory extends BaseEntity {
 	id: string;
@@ -19,6 +20,7 @@ export interface FAQCategory extends BaseEntity {
 	// Computed fields
 	faqCount?: number;           // Number of FAQs in this category
 	publishedFaqCount?: number;  // Number of published FAQs
+	faqs?: FAQ[];
 }
 
 export interface FAQCategoryPaginationParams extends PaginationParams {

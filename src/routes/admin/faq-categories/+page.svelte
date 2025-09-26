@@ -2,7 +2,7 @@
 <script lang="ts">
 	import AdminHeaderSection from '$lib/components/Sections/Admin/AdminHeaderSection.svelte';
 	import UniversalDataTable from '$lib/components/UI/UniversalDataTable.svelte';
-	import UniversalCreateModal from '$lib/components/ui/UniversalCreateModal.svelte';
+	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
 
 	import { onMount } from 'svelte';
@@ -10,12 +10,12 @@
 	import { FileText } from 'lucide-svelte';
 
 	import type { FAQCategory } from '$lib/types/entities/faqCategory';
-	import type { TableColumn, TableConfig, TableCallbacks } from '$lib/types/ui/table';
-	import { TableColumnBuilder, CommonColumns } from '$lib/types/ui/table';
+	import type { TableCallbacks } from '$lib/types/ui/table';
 
 	import { faqCategoryStore } from '$lib/stores/defaults/faqCategoryStore.svelte';
 	import { getFAQCategoryActions } from './faqCategoryActions';
 	import { getFAQCategoryFormSchema, transformToCreateRequest } from '$lib/components/Forms/FAQCategoryFormSchema';
+	import { faqCategoryTableColumns, faqCategoryTableConfig } from './fatCategoryTableConfig';
 
 	// Modal and Form State
 	let isCreateModalOpen = $state(false);
@@ -23,62 +23,10 @@
 	let formIsValid = $state(false);
 	let selectedItems = $state<Set<string>>(new Set());
 
-	// TODO Move to separate configuration file
-	// Table Configuration - Check your FAQCategory interface for correct field names
-	const tableConfig: TableConfig<FAQCategory> = {
-		idField: 'id', // or 'id' - check what your API returns
-		titleField: 'name',
-		createButtonLabel: 'Create Category',
-		loadingTitle: 'Loading Categories',
-		loadingDescription: 'Please wait while we fetch your FAQ categories...',
-		itemName: 'category',
-		itemNamePlural: 'categories'
-	};
-
-	// TODO Move to separate column definition file
-	// Simple columns for debugging - expand once working
-	const columns: TableColumn<FAQCategory>[] = [
-		{
-			key: 'id',
-			header: 'ID',
-			searchable: false,
-			cellClassName: 'font-mono text-xs text-slate-500'
-		},
-		{
-			key: 'name',
-			header: 'Name',
-			searchable: true,
-		},
-		{
-			key: 'iconClass',
-			header: 'Icon',
-			searchable: true,
-			renderType: 'custom',
-			cellClassName: 'font-semibold text-slate-900'
-		},
-
-		{
-			key: 'displayOrder',
-			header: 'Order',
-			searchable: false,
-			cellClassName: 'text-center',
-			headerClassName: 'text-center',
-			width: 'w-20'
-		},
-		TableColumnBuilder.count<FAQCategory>('faqCount', 'Questions', {
-			singular: 'FAQ',
-			plural: 'FAQs',
-			color: 'bg-slate-100 text-slate-700'
-		}),
-		TableColumnBuilder.date<FAQCategory>('createdAt', 'Created', {
-			format: 'short'
-		})
-	];
-
 	// Table callbacks adapted for BaseStoreSvelte
 	const tableCallbacks: TableCallbacks<FAQCategory> = {
 		onRowClick: (category) => {
-			console.log("Clicked row", category.id);
+			console.log(`FAQ Categor row ${category.id} clicked`);
 			goto(`/admin/faq-categories/${category.id}`);
 		},
 
@@ -257,37 +205,34 @@
 </script>
 
 <!-- Main Container -->
-<section class="h-dvh">
-	<div class="m-5">
-		<!-- Header Section -->
-		<div class="mb-8">
-			<AdminHeaderSection
-				heading="FAQ Categories"
-				subHeading="Organize and manage your FAQ categories with ease"
-			/>
-		</div>
+<section class="h-dvh m-5">
 
-		<!-- Universal Data Table - Fix reactivity binding -->
-		<UniversalDataTable
-			data={faqCategoryStore.data}
-			loading={faqCategoryStore.loading}
-			error={faqCategoryStore.error}
-			config={tableConfig}
-			columns={columns}
-			callbacks={tableCallbacks}
-			bind:selectedItems={selectedItems}
-			getActions={getFAQCategoryActions}
-			searchable={true}
-			filterable={true}
-			selectable={true}
-			exportable={true}
-			searchPlaceholder="Search categories..."
-			emptyTitle="No FAQ Categories Yet"
-			emptyDescription="Get started by creating your first FAQ category. Categories help organize your frequently asked questions for better user experience."
-			emptyActionLabel="Create Your First Category"
-		/>
+	<!-- Header Section -->
+	<AdminHeaderSection
+		heading="FAQ Categories"
+		subHeading="Organize and manage your FAQ categories with ease"
+	/>
 
-	</div>
+	<!-- Universal Data Table -->
+	<UniversalDataTable
+		data={faqCategoryStore.data}
+		loading={faqCategoryStore.loading}
+		error={faqCategoryStore.error}
+		config={faqCategoryTableConfig}
+		columns={faqCategoryTableColumns}
+		callbacks={tableCallbacks}
+		bind:selectedItems={selectedItems}
+		getActions={getFAQCategoryActions}
+		searchable={true}
+		filterable={true}
+		selectable={true}
+		exportable={true}
+		searchPlaceholder="Search categories..."
+		emptyTitle="No FAQ Categories Yet"
+		emptyDescription="Get started by creating your first FAQ category. Categories help organize your frequently asked questions for better user experience."
+		emptyActionLabel="Create Your First Category"
+	/>
+
 </section>
 
 <!-- Create Category Modal -->

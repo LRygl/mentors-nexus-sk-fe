@@ -105,17 +105,23 @@
 			formState.data
 		);
 
+		if (error) {
+			formState.errors[fieldName] = error;
+		} else {
+			delete formState.errors[fieldName];
+		}
+
 		formState.errors[fieldName] = error;
 		formState.isValid = Object.values(formState.errors).every(err => !err);
 	}
+
 
 	// Handle field changes
 	function handleFieldChange(fieldName: string, value: any) {
 		formState.data[fieldName] = value;
 		formState.touched[fieldName] = true;
 		formState.isDirty = true;
-
-		validateField(fieldName);
+		validateField(fieldName)
 		callbacks.onChange?.(fieldName, value, formState);
 	}
 
@@ -313,20 +319,31 @@
 			<select
 				bind:value={formState.data[field.name]}
 				onchange={(e) => {
-          const target = e.currentTarget;
-          handleFieldChange(field.name, target.value);
-        }}
+				const target = e.currentTarget;
+				handleFieldChange(field.name, target.value);
+			}}
 				disabled={disabled}
 				class="w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors appearance-none {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
 			>
-				{#if field.placeholder}
-					<option value="" disabled>{field.placeholder}</option>
-				{/if}
 				{#each field.options || [] as option}
-					<option value={option.value}>{option.label}</option>
+					<option
+						value={option.value}
+						disabled={option.value === '' && field.placeholder}
+						selected={formState.data[field.name] === option.value}
+					>
+						{option.label}
+					</option>
 				{/each}
 			</select>
 			<ChevronDown class="absolute right-3 top-2.5 w-4 h-4 text-slate-400 pointer-events-none" />
+
+			<!-- Success indicator -->
+			{#if formState.data[field.name] && !formState.errors[field.name]}
+				<Check class="absolute right-8 top-2.5 w-4 h-4 text-green-500" />
+			{/if}
+			{#if formState.errors[field.name]}
+				<AlertCircle class="absolute right-8 top-2.5 w-4 h-4 text-red-500" />
+			{/if}
 		</div>
 
 	{:else if field.type === 'checkbox'}

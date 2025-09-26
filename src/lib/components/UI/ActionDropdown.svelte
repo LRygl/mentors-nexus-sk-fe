@@ -9,22 +9,21 @@
 		itemId,
 		itemTitle = '',
 		actions = [],
-		buttonVariant = 'outline',
-		buttonSize = 'sm',
 		disabled = false,
-		dropdownWidth = 'w-64',
-		position = 'right',
 		isOpen: controlledIsOpen = undefined,
 		onaction,
 		onopen,
-		onclose
+		onclose,
+		class: additionalClass = ''
 	}: ActionDropdownProps = $props();
 
 	let internalIsOpen = $state(false);
-	const isOpen = $derived(controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen);
+	// Only use controlled state if explicitly provided and not undefined/null
+	const isOpen = $derived(controlledIsOpen !== undefined && controlledIsOpen !== null ? controlledIsOpen : internalIsOpen);
+	//const isOpen = $derived(controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen);
 
 	let buttonElement = $state<HTMLElement>();
-	let dropdownPosition = $state({ top: 0, left: 0 });
+	let dropdownPosition = $state({ top: 0, left: 0, calculated: false });
 
 	function calculatePosition() {
 		if (!buttonElement) return;
@@ -52,16 +51,19 @@
 			top = rect.top - gap - 300;
 		}
 
-		dropdownPosition = { top, left };
+		dropdownPosition = { top, left, calculated: true };
 	}
 
 	export function open() {
 		if (!disabled) {
+			console.log(`ActionDropdown.open() called for itemId: ${itemId}, controlled: ${controlledIsOpen !== undefined}`);
 			calculatePosition();
 
 			if (controlledIsOpen !== undefined) {
+				console.log(`Calling onopen for ${itemId}`);
 				onopen?.({ itemId });
 			} else {
+				console.log(`Setting internal state to true for ${itemId}`);
 				internalIsOpen = true;
 			}
 		}
@@ -117,6 +119,20 @@
 			(typeof component === 'object' && component.$$typeof)
 		);
 	}
+
+	// Recalculate position when dropdown opens
+	$effect(() => {
+		if (isOpen && buttonElement) {
+			// Small delay to ensure DOM is ready
+			setTimeout(calculatePosition, 0);
+		}
+	});
+
+	// Debug effect
+	$effect(() => {
+		console.log(`ActionDropdown ${itemId}: controlledIsOpen=${controlledIsOpen}, internalIsOpen=${internalIsOpen}, isOpen=${isOpen}`);
+	});
+
 </script>
 
 <svelte:document onclick={handleDocumentClick} onkeydown={handleKeydown} />
@@ -140,7 +156,7 @@
 </div>
 
 <!-- Portal dropdown content to document body when open -->
-{#if isOpen}
+{#if isOpen && dropdownPosition.calculated}
 	<Portal>
 	<div
 		class="dropdown-content fixed w-64 bg-white border border-slate-200 rounded-xl shadow-2xl overflow-hidden"

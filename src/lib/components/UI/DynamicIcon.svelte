@@ -5,7 +5,7 @@
 	import { getIconComponent } from '$lib/types/params/iconRegistry';
 
 	interface Props {
-		iconName: string | null | undefined;
+		iconName: string | Component | null | undefined;
 		class?: string;
 		size?: number;
 		color?: string;
@@ -14,24 +14,61 @@
 	let {
 		iconName,
 		class: className = '',
-		size = 50,
+		size = 16,
 		color
 	}: Props = $props();
 
+
+	// Get the icon component, fallback to HelpCircle if not found
+	let IconComponent = $state<Component>(HelpCircle);
+
+	$effect(() => {
+		if (!iconName) {
+			IconComponent = HelpCircle;
+			return;
+		}
+
+		// If iconName is already a component (imported from lucide-svelte)
+		if (typeof iconName === 'function' || typeof iconName === 'object') {
+			IconComponent = iconName as Component;
+			return;
+		}
+
+		// If iconName is a string, look it up in the registry
+		if (typeof iconName === 'string') {
+			const foundIcon = getIconComponent(iconName);
+			IconComponent = foundIcon || HelpCircle;
+			return;
+		}
+
+		// Fallback
+		IconComponent = HelpCircle;
+	});
+
+/*
 	// Get the icon component, fallback to HelpCircle if not found
 	let IconComponent = $state<Component>();
 
 	$effect(() => {
 		IconComponent = getIconComponent(iconName || '');
 	});
-
+*/
 </script>
-
+<!--
 {#if IconComponent}
 	<IconComponent
 		class={className}
 		width={size}
 		height={size}
 		style={`${color ? `color: ${color};` : ''} width:${size}px; height:${size}px;`}
+	/>
+{/if}
+-->
+
+{#if IconComponent}
+	<IconComponent
+		class={className}
+		size={size}
+		style={color ? `color: ${color};` : ''}
 	/>
 {/if}

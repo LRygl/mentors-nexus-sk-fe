@@ -11,6 +11,14 @@ export class FAQAdminApiService extends BaseApiService {
 		super(API_CONFIG.BASE_URL);
 	}
 
+	async getAll(): Promise<FAQ[]> {
+		try	{
+			return await this.get<FAQ[]>(FAQAdminApiService.ENDPOINT);
+		} catch(e) {
+			throw (e as Error);
+		}
+	}
+
 	/**
 	 * Get paginated FAQs with optional filtering
 	 * Maps to Spring Boot controller: GET /api/v1/admin/faq
@@ -34,8 +42,6 @@ export class FAQAdminApiService extends BaseApiService {
 		if (params.sort) queryParams.sort = params.sort;
 		if (params.direction) queryParams.direction = params.direction;
 
-		console.log('FAQ API: Fetching FAQs with params:', queryParams);
-
 		try {
 			// Use the BaseApiService get method with caching enabled
 			// Spring Boot returns Page<FAQ> which matches your PaginatedResult<T> interface
@@ -50,10 +56,6 @@ export class FAQAdminApiService extends BaseApiService {
 
 			// Transform date strings to Date objects for FAQ content
 			result.content = result.content.map((faq) => this.transformFAQDates(faq));
-
-			console.log(
-				`FAQ API: Loaded ${result.content.length} FAQs (page ${result.number + 1} of ${result.totalPages})`
-			);
 			return result;
 		} catch (error) {
 			console.error('FAQ API: Error fetching FAQs:', error);
@@ -65,8 +67,6 @@ export class FAQAdminApiService extends BaseApiService {
 	 * Gets a single FAQ by UUID
 	 */
 	async getFAQById(uuid: string): Promise<FAQ> {
-		console.log('FAQ API: Fetching FAQ with UUID:', uuid);
-
 		try {
 			const faq = await this.get<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}`, undefined, {
 				cache: true,
@@ -89,16 +89,11 @@ export class FAQAdminApiService extends BaseApiService {
 	 */
 
 	async publishFAQ(uuid: string): Promise<FAQ> {
-		console.log('FAQ API: PublishFAQ', uuid);
-
 		try {
 			this.clearFAQCache();
 			const faq = await this.patch<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}/publish`);
-
 			// Transform date strings to Date objects
-			const transformedFAQ = this.transformFAQDates(faq);
-			console.log('FAQ API: Successfully published FAQ:', transformedFAQ);
-			return transformedFAQ;
+			return this.transformFAQDates(faq);
 		} catch (error) {
 			console.error('FAQ API: Error fetching FAQ:', error);
 			throw error;
@@ -107,8 +102,6 @@ export class FAQAdminApiService extends BaseApiService {
 	}
 
 	async unpublishFAQ(uuid: string): Promise<FAQ> {
-		console.log('FAQ API: Un-PublishFAQ', uuid);
-
 		try {
 			this.clearFAQCache();
 			const faq = await this.patch<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}/unpublish`);
@@ -118,6 +111,28 @@ export class FAQAdminApiService extends BaseApiService {
 			throw error;
 		}
 	}
+
+	async linkFAQToCategory(faqUuid:string, categoryUuid:string): Promise<FAQ> {
+		try {
+			return await this.patch<FAQ>(
+				`${FAQAdminApiService.ENDPOINT}/${faqUuid}/link/${categoryUuid}`,
+				undefined, {}
+			);
+		} catch (error) {
+			console.error('FAQ API: Error linkFAQToCategory:', error);
+			throw error;
+		}
+	}
+
+	async unlinkFAQFromCategory(uuid: string): Promise<void> {
+		try {
+			await this.patch<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}/unlink`);
+		} catch (error) {
+			console.error('FAQ API: Error unlinkFAQFromCategory:', error);
+			throw error;
+		}
+	}
+
 
 	/**
 	 * Transforms date strings from Spring Boot to Date objects
@@ -135,7 +150,11 @@ export class FAQAdminApiService extends BaseApiService {
 	 * Clear FAQ-related cache entries
 	 */
 	clearFAQCache(): void {
-		this.clearCache(FAQAdminApiService.ENDPOINT);
+		this.invalidate(FAQAdminApiService.ENDPOINT);
+	}
+
+	static async unlinkFAQFromFAQCategory(faqUuid: string) {
+
 	}
 }
 

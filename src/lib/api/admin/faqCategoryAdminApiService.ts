@@ -25,8 +25,6 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 		if (params.sort) queryParams.sort = params.sort;
 		if (params.direction) queryParams.direction = params.direction;
 
-		console.log('FAQ CATEGORY API: Fetching FAQ Categories with params:', queryParams);
-
 		try {
 			return await this.get<PaginatedResult<FAQCategory>>(
 				FAQCategoryAdminApiService.ENDPOINT,
@@ -44,7 +42,6 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 
 	async getFAQCategoryById(id: string): Promise<FAQCategory> {
 		try {
-			console.log("API CALL for Category ID", id)
 			return this.get<FAQCategory>(`${FAQCategoryAdminApiService.ENDPOINT}/${id}`);
 		} catch (error) {
 			throw error;
@@ -63,8 +60,6 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 
 		return await this.post<FAQCategory>(FAQCategoryAdminApiService.ENDPOINT, requestData);
 	}
-
-
 
 	/**
 	 * Private helper to generate URL-friendly slug

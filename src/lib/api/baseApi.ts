@@ -20,7 +20,6 @@ export abstract class BaseApiService {
 		config?: RequestConfig
 	): Promise<T> {
 		const url = this.buildUrl(endpoint, params);
-		console.log('Calling URL:' + url);
 		const cacheKey = `GET:${url}`;
 
 		// Check cache first
@@ -59,8 +58,6 @@ export abstract class BaseApiService {
 		config?: RequestConfig
 	): Promise<T> {
 		const url = this.buildUrl(endpoint);
-		console.log('Calling POST:', url);
-
 		const headers = await this.getHeaders(config);
 		const response = await this.executeRequest(
 			() =>
@@ -90,10 +87,7 @@ export abstract class BaseApiService {
 		config?: RequestConfig
 	): Promise<T> {
 		const url = this.buildUrl(endpoint);
-		console.log('Calling PUT:', url);
-
 		const headers = await this.getHeaders(config);
-
 		const response = await this.executeRequest(
 			() =>
 				fetch(url, {
@@ -123,9 +117,7 @@ export abstract class BaseApiService {
 		config?: RequestConfig
 	): Promise<T> {
 		const url = this.buildUrl(endpoint, params);
-		console.log('Calling URL:' + url);
 		const cacheKey = `PUT:${url}`;
-
 		// Prepare headers for the request
 		const headers = await this.getHeaders(config);
 
@@ -155,10 +147,7 @@ export abstract class BaseApiService {
 		config?: RequestConfig
 	): Promise<T> {
 		const url = this.buildUrl(endpoint);
-		console.log('DELETE to URL:', url);
-
 		const headers = await this.getHeaders(config);
-
 		const response = await this.executeRequest(
 			() =>
 				fetch(url, {
@@ -271,11 +260,11 @@ export abstract class BaseApiService {
 		if (contentType?.includes('application/json')) {
 			const data = await response.json();
 
-			// Handle spring boot responseEntity pattern
-			if (data.data !== undefined) {
-				return data.data;
-			}
-			 return data;
+			// Handle Spring Boot ResponseEntity pattern
+			const payload = data.data !== undefined ? data.data : data;
+
+			// Normalize IDs tto strings
+			return this.normalizeIds(payload) as T;
 		}
 
 		// Handle TEXT Responses
@@ -289,6 +278,26 @@ export abstract class BaseApiService {
 		}
 
 		throw new Error(`Unsupported content type: ${contentType}`);
+	}
+
+	/**
+	 * Recursively normalize any `id` fields into strings.
+	 */
+	private normalizeIds(obj: unknown): unknown {
+		if (Array.isArray(obj)) {
+			return obj.map(item => this.normalizeIds(item));
+		} else if (obj !== null && typeof obj === "object") {
+			const normalized: Record<string, any> = {};
+			for (const [key, value] of Object.entries(obj)) {
+				if (key === "id" && (typeof value === "number" || typeof value === "bigint")) {
+					normalized[key] = String(value);
+				} else {
+					normalized[key] = this.normalizeIds(value);
+				}
+			}
+			return normalized;
+		}
+		return obj;
 	}
 
 	private async createApiError(response: Response): Promise<Error> {

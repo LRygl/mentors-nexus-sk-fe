@@ -5,7 +5,7 @@ export interface ActionItem {
 	id: string;
 	label: string;
 	description?: string;
-	icon: Component;
+	icon: string;
 	variant?: ActionType;
 	disabled?: boolean;
 	separator?: boolean; // Show separator after this item
@@ -36,6 +36,7 @@ export interface ActionDropdownProps {
 	dropdownWidth?: string;
 	position?: 'left' | 'right';
 	isOpen?: boolean;
+	class?: string;
 
 	// Callback props for Svelte 5
 	onaction?: (event: ActionEvent) => void;

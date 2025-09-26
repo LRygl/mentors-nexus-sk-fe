@@ -31,12 +31,13 @@ export interface TableColumn<T = any> {
 
 export interface TableConfig<T = any> {
 	idField: keyof T;
-	titleField?: keyof T;
+	titleField: keyof T;
 	createButtonLabel?: string;
 	loadingTitle?: string;
 	loadingDescription?: string;
 	itemName?: string;
 	itemNamePlural?: string;
+	actionsInline?: boolean;
 }
 
 export interface SelectionState {

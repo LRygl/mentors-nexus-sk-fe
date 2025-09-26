@@ -1,9 +1,10 @@
 <!-- src/lib/components/UI/UniversalDataTable.svelte - Fixed Version -->
-<script lang="ts" generics="T extends Record<string, any>">
-	import { Check, Download, Settings, Plus, AlertCircle, Filter, RefreshCw, Search, FileText } from 'lucide-svelte';
-	import ActionDropdown from '$lib/components/ui/ActionDropdown.svelte';
-	import type { TableColumn, TableAction, TableConfig, TableCallbacks } from '$lib/types/ui/table';
+<script generics="T extends Record<string, any>" lang="ts">
+	import { Check, Download, Plus, AlertCircle, Filter, RefreshCw, Search, FileText } from 'lucide-svelte';
+	import ActionDropdown from '$lib/components/UI/ActionDropdown.svelte';
+	import type { TableColumn, TableConfig, TableCallbacks } from '$lib/types/ui/table';
 	import type { ActionGroup } from '$lib/types';
+	import InlineActionButtons from '$lib/components/UI/InlineActionButtons.svelte';
 
 	//FIXME Checking the checkbox in the header does not check all checkboxes in the table page
 	//FIXME Bulk Edit and Delete Selected should have propper formatting
@@ -43,11 +44,11 @@
 		callbacks = {},
 		selectedItems = $bindable(new Set<string>()),
 		getActions,
-		emptyTitle = "No Data Available",
-		emptyDescription = "Get started by creating your first item.",
-		emptyActionLabel = "Create Item",
-		searchPlaceholder = "Search items...",
-		className = ""
+		emptyTitle = 'No Data Available',
+		emptyDescription = 'Get started by creating your first item.',
+		emptyActionLabel = 'Create Item',
+		searchPlaceholder = 'Search items...',
+		className = ''
 	}: Props = $props();
 
 	// Internal state
@@ -68,12 +69,6 @@
 
 	// Filtered data based on search - fixed type assertion with debug
 	let filteredData = $derived.by(() => {
-		console.log('UniversalDataTable - Computing filteredData:', {
-			originalDataLength: data.length,
-			searchQuery: searchQuery.trim(),
-			hasSearchQuery: !!searchQuery.trim()
-		});
-
 		if (!searchQuery.trim()) {
 			return data;
 		}
@@ -86,7 +81,6 @@
 			});
 		});
 
-		console.log('UniversalDataTable - Filtered data:', filtered);
 		return filtered;
 	});
 
@@ -180,7 +174,12 @@
 
 			case 'count':
 				const count = Number(value) || 0;
-				const { singular, plural, showZero = true, color: countColor = 'bg-slate-100 text-slate-700' } = column.renderOptions || {};
+				const {
+					singular,
+					plural,
+					showZero = true,
+					color: countColor = 'bg-slate-100 text-slate-700'
+				} = column.renderOptions || {};
 				if (!showZero && count === 0) {
 					return '<span class="text-slate-400 text-xs">None</span>';
 				}
@@ -241,7 +240,8 @@
 							/>
 						</div>
 						{#if filterable}
-							<button class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors duration-200">
+							<button
+								class="p-2.5 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors duration-200">
 								<Filter class="h-4 w-4 text-slate-600" />
 							</button>
 						{/if}
@@ -282,7 +282,8 @@
 				<div class="w-12 h-12 rounded-full border-4 border-slate-200 border-t-indigo-600 animate-spin"></div>
 			</div>
 			<h3 class="mt-4 text-lg font-semibold text-slate-700">{config.loadingTitle || 'Loading'}</h3>
-			<p class="mt-1 text-sm text-slate-500">{config.loadingDescription || 'Please wait while we fetch your data...'}</p>
+			<p
+				class="mt-1 text-sm text-slate-500">{config.loadingDescription || 'Please wait while we fetch your data...'}</p>
 		</div>
 
 	{:else if error}
@@ -342,7 +343,8 @@
 			</div>
 			<h3 class="text-lg font-semibold text-slate-900 mb-2">No results found</h3>
 			<p class="text-slate-600 text-center mb-6">
-				We couldn't find any items matching "<span class="font-medium">{searchQuery}</span>". Try adjusting your search terms.
+				We couldn't find any items matching "<span class="font-medium">{searchQuery}</span>". Try adjusting your search
+				terms.
 			</p>
 			<button
 				onclick={() => searchQuery = ''}
@@ -386,7 +388,8 @@
 					{/if}
 
 					{#each columns as column}
-						<th class={`px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider ${column.headerClassName || ''}`}>
+						<th
+							class={`px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider ${column.headerClassName || ''}`}>
 							{column.header}
 						</th>
 					{/each}
@@ -401,11 +404,10 @@
 				<tbody class="divide-y divide-slate-100">
 				{#each filteredData as item, index (item[config.idField])}
 					<tr
-						class={`
-			hover:bg-slate-50/50 transition-all duration-200 group cursor-pointer
-			${selectedItems.has(String(item[config.idField])) ? 'bg-indigo-50/50' : ''}
-			hover:shadow-sm hover:scale-[1.002] transform-gpu
-		`}
+						class={`hover:bg-slate-50/50 transition-all duration-200 group cursor-pointer
+									${selectedItems.has(String(item[config.idField])) ? 'bg-indigo-50/50' : ''}
+									hover:shadow-sm hover:scale-[1.002] transform-gpu
+						`}
 						onclick={(e) => handleRowClick(e, item)}
 						role="button"
 						tabindex="0"
@@ -439,29 +441,35 @@
 								{/if}
 							</td>
 						{/each}
-
 						{#if getActions}
 							<td class="px-6 py-4 table-cell-with-dropdown">
-								<div onclick={(e) => e.stopPropagation()} role="none">
-									<ActionDropdown
+								{#if config.actionsInline}
+									<InlineActionButtons
 										itemId={String(item[config.idField])}
-										itemTitle={String(
-							(config.titleField && item[config.titleField as keyof T]) ||
-							item[config.idField] ||
-							'Item'
-						)}
+										itemTitle={String(item[config.titleField])}
 										actions={getActions(item)}
-										buttonVariant="outline"
-										buttonSize="sm"
-										dropdownWidth="w-64"
-										position="right"
-										isOpen={openDropdownId === String(item[config.idField])}
-										onaction={handleAction}
-										onopen={handleDropdownOpen}
-										onclose={handleDropdownClose}
+										onAction={handleAction}
+										maxVisible={3}
 									/>
-								</div>
+								{:else}
+									<div onclick={(e) => e.stopPropagation()} role="none">
+										<ActionDropdown
+											itemId={String(item[config.idField])}
+											itemTitle={String(item[config.titleField])}
+											actions={getActions(item)}
+											buttonVariant="outline"
+											buttonSize="sm"
+											dropdownWidth="w-64"
+											position="right"
+											isOpen={openDropdownId === String(item[config.idField])}
+											onaction={handleAction}
+											onopen={handleDropdownOpen}
+											onclose={handleDropdownClose}
+										/>
+									</div>
+								{/if}
 							</td>
+
 						{/if}
 					</tr>
 				{/each}

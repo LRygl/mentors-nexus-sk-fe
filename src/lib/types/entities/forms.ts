@@ -16,7 +16,12 @@ export interface FormField<T = any> {
 	validationRules?: ValidationRule[];
 
 	// Field-specific option
-	options?: Array<{ label: string; value: any}>; // For Select fields
+	options?: Array<{
+		label: string;
+		value: any;
+		searchText?: string;
+		metadata?: Record<string, any>;
+	}>; // For Select fields
 	min?: number;
 	max?: number;
 	rows?: number; // For Textarea
@@ -30,6 +35,7 @@ export interface FormField<T = any> {
 
 	// Icon selector specific
 	previewColor?: string;
+
  }
 
 export interface FormFieldGroup {
