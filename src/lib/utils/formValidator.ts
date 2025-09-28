@@ -3,242 +3,356 @@ import type { FormField, FormValidationResult, ValidationRule } from '$lib/types
 export class FormValidator {
 
 	/**
- 	* Validates a single field value against its validation rules
-	*/
+	 * Validate entire form
+	 */
+	static validateForm(data: Record<string, any>, fields: FormField[]): FormValidationResult {
+		const errors: Record<string, string> = {};
+		let firstErrorField: string | undefined;
+
+		fields.forEach(field => {
+			const error = this.validateField(data[field.name], field, data);
+			if (error) {
+				errors[field.name] = error;
+				if (!firstErrorField) {
+					firstErrorField = field.name;
+				}
+			}
+		});
+
+		return {
+			isValid: Object.keys(errors).length === 0,
+			errors,
+			firstErrorField
+		};
+	}
+
+	/**
+	 * Validate single field
+	 */
 	static validateField(value: any, field: FormField, formData?: Record<string, any>): string | null {
-		if (!field.validationRules) return null;
+		if (!field.validationRules || field.validationRules.length === 0) {
+			return null;
+		}
 
 		for (const rule of field.validationRules) {
-			// Handle both old and new rule formats
-			const ruleType = typeof rule === 'object' && rule.type ? rule.type : rule.name || rule;
-			const ruleMessage = typeof rule === 'object' && rule.message ? rule.message : undefined;
-
-			switch (ruleType) {
-				case 'required':
-					if (!value || (typeof value === 'string' && value.trim() === '')) {
-						return ruleMessage || `${field.label} is required`;
-					}
-					break;
-
-				// Add other validation cases as needed
-				default:
-					// Handle existing validation rules
-					const result = this.executeRule(rule, value, field, formData);
-					if (result) return result;
+			const error = this.validateRule(value, rule, field, formData);
+			if (error) {
+				return error;
 			}
 		}
 
 		return null;
 	}
 
-	private static executeRule(rule: any, value: any, field: FormField, formData?: Record<string, any>): string | null {
-		// Handle your existing validation rules here
-		if (typeof rule === 'function') {
-			return rule(value, formData);
-		}
-
-		// Handle object-based rules
-		if (typeof rule === 'object' && rule.validate) {
-			return rule.validate(value, formData);
-		}
-
-		return null;
-	}
-
 	/**
-	 * Validates entire form data against schema
+	 * Validate individual rule
 	 */
-	static validateForm<T extends Record<string, any>>(
-		data: T,
-		fields: FormField[]
-	): FormValidationResult {
-		const errors: Record<string, string> = {};
-		let isValid = true;
-
-		for (const field of fields) {
-			const fieldError = this.validateField(data[field.name], field, data);
-			if (fieldError) {
-				errors[field.name] = fieldError;
-				isValid = false;
-			}
-		}
-
-		return { isValid, errors };
-	}
-
-	/**
-	 * Apply individual validation rule
-	 */
-	private static applyValidationRule(
+	private static validateRule(
 		value: any,
 		rule: ValidationRule,
+		field: FormField,
 		formData?: Record<string, any>
-	): string {
+	): string | null {
 		switch (rule.type) {
 			case 'required':
-				if (this.isEmpty(value)) {
-					return rule.message;
-				}
-				break;
+				return this.validateRequired(value, rule, field);
 
-			case 'minLength':
-				if (typeof value === 'string' && value.length < (rule.value as number)) {
-					return rule.message;
-				}
-				break;
+			case 'email':
+				return this.validateEmail(value, rule, field);
 
-			case 'maxLength':
-				if (typeof value === 'string' && value.length > (rule.value as number)) {
-					return rule.message;
-				}
-				break;
+			case 'url':
+				return this.validateUrl(value, rule, field);
 
 			case 'min':
-				if (typeof value === 'number' && value < (rule.value as number)) {
-					return rule.message;
-				}
-				break;
+				return this.validateMin(value, rule, field);
 
 			case 'max':
-				if (typeof value === 'number' && value > (rule.value as number)) {
-					return rule.message;
-				}
-				break;
+				return this.validateMax(value, rule, field);
+
+			case 'minLength':
+				return this.validateMinLength(value, rule, field);
+
+			case 'maxLength':
+				return this.validateMaxLength(value, rule, field);
 
 			case 'pattern':
-				if (typeof value === 'string' && !(rule.value as RegExp).test(value)) {
-					return rule.message;
-				}
-				break;
+				return this.validatePattern(value, rule, field);
 
 			case 'custom':
-				if (rule.validator && !rule.validator(value, formData)) {
-					return rule.message;
-				}
-				break;
+				return this.validateCustom(value, rule, field, formData);
 
 			default:
-				console.warn(`Unknown validation rule type: ${rule.type}`);
+				return null;
 		}
-
-		return '';
 	}
 
-	/**
-	 * Check if value is empty (null, undefined, empty string, etc.)
-	 */
-	private static isEmpty(value: any): boolean {
-		return value === null ||
+	// Individual validation methods
+	private static validateRequired(value: any, rule: ValidationRule, field: FormField): string | null {
+		const isEmpty = value === null ||
 			value === undefined ||
 			(typeof value === 'string' && value.trim() === '') ||
 			(Array.isArray(value) && value.length === 0);
+
+		if (isEmpty) {
+			return rule.message || `${field.label} is required`;
+		}
+		return null;
 	}
 
-	/**
-	 * Get default validation rules for common field types
-	 */
-	static getDefaultRules(fieldType: string, required: boolean = false): ValidationRule[] {
-		const rules: ValidationRule[] = [];
+	private static validateEmail(value: any, rule: ValidationRule, field: FormField): string | null {
+		if (!value) return null; // Skip if empty (use required rule for that)
 
-		if (required) {
-			rules.push({
-				type: 'required',
-				message: 'This field is required'
-			});
+		const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+		if (!emailRegex.test(value)) {
+			return rule.message || 'Please enter a valid email address';
 		}
-
-		switch (fieldType) {
-			case 'text':
-				rules.push({
-					type: 'maxLength',
-					value: 255,
-					message: 'Must be less than 255 characters'
-				});
-				break;
-
-			case 'textarea':
-				rules.push({
-					type: 'maxLength',
-					value: 1000,
-					message: 'Must be less than 1000 characters'
-				});
-				break;
-
-			case 'number':
-				rules.push({
-					type: 'min',
-					value: 0,
-					message: 'Must be a positive number'
-				});
-				break;
-
-			case 'color':
-				rules.push({
-					type: 'pattern',
-					value: /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/,
-					message: 'Must be a valid hex color'
-				});
-				break;
-		}
-
-		return rules;
+		return null;
 	}
 
-	/**
-	 * Common validation rules factory
-	 */
+	private static validateUrl(value: any, rule: ValidationRule, field: FormField): string | null {
+		if (!value) return null;
+
+		try {
+			new URL(value);
+			return null;
+		} catch {
+			return rule.message || 'Please enter a valid URL';
+		}
+	}
+
+	private static validateMin(value: any, rule: ValidationRule, field: FormField): string | null {
+		if (value === null || value === undefined || value === '') return null;
+
+		const numValue = Number(value);
+		if (isNaN(numValue) || numValue < rule.value!) {
+			return rule.message || `${field.label} must be at least ${rule.value}`;
+		}
+		return null;
+	}
+
+	private static validateMax(value: any, rule: ValidationRule, field: FormField): string | null {
+		if (value === null || value === undefined || value === '') return null;
+
+		const numValue = Number(value);
+		if (isNaN(numValue) || numValue > rule.value!) {
+			return rule.message || `${field.label} must be no more than ${rule.value}`;
+		}
+		return null;
+	}
+
+	private static validateMinLength(value: any, rule: ValidationRule, field: FormField): string | null {
+		if (!value) return null;
+
+		const length = typeof value === 'string' ? value.length : String(value).length;
+		if (length < rule.value!) {
+			return rule.message || `${field.label} must be at least ${rule.value} characters`;
+		}
+		return null;
+	}
+
+	private static validateMaxLength(value: any, rule: ValidationRule, field: FormField): string | null {
+		if (!value) return null;
+
+		const length = typeof value === 'string' ? value.length : String(value).length;
+		if (length > rule.value!) {
+			return rule.message || `${field.label} must be no more than ${rule.value} characters`;
+		}
+		return null;
+	}
+
+	private static validatePattern(value: any, rule: ValidationRule, field: FormField): string | null {
+		if (!value) return null;
+
+		const regex = new RegExp(rule.value as string);
+		if (!regex.test(String(value))) {
+			return rule.message || `${field.label} format is invalid`;
+		}
+		return null;
+	}
+
+	private static validateCustom(
+		value: any,
+		rule: ValidationRule,
+		field: FormField,
+		formData?: Record<string, any>
+	): string | null {
+		if (rule.validator) {
+			return rule.validator(value, formData || {});
+		}
+		return null;
+	}
+
+	// Utility validation rules that can be used in FormBuilder
 	static rules = {
-		required: (message: string = 'This field is required'): ValidationRule => ({
+		required: (message?: string): ValidationRule => ({
 			type: 'required',
 			message
 		}),
 
-		minLength: (length: number, message?: string): ValidationRule => ({
-			type: 'minLength',
-			value: length,
-			message: message || `Must be at least ${length} characters`
+		email: (message?: string): ValidationRule => ({
+			type: 'email',
+			message
 		}),
 
-		maxLength: (length: number, message?: string): ValidationRule => ({
-			type: 'maxLength',
-			value: length,
-			message: message || `Must be less than ${length} characters`
+		url: (message?: string): ValidationRule => ({
+			type: 'url',
+			message
 		}),
 
 		min: (value: number, message?: string): ValidationRule => ({
 			type: 'min',
 			value,
-			message: message || `Must be at least ${value}`
+			message
 		}),
 
 		max: (value: number, message?: string): ValidationRule => ({
 			type: 'max',
 			value,
-			message: message || `Must be less than ${value}`
+			message
 		}),
 
-		pattern: (regex: RegExp, message: string): ValidationRule => ({
+		minLength: (value: number, message?: string): ValidationRule => ({
+			type: 'minLength',
+			value,
+			message
+		}),
+
+		maxLength: (value: number, message?: string): ValidationRule => ({
+			type: 'maxLength',
+			value,
+			message
+		}),
+
+		pattern: (regex: string, message?: string): ValidationRule => ({
 			type: 'pattern',
 			value: regex,
 			message
 		}),
 
-		hexColor: (message: string = 'Must be a valid hex color'): ValidationRule => ({
-			type: 'pattern',
-			value: /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/,
-			message
-		}),
-
-		email: (message: string = 'Must be a valid email address'): ValidationRule => ({
-			type: 'pattern',
-			value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-			message
-		}),
-
-		custom: (validator: (value: any, formData?: Record<string, any>) => boolean, message: string): ValidationRule => ({
+		custom: (validator: (value: any, formData?: Record<string, any>) => string | null): ValidationRule => ({
 			type: 'custom',
-			validator,
-			message
+			validator
+		}),
+
+		// Common pattern shortcuts
+		phone: (message?: string): ValidationRule => ({
+			type: 'pattern',
+			value: '^[+]?[1-9]?[0-9]{7,15}$',
+			message: message || 'Please enter a valid phone number'
+		}),
+
+		alphanumeric: (message?: string): ValidationRule => ({
+			type: 'pattern',
+			value: '^[a-zA-Z0-9]+$',
+			message: message || 'Only letters and numbers are allowed'
+		}),
+
+		noSpaces: (message?: string): ValidationRule => ({
+			type: 'pattern',
+			value: '^[^\\s]+$',
+			message: message || 'Spaces are not allowed'
+		}),
+
+		hexColor: (message?: string): ValidationRule => ({
+			type: 'pattern',
+			value: '^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$',
+			message: message || 'Please enter a valid hex color (e.g., #FF0000)'
+		}),
+
+		// Conditional validation
+		requiredIf: (
+			dependentField: string,
+			dependentValue: any,
+			message?: string
+		): ValidationRule => ({
+			type: 'custom',
+			validator: (value, formData) => {
+				if (!formData) return null;
+				if (formData[dependentField] === dependentValue) {
+					return !value ? (message || 'This field is required') : null;
+				}
+				return null;
+			}
+		}),
+
+		mustMatch: (otherField: string, message?: string): ValidationRule => ({
+			type: 'custom',
+			validator: (value, formData) => {
+				if (!formData) return null;
+				if (value !== formData[otherField]) {
+					return message || 'Fields must match';
+				}
+				return null;
+			}
+		}),
+
+		// File validation
+		fileSize: (maxSizeInMB: number, message?: string): ValidationRule => ({
+			type: 'custom',
+			validator: (files) => {
+				if (!files || files.length === 0) return null;
+
+				for (const file of Array.from(files) as File[]) { // Type assertion
+					if (file.size > maxSizeInMB * 1024 * 1024) {
+						return message || `File size must be less than ${maxSizeInMB}MB`;
+					}
+				}
+				return null;
+			}
+		}),
+
+		fileType: (allowedTypes: string[], message?: string): ValidationRule => ({
+			type: 'custom',
+			validator: (files) => {
+				if (!files || files.length === 0) return null;
+
+				for (const file of Array.from(files) as File[]) { // Type assertion
+					if (!allowedTypes.includes(file.type)) {
+						return message || `File type not allowed. Allowed types: ${allowedTypes.join(', ')}`;
+					}
+				}
+				return null;
+			}
 		})
 	};
+
+	// Form-level validation utilities
+	static async validateFormAsync(
+		data: Record<string, any>,
+		fields: FormField[]
+	): Promise<FormValidationResult> {
+		// For future async validation support
+		return this.validateForm(data, fields);
+	}
+
+	static getFieldError(
+		fieldName: string,
+		errors: Record<string, string>
+	): string | null {
+		return errors[fieldName] || null;
+	}
+
+	static hasFieldError(
+		fieldName: string,
+		errors: Record<string, string>
+	): boolean {
+		return Boolean(errors[fieldName]);
+	}
+
+	static clearFieldError(
+		fieldName: string,
+		errors: Record<string, string>
+	): Record<string, string> {
+		const newErrors = { ...errors };
+		delete newErrors[fieldName];
+		return newErrors;
+	}
+
+	static setFieldError(
+		fieldName: string,
+		error: string,
+		errors: Record<string, string>
+	): Record<string, string> {
+		return { ...errors, [fieldName]: error };
+	}
 }

@@ -8,11 +8,12 @@
 	import type { TableCallbacks } from '$lib/types/ui/table';
 	import type { FAQ } from '$lib/types';
 	import { goto } from '$app/navigation';
-	import { createFAQFormSchema } from '$lib/components/Forms/FAQFormSchema';
+	import { createFAQFormSchema, FAQFormPresets } from '$lib/components/Forms/FAQFormSchema';
 	import type { FAQCreateFormData } from '$lib/types/entities/faq';
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
 	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
 	import { Link2 } from 'lucide-svelte';
+	import { faqCategoryStore } from '$lib/stores/defaults/faqCategoryStore.svelte';
 
 	let selectedItems = $state<Set<string>>(new Set());
 	let isCreateModalOpen = $state<boolean>(false);
@@ -21,8 +22,9 @@
 	let createFormDataValid = $state(false);
 
 	// Form schema
-	const createFormSchema = $derived(createFAQFormSchema());
-
+	const createFormSchema = $derived(createFAQFormSchema('standard', faqCategoryStore.data || []));
+	const quickSchema = $derived(createFAQFormSchema('quick', faqCategoryStore.data || []));
+	const detailedSchema = $derived(createFAQFormSchema('detailed', faqCategoryStore.data || []));
 
 	// Initialize data on component mount
 	onMount(async () => {
