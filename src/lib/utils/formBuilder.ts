@@ -1,4 +1,10 @@
-import type { FormField, FormFieldGroup, FormSchema } from '$lib/types/entities/forms';
+import type {
+	ConditionalValidation,
+	FormField,
+	FormFieldDependency,
+	FormFieldGroup,
+	FormSchema
+} from '$lib/types/entities/forms';
 import { FormValidator } from '$lib/utils/formValidator';
 
 export class FormBuilder<T = Record<string, any>> {
@@ -229,6 +235,8 @@ export class FormBuilder<T = Record<string, any>> {
 			colSpan?: 1 | 2;
 			helpText?: string;
 			defaultValue?: any;
+			dependencies?: FormFieldDependency[];
+			conditionalValidation?: ConditionalValidation[];
 		} = {}
 	): FormBuilder<T> {
 		const validationRules = [];
@@ -237,7 +245,6 @@ export class FormBuilder<T = Record<string, any>> {
 			validationRules.push(FormValidator.rules.required());
 		}
 
-		// Filter out placeholder options from validation if they exist
 		const hasPlaceholder = optionsArray.some((opt) => opt.value === '');
 
 		return this.addField({
@@ -249,14 +256,15 @@ export class FormBuilder<T = Record<string, any>> {
 			options: optionsArray,
 			colSpan: options.colSpan,
 			helpText: options.helpText,
-			// Don't set defaultValue to empty string if required and has placeholder
 			defaultValue:
 				options.defaultValue !== undefined
 					? options.defaultValue
 					: hasPlaceholder && options.required
 						? ''
 						: optionsArray[0]?.value || '',
-			validationRules
+			validationRules,
+			dependencies: options.dependencies,
+			conditionalValidation: options.conditionalValidation
 		});
 	}
 
@@ -436,5 +444,29 @@ export class FormBuilder<T = Record<string, any>> {
 		}
 
 		return builder.build();
+	}
+
+	/**
+	 * Helper method to create dependency conditions
+	 */
+	static when(field: string, condition: 'equals' | 'not-equals' | 'truthy' | 'falsy', value?: any): FormFieldDependency {
+		return { field, condition, value };
+	}
+
+	/**
+	 * Helper method to create conditional validation rules
+	 */
+	static conditionallyRequired(when: FormFieldDependency, message?: string): ConditionalValidation {
+		return {
+			when,
+			rules: [{ type: 'required', message: message || 'This field is required' }]
+		};
+	}
+
+	/**
+	 * Helper method to create conditional validation with custom rules
+	 */
+	static conditionalValidation(when: FormFieldDependency, rules: any[]): ConditionalValidation {
+		return { when, rules };
 	}
 }

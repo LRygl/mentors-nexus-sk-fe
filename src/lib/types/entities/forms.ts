@@ -15,6 +15,13 @@ export interface FormField<T = any> {
 	defaultValue?: T;
 	validationRules?: ValidationRule[];
 
+	// Dependency and conditional validation
+	dependencies?: FormFieldDependency[];
+	conditionalValidation?: {
+		when: FormFieldDependency;
+		rules: any[];
+	}[];
+
 	// Field-specific option
 	options?: Array<{
 		label: string;
@@ -37,6 +44,13 @@ export interface FormField<T = any> {
 	previewColor?: string;
 
  }
+
+
+export interface FormFieldDependency {
+	field: string;
+	condition: 'equals' | 'not-equals' | 'truthy' | 'falsy';
+	value?: any;
+}
 
 export interface FormFieldGroup {
 	title?: string;
@@ -68,9 +82,15 @@ export interface FormValidationResult {
 	errors: Record<string, string>;
 }
 
+export interface ConditionalValidation {
+	when: FormFieldDependency;
+	rules: any[];
+}
+
 export interface FormCallbacks<T = Record<string, any>> {
 	onSubmit?: (data: T) => Promise<void> | void;
 	onCancel?: () => void;
 	onValidate?: (result: FormValidationResult) => void;
 	onChange?: (field: string, value: any, formState: FormState<T>) => void;
 }
+

@@ -12,6 +12,7 @@
 	import type { FAQCreateFormData } from '$lib/types/entities/faq';
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
 	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
+	import { Link2 } from 'lucide-svelte';
 
 	let selectedItems = $state<Set<string>>(new Set());
 	let isCreateModalOpen = $state<boolean>(false);
@@ -98,6 +99,12 @@
 		onValidate: handleFormValidation,
 		onChange: (field: string, value: any) => {
 			createFormData = { ...createFormData, [field]: value };
+
+			// Special handling for isPublished change
+			if (field === 'isPublished' && !value) {
+				// Clear FAQ category when unpublishing
+				createFormData.categoryId = undefined;
+			}
 		}
 	};
 
@@ -128,8 +135,8 @@
 		exportable={true}
 		searchPlaceholder="Search categories..."
 		emptyTitle="No FAQs yet"
-		emptyDescription="Get started by creating your first FAQ category. Categories help organize your frequently asked questions for better user experience."
-		emptyActionLabel="Create Your First Category"
+		emptyDescription="Get started by defining questions which might be interesting to your users and provide simple answers."
+		emptyActionLabel="Create your first FAQ!"
 	/>
 
 </section>
@@ -139,7 +146,7 @@
 	isOpen={isCreateModalOpen}
 	title="Create new FAQ"
 	subtitle="Create new FAQ record for your users"
-	icon="Link2"
+	icon={Link2}
 	iconBgColor="from-blue-500 to-indigo-600"
 	loading={faqStore.loading}
 	error={faqStore.error}

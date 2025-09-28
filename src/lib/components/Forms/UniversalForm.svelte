@@ -11,6 +11,7 @@
 	import { onMount } from 'svelte';
 	import IconSelector from '$lib/components/UI/IconSelector.svelte';
 	import DynamicIcon from '$lib/components/UI/DynamicIcon.svelte';
+	import { FormDependencyHandler } from '$lib/components/Forms/FormDependencyHandler';
 
 	// Props
 	interface Props<T extends Record<string, any> = Record<string, any>> {
@@ -37,6 +38,14 @@
 		return schema.fields || [];
 	});
 
+	// Add this derived value to check field visibility
+	const visibleFields = $derived(() => {
+		const fields = allFields();
+		return fields.filter(field =>
+			FormDependencyHandler.isFieldVisible(field, formState.data)
+		);
+	});
+
 	// Form state
 	let formState = $state<FormState>({
 		data: {} as any,
@@ -59,6 +68,11 @@
 		formState.data = defaultData;
 		validateForm();
 	});
+
+	// Helper function to check if field should be rendered
+	function shouldRenderField(field: FormField): boolean {
+		return FormDependencyHandler.isFieldVisible(field, formState.data);
+	}
 
 	// Get appropriate default value for field type
 	function getDefaultValueForField(field: FormField, providedDefault?: any): any {
@@ -84,12 +98,36 @@
 	}
 
 	// Validation
+	// Enhanced validateForm function
 	function validateForm(): FormValidationResult {
 		const fields = allFields();
-		const result = FormValidator.validateForm(formState.data, fields);
-		formState.errors = result.errors;
-		formState.isValid = result.isValid;
+		const errors: Record<string, string> = {};
 
+		fields.forEach(field => {
+			// Skip validation for invisible fields
+			if (!FormDependencyHandler.isFieldVisible(field, formState.data)) {
+				return;
+			}
+
+			// Get current validation rules
+			const currentRules = FormDependencyHandler.getConditionalValidationRules(field, formState.data);
+			const fieldWithCurrentRules = { ...field, validationRules: currentRules };
+
+			const error = FormValidator.validateField(
+				formState.data[field.name],
+				fieldWithCurrentRules,
+				formState.data
+			);
+
+			if (error) {
+				errors[field.name] = error;
+			}
+		});
+
+		formState.errors = errors;
+		formState.isValid = Object.keys(errors).length === 0;
+
+		const result = { isValid: formState.isValid, errors };
 		callbacks.onValidate?.(result);
 		return result;
 	}
@@ -99,9 +137,21 @@
 		const field = fields.find(f => f.name === fieldName);
 		if (!field) return;
 
+		// Skip validation if field is not visible
+		if (!FormDependencyHandler.isFieldVisible(field, formState.data)) {
+			delete formState.errors[fieldName];
+			return;
+		}
+
+		// Get current validation rules (including conditional ones)
+		const currentRules = FormDependencyHandler.getConditionalValidationRules(field, formState.data);
+
+		// Create a temporary field with current rules for validation
+		const fieldWithCurrentRules = { ...field, validationRules: currentRules };
+
 		const error = FormValidator.validateField(
 			formState.data[fieldName],
-			field,
+			fieldWithCurrentRules,
 			formState.data
 		);
 
@@ -111,7 +161,6 @@
 			delete formState.errors[fieldName];
 		}
 
-		formState.errors[fieldName] = error;
 		formState.isValid = Object.values(formState.errors).every(err => !err);
 	}
 
@@ -121,7 +170,18 @@
 		formState.data[fieldName] = value;
 		formState.touched[fieldName] = true;
 		formState.isDirty = true;
-		validateField(fieldName)
+
+		// Validate the changed field
+		validateField(fieldName);
+
+		// Re-validate all fields that might depend on this field
+		const fields = allFields();
+		fields.forEach(field => {
+			if (field.dependencies?.some(dep => dep.field === fieldName)) {
+				validateField(field.name);
+			}
+		});
+
 		callbacks.onChange?.(fieldName, value, formState);
 	}
 
@@ -207,9 +267,12 @@
 
 				<div class="grid grid-cols-1 {schema.layout === 'two-column' ? 'lg:grid-cols-2' : ''} gap-4">
 					{#each group.fields as field}
-						<div class="space-y-2 {field.colSpan === 2 ? 'lg:col-span-2' : ''} {field.className || ''}">
-							{@render fieldRenderer(field)}
-						</div>
+						<!-- Only render field if it should be visible based on dependencies -->
+						{#if shouldRenderField(field)}
+							<div class="space-y-2 {field.colSpan === 2 ? 'lg:col-span-2' : ''} {field.className || ''}">
+								{@render fieldRenderer(field)}
+							</div>
+						{/if}
 					{/each}
 				</div>
 			</div>
@@ -218,132 +281,142 @@
 		<!-- Render direct fields -->
 		<div class="grid grid-cols-1 {schema.layout === 'two-column' ? 'lg:grid-cols-2' : ''} gap-4">
 			{#each schema.fields as field}
-				<div class="space-y-2 {field.colSpan === 2 ? 'lg:col-span-2' : ''} {field.className || ''}">
-					{@render fieldRenderer(field)}
-				</div>
+				{#if shouldRenderField(field)}
+					<div class="space-y-2 {field.colSpan === 2 ? 'lg:col-span-2' : ''} {field.className || ''}">
+						{@render fieldRenderer(field)}
+					</div>
+				{/if}
 			{/each}
 		</div>
 	{/if}
 </form>
 
+<!-- Add visual feedback for conditional fields -->
 {#snippet fieldRenderer(field: FormField)}
-	<!-- Field Label -->
-	{#if field.type !== 'checkbox'}
-		<label class="flex items-center gap-2 text-sm font-medium text-slate-700">
-			<DynamicIcon iconName={getFieldIconName(field.type)} class="w-4 h-4" size={16} />{field.label}
-			{#if field.required}
-				<span class="text-red-500">*</span>
-			{/if}
-		</label>
-	{/if}
+	<!-- Add conditional styling for dependent fields -->
+	<div class="transition-all duration-200 {field.dependencies ? 'animate-in slide-in-from-top-2' : ''}">
+		<!-- Field Label -->
+		{#if field.type !== 'checkbox'}
+			<label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+				<DynamicIcon iconName={getFieldIconName(field.type)} class="w-4 h-4" size={16} />
+				{field.label}
+				{#if field.required || (field.conditionalValidation && field.conditionalValidation.some(cv => FormDependencyHandler.evaluateDependency(cv.when, formState.data)))}
+					<span class="text-red-500">*</span>
+				{/if}
+				<!-- Add dependency indicator -->
+				{#if field.dependencies}
+					<span class="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">conditional</span>
+				{/if}
+			</label>
+		{/if}
 
-	<!-- Field Input -->
-	{#if field.type === 'text'}
-		<div class="relative">
-			<input
-				type="text"
+		<!-- Field Input -->
+		{#if field.type === 'text'}
+			<div class="relative">
+				<input
+					type="text"
+					bind:value={formState.data[field.name]}
+					oninput={(e) => {
+						const target = e.currentTarget;
+						handleFieldChange(field.name, target.value);
+					}}
+					placeholder={field.placeholder}
+					disabled={disabled}
+					min={field.min}
+					max={field.max}
+					class="w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
+				/>
+				{#if formState.data[field.name] && !formState.errors[field.name]}
+					<Check class="absolute right-3 top-2.5 w-4 h-4 text-green-500" />
+				{/if}
+				{#if formState.errors[field.name]}
+					<AlertCircle class="absolute right-3 top-2.5 w-4 h-4 text-red-500" />
+				{/if}
+			</div>
+
+		{:else if field.type === 'textarea'}
+			<textarea
 				bind:value={formState.data[field.name]}
 				oninput={(e) => {
-          const target = e.currentTarget;
-          handleFieldChange(field.name, target.value);
-        }}
+					const target = e.currentTarget;
+					handleFieldChange(field.name, target.value);
+				}}
+				placeholder={field.placeholder}
+				disabled={disabled}
+				rows={field.rows || 3}
+				class="w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors resize-none {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
+			></textarea>
+
+		{:else if field.type === 'number'}
+			<input
+				type="number"
+				bind:value={formState.data[field.name]}
+				oninput={(e) => {
+					const target = e.currentTarget;
+					handleFieldChange(field.name, parseInt(target.value) || field.min || 0);
+				}}
 				placeholder={field.placeholder}
 				disabled={disabled}
 				min={field.min}
 				max={field.max}
 				class="w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
 			/>
-			{#if formState.data[field.name] && !formState.errors[field.name]}
-				<Check class="absolute right-3 top-2.5 w-4 h-4 text-green-500" />
-			{/if}
-			{#if formState.errors[field.name]}
-				<AlertCircle class="absolute right-3 top-2.5 w-4 h-4 text-red-500" />
-			{/if}
-		</div>
 
-	{:else if field.type === 'textarea'}
-    <textarea
-			bind:value={formState.data[field.name]}
-			oninput={(e) => {
-        const target = e.currentTarget;
-        handleFieldChange(field.name, target.value);
-      }}
-			placeholder={field.placeholder}
-			disabled={disabled}
-			rows={field.rows || 3}
-			class="w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors resize-none {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
-		></textarea>
+		{:else if field.type === 'color'}
+			<div class="flex gap-2">
+				<input
+					type="color"
+					bind:value={formState.data[field.name]}
+					onchange={(e) => {
+						const target = e.currentTarget;
+						handleFieldChange(field.name, target.value);
+					}}
+					disabled={disabled}
+					class="w-10 h-10 rounded border border-slate-300 cursor-pointer"
+				/>
+				<input
+					type="text"
+					bind:value={formState.data[field.name]}
+					oninput={(e) => {
+						const target = e.currentTarget;
+						handleFieldChange(field.name, target.value);
+					}}
+					placeholder={field.placeholder || '#3B82F6'}
+					disabled={disabled}
+					class="flex-1 px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
+				/>
+			</div>
 
-	{:else if field.type === 'number'}
-		<input
-			type="number"
-			bind:value={formState.data[field.name]}
-			oninput={(e) => {
-        const target = e.currentTarget;
-        handleFieldChange(field.name, parseInt(target.value) || field.min || 0);
-      }}
-			placeholder={field.placeholder}
-			disabled={disabled}
-			min={field.min}
-			max={field.max}
-			class="w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
-		/>
+		{:else if field.type === 'select'}
+			<div class="relative">
+				<select
+					bind:value={formState.data[field.name]}
+					onchange={(e) => {
+					const target = e.currentTarget;
+					handleFieldChange(field.name, target.value);
+				}}
+					disabled={disabled}
+					class="w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors appearance-none {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
+				>
+					{#each field.options || [] as option}
+						<option
+							value={option.value}
+							disabled={option.value === '' && field.placeholder}
+							selected={formState.data[field.name] === option.value}
+						>
+							{option.label}
+						</option>
+					{/each}
+				</select>
+				<ChevronDown class="absolute right-3 top-2.5 w-4 h-4 text-slate-400 pointer-events-none" />
 
-	{:else if field.type === 'color'}
-		<div class="flex gap-2">
-			<input
-				type="color"
-				bind:value={formState.data[field.name]}
-				onchange={(e) => {
-          const target = e.currentTarget;
-          handleFieldChange(field.name, target.value);
-        }}
-				disabled={disabled}
-				class="w-10 h-10 rounded border border-slate-300 cursor-pointer"
-			/>
-			<input
-				type="text"
-				bind:value={formState.data[field.name]}
-				oninput={(e) => {
-          const target = e.currentTarget;
-          handleFieldChange(field.name, target.value);
-        }}
-				placeholder={field.placeholder || '#3B82F6'}
-				disabled={disabled}
-				class="flex-1 px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
-			/>
-		</div>
-
-	{:else if field.type === 'select'}
-		<div class="relative">
-			<select
-				bind:value={formState.data[field.name]}
-				onchange={(e) => {
-				const target = e.currentTarget;
-				handleFieldChange(field.name, target.value);
-			}}
-				disabled={disabled}
-				class="w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors appearance-none {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
-			>
-				{#each field.options || [] as option}
-					<option
-						value={option.value}
-						disabled={option.value === '' && field.placeholder}
-						selected={formState.data[field.name] === option.value}
-					>
-						{option.label}
-					</option>
-				{/each}
-			</select>
-			<ChevronDown class="absolute right-3 top-2.5 w-4 h-4 text-slate-400 pointer-events-none" />
-
-			<!-- Success indicator -->
-			{#if formState.data[field.name] && !formState.errors[field.name]}
-				<Check class="absolute right-8 top-2.5 w-4 h-4 text-green-500" />
-			{/if}
-			{#if formState.errors[field.name]}
-				<AlertCircle class="absolute right-8 top-2.5 w-4 h-4 text-red-500" />
-			{/if}
+				<!-- Success indicator -->
+				{#if formState.data[field.name] && !formState.errors[field.name]}
+					<Check class="absolute right-8 top-2.5 w-4 h-4 text-green-500" />
+				{/if}
+				{#if formState.errors[field.name]}
+					<AlertCircle class="absolute right-8 top-2.5 w-4 h-4 text-red-500" />
+				{/if}
 		</div>
 
 	{:else if field.type === 'checkbox'}
@@ -395,10 +468,18 @@
 		{/if}
 	{/if}
 
-	<!-- Field Error/Help Text -->
-	{#if formState.errors[field.name] && formState.touched[field.name]}
-		<p class="text-xs text-red-600">{formState.errors[field.name]}</p>
-	{:else if field.helpText}
-		<p class="text-xs text-slate-500">{field.helpText}</p>
-	{/if}
+		<!-- Field Error/Help Text with enhanced messaging for conditional fields -->
+		{#if formState.errors[field.name] && formState.touched[field.name]}
+			<p class="text-xs text-red-600">{formState.errors[field.name]}</p>
+		{:else if field.helpText}
+			<p class="text-xs text-slate-500">
+				{field.helpText}
+				{#if field.dependencies}
+					<span class="text-amber-600">
+						• Shown when {field.dependencies[0].field} is {field.dependencies[0].condition === 'truthy' ? 'enabled' : 'disabled'}
+					</span>
+				{/if}
+			</p>
+		{/if}
+	</div>
 {/snippet}

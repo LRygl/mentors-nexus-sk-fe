@@ -5,22 +5,44 @@ export class FormValidator {
 	/**
  	* Validates a single field value against its validation rules
 	*/
-	static validateField(
-		value: any,
-		field: FormField,
-		formData?: Record<string, any>
-	): string {
-		if (!field.validationRules || field.validationRules.length === 0) {
-			return '';
-		}
+	static validateField(value: any, field: FormField, formData?: Record<string, any>): string | null {
+		if (!field.validationRules) return null;
 
 		for (const rule of field.validationRules) {
-			const error = this.applyValidationRule(value, rule, formData);
-			if (error) {
-				return error;
+			// Handle both old and new rule formats
+			const ruleType = typeof rule === 'object' && rule.type ? rule.type : rule.name || rule;
+			const ruleMessage = typeof rule === 'object' && rule.message ? rule.message : undefined;
+
+			switch (ruleType) {
+				case 'required':
+					if (!value || (typeof value === 'string' && value.trim() === '')) {
+						return ruleMessage || `${field.label} is required`;
+					}
+					break;
+
+				// Add other validation cases as needed
+				default:
+					// Handle existing validation rules
+					const result = this.executeRule(rule, value, field, formData);
+					if (result) return result;
 			}
 		}
-		return '';
+
+		return null;
+	}
+
+	private static executeRule(rule: any, value: any, field: FormField, formData?: Record<string, any>): string | null {
+		// Handle your existing validation rules here
+		if (typeof rule === 'function') {
+			return rule(value, formData);
+		}
+
+		// Handle object-based rules
+		if (typeof rule === 'object' && rule.validate) {
+			return rule.validate(value, formData);
+		}
+
+		return null;
 	}
 
 	/**
