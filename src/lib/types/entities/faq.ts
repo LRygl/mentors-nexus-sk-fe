@@ -27,7 +27,7 @@ export interface FAQ extends BaseEntity {
 	createdBy?: string;
 	updatedBy?: string;
 
-	// Computed fields from Spring Boot
+	// Computed Fields from Spring Boot
 	helpfulnessRatio: number;
 	isPopular: boolean;
 	fullUrl: string;

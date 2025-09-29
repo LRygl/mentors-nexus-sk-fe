@@ -109,7 +109,7 @@ export interface FormField {
 	conditionalValidation?: ConditionalValidation[];
 
 	// Advanced features
-	searchable?: boolean; // For select fields
+	searchable?: boolean; // For select Fields
 	clearable?: boolean;
 	loading?: boolean;
 	prefix?: string;
@@ -166,7 +166,7 @@ export interface FormSchema<T = Record<string, any>> {
 	showProgress?: boolean;
 	showSteps?: boolean;
 
-	// Groups or direct fields
+	// Groups or direct Fields
 	groups?: FormFieldGroup[];
 	fields?: FormField[];
 

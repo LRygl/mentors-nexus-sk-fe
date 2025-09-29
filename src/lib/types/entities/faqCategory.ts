@@ -17,7 +17,7 @@ export interface FAQCategory extends BaseEntity {
 	updatedAt: Date;
 	metaDescription: string;
 	metaKeywords: string;
-	// Computed fields
+	// Computed Fields
 	faqCount?: number;           // Number of FAQs in this category
 	publishedFaqCount?: number;  // Number of published FAQs
 	faqs?: FAQ[];

@@ -281,7 +281,7 @@ export abstract class BaseApiService {
 	}
 
 	/**
-	 * Recursively normalize any `id` fields into strings.
+	 * Recursively normalize any `id` Fields into strings.
 	 */
 	private normalizeIds(obj: unknown): unknown {
 		if (Array.isArray(obj)) {

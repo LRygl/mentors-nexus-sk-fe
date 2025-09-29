@@ -12,7 +12,7 @@
 	import type { FAQ } from '$lib/types';
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
 	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
-	import { createFAQCategoryLinkFormSchema } from '$lib/components/Forms/FAQCategoryLinkFormSchema';
+	import { createFAQCategoryLinkFormSchema } from '$lib/components/Forms/Schemas/FAQCategoryLinkFormSchema';
 	import { faqStore } from '$lib/stores/defaults/faqStore.svelte';
 	import type { FAQLinkFormData } from '$lib/types/entities/faq';
 	// Get category ID from URL params

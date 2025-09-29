@@ -14,7 +14,7 @@
 
 	import { faqCategoryStore } from '$lib/stores/defaults/faqCategoryStore.svelte';
 	import { getFAQCategoryActions } from './faqCategoryActions';
-	import { getFAQCategoryFormSchema, transformToCreateRequest } from '$lib/components/Forms/FAQCategoryFormSchema';
+	import { getFAQCategoryFormSchema, transformToCreateRequest } from '$lib/components/Forms/Schemas/FAQCategoryFormSchema';
 	import { faqCategoryTableColumns, faqCategoryTableConfig } from './fatCategoryTableConfig';
 
 	// Modal and Form State
@@ -57,7 +57,7 @@
 							name: `${category.name} (Copy)`,
 							displayOrder: category.displayOrder + 1,
 							colorCode: category.colorCode,
-							// Add other required fields
+							// Add other required Fields
 						} as any; // Replace with proper CreateFAQCategoryRequest type
 
 						await faqCategoryStore.create(duplicateData);

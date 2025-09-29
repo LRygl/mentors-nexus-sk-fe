@@ -8,7 +8,7 @@
 	import type { TableCallbacks } from '$lib/types/ui/table';
 	import type { FAQ } from '$lib/types';
 	import { goto } from '$app/navigation';
-	import { createFAQFormSchema, FAQFormPresets } from '$lib/components/Forms/FAQFormSchema';
+	import { createFAQFormSchema, FAQFormPresets } from '$lib/components/Forms/Schemas/FAQFormSchema';
 	import type { FAQCreateFormData } from '$lib/types/entities/faq';
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
 	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';

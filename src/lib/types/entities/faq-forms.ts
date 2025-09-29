@@ -12,7 +12,7 @@ export interface FAQFormDataBase {
 	answer: string;
 }
 
-// Quick form data - minimal fields needed to create the object
+// Quick form data - minimal Fields needed to create the object
 export interface FAQQuickFormData extends FAQFormDataBase {
 	isPublished?: boolean;
 }
@@ -84,13 +84,13 @@ export interface FAQDetailedFormData extends FAQCreateFormData {
 export interface FAQUpdateFormData extends Partial<FAQCreateFormData> {
 	id: string; // Required for updates
 
-	// Additional fields that might be updated
+	// Additional Fields that might be updated
 	status?: FAQStatus;
 	viewCount?: number;
 	helpfulVotes?: number;
 	notHelpfulVotes?: number;
 
-	// Audit fields
+	// Audit Fields
 	updatedBy?: string;
 }
 
@@ -395,7 +395,7 @@ export function formDataToAPIPayload<T extends FAQFormType>(
 		answer: formData.answer
 	};
 
-	// Add common fields for standard and detailed forms
+	// Add common Fields for standard and detailed forms
 	if (formType !== 'quick') {
 		const extendedData = formData as FAQCreateFormData;
 		Object.assign(basePayload, {

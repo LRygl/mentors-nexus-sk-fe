@@ -99,20 +99,20 @@ export function transformToCreateRequest(
 // Example of creating different form variations
 export const FAQ_CATEGORY_FORM_VARIATIONS = {
 
-	// Minimal form - only essential fields
+	// Minimal form - only essential Fields
 	minimal: () => new FormBuilder('Quick Category Setup')
 		.group()
 		.text('name', 'Name', { required: true, maxLength: 50 })
 		.textarea('description', 'Name', { required: true, maxLength: 200 })
 		.build(),
 
-	// Admin form - all fields with advanced options
+	// Admin form - all Fields with advanced options
 	admin: () => createCustomFAQCategoryFormSchema(),
 
-	// Simple form - standard business fields
+	// Simple form - standard business Fields
 	standard: () => FormBuilder.entityForm('FAQ Category'),
 
-	// Bulk edit form - only commonly changed fields
+	// Bulk edit form - only commonly changed Fields
 	bulkEdit: () => new FormBuilder('Bulk Edit Categories', 'Update multiple categories at once')
 		.group()
 		.checkbox('isActive', 'Active Status')
