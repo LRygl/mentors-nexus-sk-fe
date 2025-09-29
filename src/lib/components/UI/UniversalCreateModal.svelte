@@ -93,13 +93,13 @@
 		<!-- Modal Content -->
 		<div
 			bind:this={modalElement}
-			class="bg-white rounded-2xl shadow-2xl {maxWidth} w-full {height} overflow-hidden animate-modal-enter"
+			class="bg-white rounded-2xl shadow-2xl {maxWidth} w-full {height} flex flex-col animate-modal-enter"
 			onclick={(e) => e.stopPropagation()}
 			role="none"
 			tabindex="-1"
 		>
 			<!-- Modal Header -->
-			<div class="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
+			<div class="flex-none flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-indigo-50 to-purple-50">
 				<div class="flex items-center gap-3">
 					{#if icon}
 						<div class="w-10 h-10 bg-gradient-to-r {iconBgColor} rounded-lg flex items-center justify-center">
@@ -137,7 +137,7 @@
 
 			<!-- Error Banner -->
 			{#if error}
-				<div class="bg-red-50 border-l-4 border-red-400 p-4 m-6 mb-0 rounded-lg">
+				<div class="flex-none bg-red-50 border-l-4 border-red-400 p-4 m-6 mb-0 rounded-lg">
 					<div class="flex">
 						<div class="ml-3">
 							<p class="text-sm text-red-700 font-medium">
@@ -152,12 +152,15 @@
 			{/if}
 
 			<!-- Modal Body (Scrollable) -->
-			<div class="flex-1 overflow-y-auto">
+			<div class="flex-1 overflow-y-auto min-h-0">
 				<form onsubmit={handleSubmit} class="p-6 space-y-6">
 					<!-- Dynamic Content Slot -->
-					{#if children}
-						{@render children()}
-					{/if}
+					<div class="flex-1 space-y-6">
+						{#if children}
+							{@render children()}
+						{/if}
+					</div>
+
 
 					<!-- Form Actions -->
 					<div class="flex items-center justify-end gap-3 pt-6 border-t border-gray-200">

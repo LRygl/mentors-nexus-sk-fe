@@ -12,6 +12,7 @@
 	import IconSelector from '$lib/components/UI/IconSelector.svelte';
 	import DynamicIcon from '$lib/components/UI/DynamicIcon.svelte';
 	import { FormDependencyHandler } from '$lib/components/Forms/FormDependencyHandler';
+	import TextInput from '$lib/components/Forms/fields/TextInput.svelte';
 
 	// Props
 	interface Props<T extends Record<string, any> = Record<string, any>> {
@@ -52,7 +53,10 @@
 		errors: {},
 		touched: {},
 		isValid: false,
-		isDirty: false
+		isDirty: false,
+		loading: false,
+		isSubmitting: false,
+		submitCount: 0
 	});
 
 	// Initialize form data
@@ -313,18 +317,15 @@
 		<!-- Field Input -->
 		{#if field.type === 'text'}
 			<div class="relative">
-				<input
-					type="text"
-					bind:value={formState.data[field.name]}
-					oninput={(e) => {
-						const target = e.currentTarget;
-						handleFieldChange(field.name, target.value);
-					}}
+				<TextInput
+					name={field.name}
+					value={formState.data[field.name]}
 					placeholder={field.placeholder}
 					disabled={disabled}
 					min={field.min}
 					max={field.max}
-					class="w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
+					error={!!formState.errors[field.name]}
+					onChange={handleFieldChange}
 				/>
 				{#if formState.data[field.name] && !formState.errors[field.name]}
 					<Check class="absolute right-3 top-2.5 w-4 h-4 text-green-500" />
