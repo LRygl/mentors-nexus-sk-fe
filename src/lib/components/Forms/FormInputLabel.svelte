@@ -1,7 +1,7 @@
 <script lang="ts">
 
 	import type { FormField } from '$lib/types/entities/forms';
-	import DynamicIcon from '$lib/components/ui/DynamicIcon.svelte';
+	import DynamicIcon from '$lib/components/UI/DynamicIcon.svelte';
 
 	interface Props {
 		field: FormField;

@@ -1,6 +1,30 @@
 # sv
 
-Everything you need to build a Svelte project, powered by [`sv`](https://github.com/sveltejs/cli).
+## TOD
+- [ ] Implement custom confirmation modal service which will alow me to trigger actions for user confirmation. Should have variuants like Confirm | success | warning | error | infor
+- [ ] Implement toas notification that will have following
+  - [ ] To be dismissed
+  - [ ] Has timer until it disappears or stays forever based on the type
+  - [ ] they are stacked newest -> oldest
+  - [ ] has global setting to be placed top right/left/center bottom right/left/center
+  - [ ] has different style based on the type of notification Success / Warning / Error / Info / Default
+  - [ ] there should be a global option to turn on debug mode - in this mode the notifications log addiotional information (for example the full HTTP response received)
+  - [ ] each notification should have an Icon, Heading and sub-heading - optionally can contain a special link
+- [ ] Implement custom FORM input types that can be placed using FormBuilder
+- [ ] Move the Export CSV logic to UniversalDataTable (utils)
+- [ ] Make the link FAQ to category form working again
+- [ ] Make the form style more coherent and unified
+- [ ] Fix the form colapsed height issue
+- [ ] UniversalDataTable
+  - [ ] Sortable columns
+  - [ ] Working filters
+- [ ] Admin/User Login
+  - [ ] Make security work
+  - [ ] Only users with specific right can access the dashboard
+  - [ ] Handle cookies and data storing 
+  - 
+
+
 
 ## Creating a project
 

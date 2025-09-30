@@ -52,8 +52,6 @@ export function createFAQFormSchema<T extends FAQFormType>(
 // Quick FAQ Form Schema
 function createQuickFAQSchema(categoryOptions: any[]): FormSchema<FAQQuickFormData> {
 	return new FormBuilder<FAQQuickFormData>({
-		title: 'Quick FAQ Entry',
-		description: 'Rapidly create a simple FAQ',
 		layout: 'single',
 		variant: 'minimal',
 		size: 'lg'
@@ -140,7 +138,9 @@ function createStandardFAQSchema(categoryOptions: any[]): FormSchema<FAQCreateFo
 		.group('Publishing Settings', {
 			description: 'Control how and when this FAQ is displayed',
 			icon: '🚀',
-			variant: 'card'
+			variant: 'card',
+			collapsed: false,
+			collapsible: true
 		})
 		.checkbox('isPublished', 'Publish Immediately', {
 			helpText: 'Make this FAQ visible to users right away',

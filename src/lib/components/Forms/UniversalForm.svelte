@@ -19,6 +19,7 @@
 		callbacks?: FormCallbacks<T>;
 		className?: string;
 		disabled?: boolean;
+		showValidationSummary?: boolean;
 	}
 
 	let {
@@ -26,8 +27,12 @@
 		initialData = {},
 		callbacks = {},
 		className = '',
-		disabled = false
+		disabled = false,
+		showValidationSummary = true
 	}: Props = $props();
+
+	// Form element reference for external access
+	let formElement = $state<HTMLFormElement>();
 
 	// Get all Fields from schema (either from groups or direct Fields)
 	const allFields = $derived(() => {
@@ -37,14 +42,6 @@
 		return schema.fields || [];
 	});
 
-	// Add this derived value to check field visibility
-	const visibleFields = $derived(() => {
-		const fields = allFields();
-		return fields.filter(field =>
-			FormDependencyHandler.isFieldVisible(field, formState.data)
-		);
-	});
-
 	// Form state
 	let formState = $state<FormState>({
 		data: {} as any,
@@ -52,7 +49,7 @@
 		touched: {},
 		isValid: false,
 		isDirty: false,
-		loading: false,
+		loading: {},
 		isSubmitting: false,
 		submitCount: 0
 	});
@@ -108,13 +105,12 @@
 	}
 
 	// Validation
-	// Enhanced validateForm function
 	function validateForm(): FormValidationResult {
 		const fields = allFields();
 		const errors: Record<string, string> = {};
 
 		fields.forEach(field => {
-			// Skip validation for invisible Fields
+			// Skip validation for invisible fields
 			if (!FormDependencyHandler.isFieldVisible(field, formState.data)) {
 				return;
 			}
@@ -155,8 +151,6 @@
 
 		// Get current validation rules (including conditional ones)
 		const currentRules = FormDependencyHandler.getConditionalValidationRules(field, formState.data);
-
-		// Create a temporary field with current rules for validation
 		const fieldWithCurrentRules = { ...field, validationRules: currentRules };
 
 		const error = FormValidator.validateField(
@@ -184,7 +178,7 @@
 		// Validate the changed field
 		validateField(fieldName);
 
-		// Re-validate all Fields that might depend on this field
+		// Re-validate all fields that might depend on this field
 		const fields = allFields();
 		fields.forEach(field => {
 			if (field.dependencies?.some(dep => dep.field === fieldName)) {
@@ -195,34 +189,37 @@
 		callbacks.onChange?.(fieldName, value, formState);
 	}
 
-	// Handle form submission
-	function handleSubmit(event: Event) {
-		event.preventDefault();
-		const fields = allFields();
+	export function submit() {
+		formElement?.requestSubmit();
+	}
 
+	// Handle form submission
+	async function handleSubmit(event: Event) {
+		event.preventDefault();
+
+		// Prevent double submission
+		if (formState.isSubmitting) return;
+
+		const fields = allFields();
 		formState.submitCount++;
 
-		// Mark all Fields as touched
+		// Mark all visible fields as touched
 		fields.forEach(field => {
 			if (shouldRenderField(field)) {
 				formState.touched[field.name] = true;
 			}
 		});
 
+		// Validate before submitting
 		const validationResult = validateForm();
 		if (validationResult.isValid) {
-			callbacks.onSubmit?.(formState.data);
+			formState.isSubmitting = true;
+			try {
+				await callbacks.onSubmit?.(formState.data);
+			} finally {
+				formState.isSubmitting = false;
+			}
 		}
-	}
-
-	// Export functions for parent component
-	export function getFormData() {
-		return formState.data;
-	}
-
-	export function validateFormExternal(): boolean {
-		const result = validateForm();
-		return result.isValid;
 	}
 
 	export function reset(newData?: Partial<any>) {
@@ -233,38 +230,36 @@
 		formState.touched = {};
 		formState.isDirty = false;
 		formState.submitCount = 0; // Reset submit count
-		validateForm();
+		validateForm(); //Remove?
 	}
 
-	// Field component getters
-	function getFieldIconName(fieldType: string):string {
-		switch (fieldType) {
-			case 'text': return 'PencilLine';
-			case 'textarea': return 'PencilLine';
-			case 'number': return 'Hash';
-			default: return 'Type';
+	// Helper to get field label for error display
+	function getFieldLabel(fieldName: string): string {
+		const fields = allFields();
+		const field = fields.find(f => f.name === fieldName);
+		return field?.label || fieldName;
+	}
+
+	// Scroll to field with error
+	function scrollToField(fieldName: string) {
+		const fieldElement = formElement?.querySelector(`[name="${fieldName}"]`);
+		if (fieldElement) {
+			fieldElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			if (fieldElement instanceof HTMLElement) {
+				fieldElement.focus();
+			}
 		}
 	}
 
-	// Handle custom component changes
-	function createCustomChangeHandler(fieldName: string) {
-		return (value: unknown) => handleFieldChange(fieldName, value);
-	}
+	// Get validation errors that should be shown
+	const visibleValidationErrors = $derived(() => {
+		if (!showValidationSummary || formState.submitCount === 0) return {};
+		return formState.errors;
+	});
 
 </script>
 
-<form onsubmit={handleSubmit} class="space-y-6 {className}">
-	<!-- Form Header -->
-	{#if schema.title || schema.description}
-		<div class="mb-6">
-			{#if schema.title}
-				<h2 class="text-lg font-semibold text-slate-900 mb-2">{schema.title}</h2>
-			{/if}
-			{#if schema.description}
-				<p class="text-sm text-slate-600">{schema.description}</p>
-			{/if}
-		</div>
-	{/if}
+<form bind:this={formElement}  onsubmit={handleSubmit} class="space-y-6 {className}">
 
 	<!-- Render Grouped Fields -->
 	{#if schema.groups}
@@ -295,6 +290,40 @@
 					</div>
 				{/if}
 			{/each}
+		</div>
+	{/if}
+
+
+	<!-- Validation Error Summary -->
+	{#if showValidationSummary && Object.keys(visibleValidationErrors()).length > 0}
+		<div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+			<div class="flex items-start gap-2">
+				<div class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<circle cx="12" cy="12" r="10"></circle>
+						<line x1="12" y1="8" x2="12" y2="12"></line>
+						<line x1="12" y1="16" x2="12.01" y2="16"></line>
+					</svg>
+				</div>
+				<div class="flex-1">
+					<h4 class="text-sm font-semibold text-red-900 mb-2">
+						Please fix the following errors:
+					</h4>
+					<ul class="space-y-1">
+						{#each Object.entries(visibleValidationErrors()) as [fieldName, error]}
+							<li class="text-sm text-red-700">
+								<button
+									type="button"
+									onclick={() => scrollToField(fieldName)}
+									class="hover:underline text-left"
+								>
+									<strong>{getFieldLabel(fieldName)}:</strong> {error}
+								</button>
+							</li>
+						{/each}
+					</ul>
+				</div>
+			</div>
 		</div>
 	{/if}
 </form>

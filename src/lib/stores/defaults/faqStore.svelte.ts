@@ -86,8 +86,8 @@ export class FaqStoreSvelte extends BaseStoreSvelte<
 		return await this.apiService.updateFAQ(id, updateRequest);
 	}
 
-	protected async deleteItem(id: string): Promise<void> {
-		return await this.apiService.deleteFAQ(id);
+	protected async deleteItem(uuid: string): Promise<void> {
+		return await this.apiService.deleteFAQ(uuid);
 	}
 
 	// Publish FAQ

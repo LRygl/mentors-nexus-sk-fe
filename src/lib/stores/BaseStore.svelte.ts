@@ -229,6 +229,7 @@ export abstract class BaseStoreSvelte<
 	}
 
 	async delete(id: string): Promise<boolean> {
+		console.log("Base Store DELETE Callsed")
 		if (this._deleting) return false;
 
 		this._deleting = true;
@@ -238,7 +239,11 @@ export abstract class BaseStoreSvelte<
 			await this.deleteItem(id);
 
 			// Remove from data array
-			this._data = this._data.filter(item => item.id != id);
+			this._data = this._data.filter(item => {
+				const itemId = (item as any).uuid || item.id;
+				return itemId !== id;
+			}
+			);
 
 			// Update total count
 			this._totalElements = Math.max(0, this._totalElements - 1);

@@ -20,7 +20,6 @@
 	// Modal and Form State
 	let isCreateModalOpen = $state(false);
 	let formRef: any;
-	let formIsValid = $state(false);
 	let selectedItems = $state<Set<string>>(new Set());
 
 	// Form schema
@@ -129,11 +128,6 @@
 		formRef?.reset();
 	}
 
-	// Form handlers
-	function handleFormValidation(result: { isValid: boolean }) {
-		formIsValid = result.isValid;
-	}
-
 	async function handleCreateSubmit(event: Event) {
 		event.preventDefault();
 
@@ -158,11 +152,32 @@
 
 	// Form callbacks
 	const formCallbacks = {
-		onValidate: handleFormValidation,
-		onChange: (field: string, value: any, formState: any) => {
+		onSubmit: handleValidFormSubmit,
+		onChange: (field: string, value: any) => {
 			console.log(`Field ${field} changed to:`, value);
 		}
 	};
+
+	// Forward modal submit to form
+	function handleModalSubmit(event: Event) {
+		event.preventDefault();
+		formRef?.submit();
+	}
+
+	// Called when form validation passes
+	async function handleValidFormSubmit(formData: any) {
+		const requestData = transformToCreateRequest(formData);
+
+		try {
+			const newCategory = await faqCategoryStore.create(requestData);
+			if (newCategory?.id) {
+				closeCreateModal();
+				// TODO: Add toast notification
+			}
+		} catch (error) {
+			console.error('Failed to create category:', error);
+		}
+	}
 
 	// Export utility
 	function exportToCSV(data: FAQCategory[], filename: string): void {
@@ -246,9 +261,8 @@
 	loading={faqCategoryStore.creating}
 	error={faqCategoryStore.createError}
 	submitLabel="Create Category"
-	submitDisabled={!formIsValid}
 	onclose={closeCreateModal}
-	onsubmit={handleCreateSubmit}
+	onsubmit={handleModalSubmit()}
 >
 	{#snippet children()}
 		<UniversalForm

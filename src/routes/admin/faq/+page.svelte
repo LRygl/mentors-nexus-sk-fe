@@ -12,25 +12,20 @@
 	import type { FAQCreateFormData } from '$lib/types/entities/faq';
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
 	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
-	import { Link2 } from 'lucide-svelte';
+	import { AlertCircle, Link2 } from 'lucide-svelte';
 	import { faqCategoryStore } from '$lib/stores/defaults/faqCategoryStore.svelte';
 
 	let selectedItems = $state<Set<string>>(new Set());
 	let isCreateModalOpen = $state<boolean>(false);
 	let formRef: any;
-	let createFormData = $state<Partial<FAQCreateFormData>>({});
-	let createFormDataValid = $state(false);
 
 	// Form schema
 	const createFormSchema = $derived(createFAQFormSchema('standard', faqCategoryStore.data || []));
-	const quickSchema = $derived(createFAQFormSchema('quick', faqCategoryStore.data || []));
-	const detailedSchema = $derived(createFAQFormSchema('detailed', faqCategoryStore.data || []));
 
 	// Initialize data on component mount
 	onMount(async () => {
 		await faqStore.getAllFAQs(true);
 	});
-
 
 	/*
 	* DATA TABLE ACTION HANDLING
@@ -49,6 +44,10 @@
 					await goto(`/admin/faq/${faq.id}`);
 					break;
 				case 'unlink-faq':
+					break;
+				case 'delete':
+					deleteFAQRecord(faq.uuid);
+					break;
 
 			}
 		},
@@ -58,10 +57,28 @@
 		},
 	}
 
+	async function deleteFAQRecord(faqId: string): Promise<void> {
+		const confirmed = confirm('Are you sure you want to delete this FAQ?');
+		if (!confirmed) return;
+
+		try {
+			const success = await faqStore.delete(faqId);
+			if (!success) {
+				console.error('Failed to delete FAQ');
+				// TODO: Show error toast
+			}
+		} catch (error) {
+			console.error('Error deleting FAQ:', error);
+		}
+	}
+
+
+
+
+
 	/*
 	* MODAL ACTION HANDLING
 	*/
-
 	async function createModal() {
 		//await loadAllFAQs();
 		// Small delay to ensure reactivity has processed
@@ -72,43 +89,35 @@
 	function closeCreateModal() {
 		isCreateModalOpen = false;
 		formRef?.reset();
-		createFormData = {};
 	}
 
-	async function handleCreateFormSubmit(event: Event) {
-		event.preventDefault();
-
-		const createFormData = formRef.getFormData();
-		console.log(createFormData);
-
+	// This is called ONLY when the form is valid
+	async function handleValidFormSubmit(data: FAQCreateFormData) {
 		try {
-			const newFaq = await faqStore.create(createFormData);
-			if (newFaq) {
+			const newFaq = await faqStore.create(data);
+			if (newFaq && newFaq.id) {
 				closeCreateModal();
 			}
 		} catch (error) {
-			console.error(error);
+			console.error('Error creating FAQ:', error);
 		}
-
 	}
 
-	function handleFormValidation(result: { isValid: boolean }) {
-		createFormDataValid = result.isValid;
-	}
-
-	// Form callbacks
+	// Form callbacks - validation is handled by UniversalForm
 	const formCallbacks = {
-		onValidate: handleFormValidation,
+		onSubmit: handleValidFormSubmit,         // CHANGE: point to new function
 		onChange: (field: string, value: any) => {
-			createFormData = { ...createFormData, [field]: value };
-
-			// Special handling for isPublished change
 			if (field === 'isPublished' && !value) {
-				// Clear FAQ category when unpublishing
-				createFormData.categoryId = undefined;
+				// Clear category if needed
 			}
 		}
 	};
+
+	// Modal submit
+	function handleModalSubmit(event: Event) {
+		event.preventDefault();
+		formRef?.submit();
+	}
 
 </script>
 
@@ -154,14 +163,14 @@
 	error={faqStore.error}
 	submitLabel="Create FAQ"
 	onclose={closeCreateModal}
-	onsubmit={handleCreateFormSubmit}
+	onsubmit={handleModalSubmit}
 >
 	{#snippet children()}
-			<UniversalForm
-				bind:this={formRef}
-				schema={createFormSchema}
-				callbacks={formCallbacks}
-				className="space-y-6"
-			/>
+		<UniversalForm
+			bind:this={formRef}
+			schema={createFormSchema}
+			callbacks={formCallbacks}
+			className="space-y-6"
+		/>
 	{/snippet}
 </UniversalCreateModal>

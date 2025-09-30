@@ -94,6 +94,17 @@ export class FAQAdminApiService extends BaseApiService {
 		return undefined;
 	}
 
+	async deleteFAQ(uuid: string): Promise<void> {
+		try {
+			await this.delete<FAQ>(
+				`${FAQAdminApiService.ENDPOINT}/${uuid}`
+			);
+		} catch (e) {
+			console.error('FAQ API: Error deleting FAQ:', e);
+			throw e; // RE-THROW the error so BaseStore knows it failed
+		}
+	}
+
 	/**
 	 * PUBLISH FAQ
 	 * Maps to Spring Boot controller: PATCH /api/v1/admin/faq/{uuid}/publish
@@ -156,6 +167,7 @@ export class FAQAdminApiService extends BaseApiService {
 			publishedDate: faq.publishedDate ? new Date(faq.publishedDate) : undefined
 		};
 	}
+
 
 }
 
