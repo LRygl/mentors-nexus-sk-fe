@@ -21,7 +21,6 @@
 	let internalIsOpen = $state(false);
 	// Only use controlled state if explicitly provided and not undefined/null
 	const isOpen = $derived(controlledIsOpen !== undefined && controlledIsOpen !== null ? controlledIsOpen : internalIsOpen);
-	//const isOpen = $derived(controlledIsOpen !== undefined ? controlledIsOpen : internalIsOpen);
 
 	let buttonElement = $state<HTMLElement>();
 	let dropdownPosition = $state({ top: 0, left: 0, calculated: false });
@@ -57,14 +56,10 @@
 
 	export function open() {
 		if (!disabled) {
-			console.log(`ActionDropdown.open() called for itemId: ${itemId}, controlled: ${controlledIsOpen !== undefined}`);
 			calculatePosition();
-
 			if (controlledIsOpen !== undefined) {
-				console.log(`Calling onopen for ${itemId}`);
 				onopen?.({ itemId });
 			} else {
-				console.log(`Setting internal state to true for ${itemId}`);
 				internalIsOpen = true;
 			}
 		}
@@ -127,11 +122,6 @@
 			// Small delay to ensure DOM is ready
 			setTimeout(calculatePosition, 0);
 		}
-	});
-
-	// Debug effect
-	$effect(() => {
-		console.log(`ActionDropdown ${itemId}: controlledIsOpen=${controlledIsOpen}, internalIsOpen=${internalIsOpen}, isOpen=${isOpen}`);
 	});
 
 </script>

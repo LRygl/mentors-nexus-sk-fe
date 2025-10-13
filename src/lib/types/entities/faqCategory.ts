@@ -54,17 +54,7 @@ export interface UpdateFAQCategoryRequest {
 	iconClass?: Component;
 }
 
-// Response types for API operations
-export interface FAQCategoryResponse {
-	category: FAQCategory;
-	message?: string;
-}
 
-export interface FAQCategoryListResponse {
-	categories: FAQCategory[];
-	totalCount: number;
-	message?: string;
-}
 
 // Form validation types
 export interface FAQCategoryFormData {
@@ -76,63 +66,9 @@ export interface FAQCategoryFormData {
 	displayOrder: number;
 }
 
-export interface FAQCategoryFormErrors {
-	name: string;
-	description: string;
-	colorCode: string;
-	displayOrder: string;
-}
 
-// Filter and search types
-export interface FAQCategoryFilters {
-	search?: string;
-	isActive?: boolean;
-	isVisible?: boolean;
-	colorCodes?: string[];      // Filter by specific colors
-	displayOrderRange?: {       // Filter by display order range
-		min: number;
-		max: number;
-	};
-	dateRange?: {              // Filter by creation date range
-		start: Date;
-		end: Date;
-	};
-}
 
-// Sort options
-export type FAQCategorySortField = 'name' | 'displayOrder' | 'createdAt' | 'faqCount' | 'updatedAt';
-export type SortDirection = 'asc' | 'desc';
 
-export interface FAQCategorySortOptions {
-	field: FAQCategorySortField;
-	direction: SortDirection;
-}
-
-// Bulk operations
-export interface BulkFAQCategoryOperation {
-	categoryIds: string[];
-	operation: 'activate' | 'deactivate' | 'show' | 'hide' | 'delete';
-}
-
-export interface BulkUpdateFAQCategoryRequest {
-	categoryIds: string[];
-	updates: Partial<UpdateFAQCategoryRequest>;
-}
-
-// Statistics and analytics
-export interface FAQCategoryStats {
-	totalCategories: number;
-	activeCategories: number;
-	visibleCategories: number;
-	categoriesWithFAQs: number;
-	avgFAQsPerCategory: number;
-	mostPopularCategory: FAQCategory;
-	leastPopularCategory: FAQCategory;
-}
-
-// Export commonly used type unions
-export type FAQCategoryStatus = 'active' | 'inactive';
-export type FAQCategoryVisibility = 'visible' | 'hidden';
 
 
 export interface FAQCategoryPaginationParams extends PaginationParams {

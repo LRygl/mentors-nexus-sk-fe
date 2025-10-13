@@ -441,8 +441,8 @@ export class FormBuilder<T = Record<string, any>> {
 			colSpan?: 1 | 2 | 3 | 4;
 			helpText?: string;
 			defaultValue?: string;
-			min?: string;
-			max?: string;
+			min?: number;
+			max?: number;
 			dependencies?: FormFieldDependency[];
 			conditionalValidation?: ConditionalValidation[];
 		} = {}
@@ -534,7 +534,6 @@ export class FormBuilder<T = Record<string, any>> {
 			required: options.required,
 			colSpan: options.colSpan,
 			defaultValue: options.defaultValue || 'HelpCircle',
-			previewColor: options.previewColor,
 			dependencies: options.dependencies,
 			conditionalValidation: options.conditionalValidation,
 			validationRules

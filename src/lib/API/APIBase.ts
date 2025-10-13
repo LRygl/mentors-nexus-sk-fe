@@ -1,5 +1,7 @@
 import type { RequestConfig } from '$lib/types/common';
-import { API_CONFIG } from '$lib/config/api';
+import { API_CONFIG } from '$lib/API/APIConfiguration';
+import { toastService } from '$lib/Services/ToastService.svelte';
+import type { APIErrorResponse } from '$lib/types/entities/APIErrorResponse';
 
 export abstract class BaseApiService {
 	protected readonly baseUrl: string;
@@ -221,6 +223,7 @@ export abstract class BaseApiService {
 		let lastError: Error;
 
 		for (let attempt = 0; attempt <= maxRetries; attempt++) {
+			console.log("Retry attempt", attempt);
 			try {
 				const response = await requestFn();
 
@@ -256,6 +259,17 @@ export abstract class BaseApiService {
 
 	private async parseResponse<T>(response: Response): Promise<T> {
 		const contentType = response.headers.get('content-type');
+
+		if (!response.ok) {
+			if (contentType?.includes('application/json')) {
+				const errorData: APIErrorResponse = await response.json();
+				console.log("Error Log Notification trigger test");
+				toastService.warning(
+					errorData?.applicationErrorCode,
+					errorData?.applicationErrorMessage
+				)
+			}
+		}
 
 		if (contentType?.includes('application/json')) {
 			const data = await response.json();
@@ -303,6 +317,12 @@ export abstract class BaseApiService {
 	private async createApiError(response: Response): Promise<Error> {
 		try {
 			const errorData = await response.json();
+
+			toastService.warning(
+				("Error - " + errorData?.applicationErrorCode),
+				errorData?.applicationErrorMessage
+			)
+
 			return new ApiError(
 				errorData.message || `HTTP ${response.status}: ${response.statusText}`,
 				response.status,

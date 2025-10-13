@@ -1,90 +1,81 @@
-// src/lib/components/Forms/FAQCategoryLinkFormSchema.ts
-import type { FAQ } from '$lib/types';
-import { FormBuilder } from '$lib/utils/formBuilder';
+import type { FAQCategory } from '$lib/types/entities/faqCategory';
+import {
+	defineEntitySchema,
+	type EntityFieldConfig,
+	type EntityGroupConfig
+} from './FormSchemaFactory';
 
-export interface FAQLinkFormData {
-	faqUuid: string;
-}
 
-
-export function createFAQCategoryLinkFormSchema(availableFAQs: FAQ[] | (() => FAQ[]) = []) {
-	// Handle both direct array and function that returns array
-	const faqs = typeof availableFAQs === 'function' ? availableFAQs() : availableFAQs;
-
-	// Transform FAQs into select options
-	const faqOptions = faqs.map(faq => ({
-		label: `${faq.question}${faq.isPublished ? '' : ' (Draft)'}`, // Show if it's a draft
-		value: faq.uuid
+/**
+ * FAQ Category Link Field Definitions
+ */
+export function createFAQCategoryLinkFields(availableCategories: FAQCategory[] = []): EntityFieldConfig[] {
+	const categoryOptions = availableCategories.map(category => ({
+		label: category.name,
+		value: category.uuid,
+		icon: category.iconClass,
+		color: category.colorCode
 	}));
 
-	if (faqOptions.length === 0) {
-		// Return a form with a disabled message field if no FAQs available
-		return new FormBuilder<FAQLinkFormData>()
-			.layout('single')
-			.group('No FAQs Available')
-			.text('message', 'Status', {
-				defaultValue: 'No FAQs available to link to this category',
-				colSpan: 1
-			})
-			.build();
-	}
-
-	// Create options with placeholder as first item
-	const selectOptions = [
-		{ label: 'Choose an FAQ to link...', value: '' }, // Empty value for placeholder
-		...faqOptions
-	];
-
-	return new FormBuilder<FAQLinkFormData>()
-		.layout('single')
-		.group('Select FAQ to Link', 'Choose an FAQ to add to this category')
-		.select('faqUuid', 'Select FAQ', selectOptions, {
+	return [
+		{
+			name: 'categoryUuid',
+			label: 'Select Category',
+			type: 'select',
+			variants: { link: true },
+			options: [
+				{ label: 'Choose a category...', value: '', disabled: true },
+				...categoryOptions
+			],
 			required: true,
-			colSpan: 1,
-			helpText: `${faqOptions.length} FAQ${faqOptions.length !== 1 ? 's' : ''} available`,
-			defaultValue: '' // Explicitly set empty string as default
-		})
-		.build();
-}
-
-/*
-export function createFAQCategorySearchLinkFormSchema(availableFAQs: FAQ[] | (() => FAQ[]) = []) {
-	const faqs = typeof availableFAQs === 'function' ? availableFAQs() : availableFAQs;
-
-	if (faqs.length === 0) {
-		return null;
-	}
-
-	const faqOptions = faqs.map(faq => ({
-		label: faq.question,
-		value: faq.uuid,
-		searchText: `${faq.question} ${faq.isPublished ? 'published' : 'draft'}`,
-		metadata: {
-			isPublished: faq.isPublished,
-			status: faq.isPublished ? 'Published' : 'Draft',
-			statusColor: faq.isPublished ? 'green' : 'orange'
+			searchable: true,
+			helpText: `${availableCategories.length} categor${availableCategories.length === 1 ? 'y' : 'ies'} available`,
+			colSpan: 1
 		}
-	}));
-
-	return new FormBuilder<FAQLinkFormData>()
-		.layout('single')
-		.group('Select FAQ to Link', 'Choose an FAQ to add to this category')
-		.custom('faqUuid', 'Select FAQ', 'EnhancedSelect', {
-			componentProps: {
-				options: faqOptions,
-				placeholder: 'Search and select an FAQ...',
-				searchable: true,
-				showMetadata: true,
-				customRenderer: true
-			},
-			required: true,
-			colSpan: 1,
-			helpText: `${faqOptions.length} FAQ${faqOptions.length !== 1 ? 's' : ''} available`,
-			defaultValue: '',
-			validationRules: [
-				{ type: 'required', message: 'Please select an FAQ', value: true }
-			]
-		})
-		.build();
+	];
 }
-*/
+
+/**
+ * Optional: Groups (if you need them later)
+ */
+const faqCategoryLinkGroups: EntityGroupConfig[] = [
+	// Add groups here if needed in the future
+];
+
+/**
+ * Create FAQ Category Link Schema Factory
+ */
+export function createFAQCategoryLinkSchemaFactory(availableCategories: FAQCategory[] = []) {
+	return defineEntitySchema({
+		entity: 'FAQ Category Link',
+		fields: createFAQCategoryLinkFields(availableCategories),
+		groups: faqCategoryLinkGroups,
+		variantConfig: {
+			link: {
+				title: 'Link FAQ to Category',
+				description: 'Associate this FAQ with a category',
+				submitLabel: 'Link to Category',
+				showReset: false,
+				showCancel: true
+			}
+		}
+	});
+}
+
+/**
+ * FAQ Category Link Presets - Simple API (consistent naming)
+ */
+export const FAQCategoryLinkPresets = {
+	link: (categories: FAQCategory[] = []) =>
+		createFAQCategoryLinkSchemaFactory(categories).create('link')
+};
+
+/**
+ * Backward compatibility helper (matches FAQ pattern)
+ */
+export function createFAQCategoryLinkFormSchema(
+	variant: 'link',
+	categories: FAQCategory[] = []
+) {
+	return createFAQCategoryLinkSchemaFactory(categories).create(variant);
+}

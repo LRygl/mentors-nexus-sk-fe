@@ -50,6 +50,11 @@ export interface FAQCreateFormData {
 	isFeatured: boolean;
 }
 
+export interface FAQLinkData {
+	faqUuid: string;
+	categoryUuid: string;
+}
+
 
 export interface FAQLinkFormData {
 	faqId: string;

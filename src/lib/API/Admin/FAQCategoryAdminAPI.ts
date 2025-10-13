@@ -1,13 +1,14 @@
-import { BaseApiService } from '$lib/api/baseApi';
-import { API_CONFIG } from '$lib/config/api';
+import { BaseApiService } from '$lib/API/APIBase';
+import { API_CONFIG } from '$lib/API/APIConfiguration';
 import type {
 	CreateFAQCategoryRequest,
 	FAQCategory,
-	FAQCategoryPaginationParams
+	FAQCategoryPaginationParams,
+	UpdateFAQCategoryRequest
 } from '$lib/types/entities/faqCategory';
-import type { FAQ, PaginatedResult } from '$lib/types';
+import type { PaginatedResult } from '$lib/types';
 
-export class FAQCategoryAdminApiService extends BaseApiService {
+export class FAQCategoryAdminAPI extends BaseApiService {
 	private static readonly ENDPOINT = API_CONFIG.ENDPOINTS.ADMIN.ADMIN_FAQ_CATEGORY;
 
 	constructor() {
@@ -27,7 +28,7 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 
 		try {
 			return await this.get<PaginatedResult<FAQCategory>>(
-				FAQCategoryAdminApiService.ENDPOINT,
+				FAQCategoryAdminAPI.ENDPOINT,
 				queryParams,
 				{
 					cache: true,
@@ -42,7 +43,7 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 
 	async getFAQCategoryById(id: string): Promise<FAQCategory> {
 		try {
-			return this.get<FAQCategory>(`${FAQCategoryAdminApiService.ENDPOINT}/${id}`);
+			return this.get<FAQCategory>(`${FAQCategoryAdminAPI.ENDPOINT}/${id}`);
 		} catch (error) {
 			throw error;
 		}
@@ -58,8 +59,17 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 			slug: createRequest.slug || this.generateSlug(createRequest.name)
 		};
 
-		return await this.post<FAQCategory>(FAQCategoryAdminApiService.ENDPOINT, requestData);
+		return await this.post<FAQCategory>(FAQCategoryAdminAPI.ENDPOINT, requestData);
 	}
+
+	async deleteFAQCategory(id: string): Promise<void> {
+		await this.delete(`${FAQCategoryAdminAPI.ENDPOINT}/${id}`)
+	}
+
+
+
+
+
 
 	/**
 	 * Private helper to generate URL-friendly slug
@@ -74,4 +84,4 @@ export class FAQCategoryAdminApiService extends BaseApiService {
 	}
 }
 
-export const faqCategoryAdminApiService = new FAQCategoryAdminApiService;
+export const faqCategoryAdminApiService = new FAQCategoryAdminAPI;

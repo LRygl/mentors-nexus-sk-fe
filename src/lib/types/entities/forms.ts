@@ -1,4 +1,14 @@
+// ============================================================================
+// CORE FORM TYPE DEFINITIONS
+// Runtime types used by UniversalForm component and form rendering
+// These are the foundation - everything else builds on top of these
+// ============================================================================
+
 import type { Component } from 'svelte';
+
+// ============================================================================
+// ENUMS AND BASIC TYPES
+// ============================================================================
 
 export type FormFieldType =
 	| 'text'
@@ -24,17 +34,40 @@ export type FormFieldType =
 	| 'tags'
 	| 'custom';
 
-export type FormLayout = 'single' |'two-column' | 'three-column' | 'grid' | 'compact';
+export type FormLayout = 'single' | 'two-column' | 'three-column' | 'grid' | 'compact';
 export type FormVariant = 'default' | 'bordered' | 'floating' | 'minimal';
 export type FieldSize = 'sm' | 'md' | 'lg';
 export type FormFieldColSpan = 1 | 2 | 3 | 4;
 export type FormFieldGroupVariant = 'default' | 'card' | 'minimal';
-export type FormFieldDependencyConcition = 'equals' | 'not-equals' | 'truthy' | 'falsy' | 'id' | 'not-in' | 'greater-than' | 'less-than';
-export type FormFieldValidationRuleType = 'required' | 'email' | 'url' | 'minLength' | 'maxLength' | 'min' | 'max' | 'pattern' | 'custom';
+
+export type FormFieldDependencyCondition =
+	| 'equals'
+	| 'not-equals'
+	| 'truthy'
+	| 'falsy'
+	| 'in'
+	| 'not-in'
+	| 'greater-than'
+	| 'less-than';
+
+export type FormFieldValidationRuleType =
+	| 'required'
+	| 'email'
+	| 'url'
+	| 'minLength'
+	| 'maxLength'
+	| 'min'
+	| 'max'
+	| 'pattern'
+	| 'custom';
+
+// ============================================================================
+// FIELD CONFIGURATION
+// ============================================================================
 
 export interface FormFieldDependency {
 	field: string;
-	condition: FormFieldDependencyConcition;
+	condition: FormFieldDependencyCondition;
 	value?: any;
 	values?: any[]; // For 'in' and 'not-in' conditions
 }
@@ -60,15 +93,17 @@ export interface FieldOption {
 	group?: string;
 }
 
-/*
-* FORM FIELD DEFINITION
-*/
+// ============================================================================
+// FORM FIELD DEFINITION
+// The complete field definition used at runtime
+// ============================================================================
+
 export interface FormField {
 	name: string;
 	label: string;
 	type: FormFieldType;
 
-	// Basic form properties
+	// Basic properties
 	placeholder?: string;
 	helpText?: string;
 	description?: string;
@@ -77,39 +112,39 @@ export interface FormField {
 	readonly?: boolean;
 	autoFocus?: boolean;
 
-	// Layout and styling
+	// Layout
 	colSpan?: FormFieldColSpan;
 	size?: FieldSize;
 	className?: string;
 	variant?: FormVariant;
 
-	// Type-specific field properties
-	min?:number;
-	max?:number;
-	step?:number;
-	minLength?:number;
-	maxLength?:number;
-	rows?:number; // For Textarea
-	cols?:number;
+	// Type-specific properties
+	min?: number;
+	max?: number;
+	step?: number;
+	minLength?: number;
+	maxLength?: number;
+	rows?: number;
+	cols?: number;
 	multiple?: boolean;
-	accept?:string; // For File inputs
-	pattern?:string;
+	accept?: string;
+	pattern?: string;
 
 	// Options for select, radio, etc.
 	options?: FieldOption[];
 
-	// Default values
+	// Default value
 	defaultValue?: any;
 
 	// Validation
 	validationRules?: ValidationRule[];
 
-	// Dependency and conditional validation
+	// Dependencies and conditional validation
 	dependencies?: FormFieldDependency[];
 	conditionalValidation?: ConditionalValidation[];
 
 	// Advanced features
-	searchable?: boolean; // For select Fields
+	searchable?: boolean;
 	clearable?: boolean;
 	loading?: boolean;
 	prefix?: string;
@@ -118,26 +153,30 @@ export interface FormField {
 
 	// Custom component
 	component?: Component;
-	componentProps?: Record<string, any>
+	componentProps?: Record<string, any>;
 
-	// Rich text options
-	toolbar?: string[];
+	// Tags-specific
+	maxTags?: number;
+	allowDuplicates?: boolean;
+	tagValidator?: (tag: string) => boolean;
 
-	// File upload options
+	// File upload
 	maxFilesize?: number;
 	allowedFileTypes?: string[];
 	uploadUrl?: string;
 
-	// Slider options
-	marks?: Record<number, string>
-	toltipFormatter?: (value: number) => string;
+	// Slider
+	marks?: Record<number, string>;
+	tooltipFormatter?: (value: number) => string;
 
-	/*
-	onChangeType?: (value: T) => void; // Optional type hint for the onChange callback
-	// Icon selector specific
-	previewColor?: string;
-  */
- }
+	// Rich text
+	toolbar?: string[];
+}
+
+// ============================================================================
+// FORM FIELD GROUP
+// Groups organize related fields together
+// ============================================================================
 
 export interface FormFieldGroup {
 	id?: string;
@@ -150,6 +189,11 @@ export interface FormFieldGroup {
 	variant?: FormFieldGroupVariant;
 	fields: FormField[];
 }
+
+// ============================================================================
+// FORM SCHEMA
+// The complete form definition used by UniversalForm
+// ============================================================================
 
 export interface FormSchema<T = Record<string, any>> {
 	id?: string;
@@ -166,27 +210,32 @@ export interface FormSchema<T = Record<string, any>> {
 	showProgress?: boolean;
 	showSteps?: boolean;
 
-	// Groups or direct Fields
+	// Content structure
 	groups?: FormFieldGroup[];
 	fields?: FormField[];
 
-	// Form actions
+	// Action buttons
 	submitLabel?: string;
 	cancelLabel?: string;
 	resetLabel?: string;
 	showCancel?: boolean;
 	showReset?: boolean;
 
-	// Advanced actions
+	// Advanced features
 	autosave?: boolean;
 	autosaveDelay?: number;
 	confirmOnLeave?: boolean;
 
-	// Callbacks
+	// Lifecycle callbacks
 	onBeforeSubmit?: (data: T) => Promise<boolean> | boolean;
 	onAfterSubmit?: (data: T, result: any) => void;
 	onFieldChange?: (field: string, value: any, formData: T) => void;
 }
+
+// ============================================================================
+// FORM STATE MANAGEMENT
+// Runtime state for form components
+// ============================================================================
 
 export interface FormState<T = Record<string, any>> {
 	data: T;
@@ -199,6 +248,11 @@ export interface FormState<T = Record<string, any>> {
 	submitCount: number;
 }
 
+// ============================================================================
+// FORM CALLBACKS
+// Event handlers for form interactions
+// ============================================================================
+
 export interface FormCallbacks<T = Record<string, any>> {
 	onValidate?: (result: FormValidationResult) => void;
 	onChange?: (field: string, value: any, formState: FormState<T>) => void;
@@ -209,47 +263,34 @@ export interface FormCallbacks<T = Record<string, any>> {
 	onFieldBlur?: (field: string) => void;
 }
 
+// ============================================================================
+// VALIDATION RESULT
+// ============================================================================
+
 export interface FormValidationResult {
 	isValid: boolean;
 	errors: Record<string, string>;
 	firstErrorField?: string;
 }
 
-// Preset configuration for common form patterns
-export interface FromPreset {
-	name: string;
-	description: string;
-	schema: Partial<FormSchema>
-	defaultFields?: FormField[];
+// ============================================================================
+// FORM CONTEXT
+// Complete form context for advanced use cases
+// ============================================================================
+
+export interface FormContext<T = Record<string, any>> {
+	schema: FormSchema<T>;
+	state: FormState<T>;
+	callbacks: FormCallbacks<T>;
 }
 
-// Theme configuration
-export interface FormTheme {
-	name:string;
-	colors: {
-		primary: string;
-		success: string;
-		warning: string;
-		error: string;
-		info: string;
-	};
-	spacing: {
-		xs: string;
-		sm: string;
-		md: string;
-		lg: string;
-		xl: string;
-	};
-	borderRadius: {
-		sm: string;
-		md: string;
-		lg: string;
-	};
-	shadows: {
-		sm: string;
-		md: string;
-		lg: string;
-	};
+// ============================================================================
+// UTILITY TYPES
+// ============================================================================
+
+export interface FormError {
+	field: string;
+	message: string;
+	type: FormFieldValidationRuleType;
+	value?: any;
 }
-
-

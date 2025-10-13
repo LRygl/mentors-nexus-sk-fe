@@ -145,8 +145,8 @@
 				icon: Settings2Icon,
 				items: [
 					{
-						title: "General",
-						url: "#",
+						title: "Notifications",
+						url: "/admin/settings/notifications",
 					},
 					{
 						title: "Team",

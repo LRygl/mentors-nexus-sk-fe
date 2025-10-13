@@ -226,7 +226,7 @@
 					<NavigationMenu.Content>
 						<ul class="grid w-[200px] gap-4 p-2">
 							<li>
-								<NavigationMenu.Link href="/admin/users">Users</NavigationMenu.Link>
+								<NavigationMenu.Link href="/Admin/users">Users</NavigationMenu.Link>
 								<NavigationMenu.Link href="#">Documentation</NavigationMenu.Link>
 								<NavigationMenu.Link href="#">Blocks</NavigationMenu.Link>
 							</li>

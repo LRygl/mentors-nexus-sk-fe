@@ -1,7 +1,7 @@
-import { BaseApiService } from '$lib/api/baseApi';
+import { BaseApiService } from '$lib/API/APIBase';
 import type { PaginatedResult } from '$lib/types';
 import type { FAQ, FAQPaginationParams } from '$lib/types/entities/faq';
-import { API_CONFIG } from '$lib/config/api';
+import { API_CONFIG } from '$lib/API/APIConfiguration';
 
 export class FAQAdminApiService extends BaseApiService {
 	private static instance: FAQAdminApiService;
@@ -21,7 +21,7 @@ export class FAQAdminApiService extends BaseApiService {
 
 	/**
 	 * Get paginated FAQs with optional filtering
-	 * Maps to Spring Boot controller: GET /api/v1/admin/faq
+	 * Maps to Spring Boot controller: GET /API/v1/Admin/faq
 	 *
 	 * @param params - Search and pagination parameters
 	 * @returns Promise<PaginatedResult<FAQ>> - Spring Boot Page<FAQ> response
@@ -107,7 +107,7 @@ export class FAQAdminApiService extends BaseApiService {
 
 	/**
 	 * PUBLISH FAQ
-	 * Maps to Spring Boot controller: PATCH /api/v1/admin/faq/{uuid}/publish
+	 * Maps to Spring Boot controller: PATCH /API/v1/Admin/faq/{uuid}/publish
 	 * @param uuid - The UUID of the FAQ to publish
 	 * @returns Promise<FAQ> - The updated FAQ with published status
 	 */
@@ -146,11 +146,30 @@ export class FAQAdminApiService extends BaseApiService {
 		}
 	}
 
-	async unlinkFAQFromCategory(uuid: string): Promise<void> {
+	async unlinkFAQFromCategory(uuid: string): Promise<FAQ> {
 		try {
-			await this.patch<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}/unlink`);
+			return await this.patch<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}/unlink`);
 		} catch (error) {
 			console.error('FAQ API: Error unlinkFAQFromCategory:', error);
+			throw error;
+		}
+	}
+	
+	
+	async feature(uuid: string): Promise<FAQ> {
+		try {
+			return await this.patch<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}/feature`);
+		} catch (error) {
+			console.error('FAQ API: Error feature(uuid)', error);
+			throw error;
+		}
+	}
+
+	async unfeature(uuid: string): Promise<FAQ> {
+		try {
+			return await this.patch<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}/unfeature`);
+		} catch (error) {
+			console.error('FAQ API: Error feature(uuid)', error);
 			throw error;
 		}
 	}

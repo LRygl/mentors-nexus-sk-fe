@@ -1,5 +1,5 @@
 import type { BaseEntity, PaginatedResult, PaginationParams } from '$lib/types/common';
-import type { BaseApiService } from '$lib/api/baseApi';
+import type { BaseApiService } from '$lib/API/APIBase';
 import { untrack } from 'svelte';
 
 export abstract class BaseStoreSvelte<
@@ -255,8 +255,7 @@ export abstract class BaseStoreSvelte<
 			return true;
 		} catch (error) {
 			this._deleteError = error instanceof Error ? error.message : 'Failed to delete item';
-			console.error('Error loading delete item:', error);
-			return false;
+			throw error;
 		} finally {
 			this._deleting = false;
 		}
@@ -282,6 +281,125 @@ export abstract class BaseStoreSvelte<
 		this._selectedItem = null;
 		this._itemError = null;
 	}
+
+	/**
+	 * Update a specific item in the store by ID or UUID
+	 * Maintains reactivity by creating new array reference
+	 */
+	updateItemInStore(itemId: string, updatedItem: TEntity): void {
+		const index = this._data.findIndex(item => {
+			const id = item.id;
+			const uuid = (item as any).uuid;
+			return id === itemId || uuid === itemId;
+		});
+
+		console.log('🔍 Updating item in store:', itemId, 'Found at index:', index);
+
+		if (index !== -1) {
+			console.log('📊 Old item:', this._data[index]);
+			console.log('📊 New item:', updatedItem);
+			this._data[index] = updatedItem;
+			this._data = [...this._data];
+			console.log('✅ Store data updated, triggering reactivity');
+		}
+
+		if (this._selectedItem?.id === itemId || (this._selectedItem as any)?.uuid === itemId) {
+			this._selectedItem = updatedItem;
+		}
+	}
+
+	/**
+	 * Refresh a single item from the backend
+	 * Useful after operations that modify the item on the server
+	 */
+	async refreshItem(itemId: string): Promise<TEntity> {
+		try {
+			const updatedItem = await this.fetchItem(itemId);
+			this.updateItemInStore(itemId, updatedItem);
+			return updatedItem;
+		} catch (error) {
+			console.error('BaseStore: Error refreshing item:', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Optimistic update with automatic rollback on failure
+	 * @param itemId - ID of item to update
+	 * @param optimisticUpdate - Function that returns the optimistically updated item
+	 * @param apiCall - Async function that performs the actual API call
+	 * @returns The result from the API call
+	 */
+	async optimisticUpdate<TResult>(
+		itemId: string,
+		optimisticUpdate: (currentItem: TEntity) => TEntity,
+		apiCall: () => Promise<TResult>
+	): Promise<TResult> {
+		// Find the current item
+		const currentItem = this.getItemById(itemId) || this.getItemByUuid(itemId);
+
+		if (!currentItem) {
+			throw new Error(`Item with id ${itemId} not found`);
+		}
+
+		// Store original state for rollback
+		const originalItem = JSON.parse(JSON.stringify(currentItem));
+
+		// Apply optimistic update
+		const updatedItem = optimisticUpdate(currentItem);
+		this.updateItemInStore(itemId, updatedItem);
+
+		try {
+			// Perform API call
+			const result = await apiCall();
+			return result;
+		} catch (error) {
+			// Rollback on error
+			console.error('Optimistic update failed, rolling back:', error);
+			this.updateItemInStore(itemId, originalItem);
+			throw error;
+		}
+	}
+
+	/**
+	 * Batch update multiple items optimistically
+	 * Useful for operations affecting multiple items at once
+	 */
+	async batchOptimisticUpdate<TResult>(
+		updates: Array<{
+			itemId: string;
+			optimisticUpdate: (currentItem: TEntity) => TEntity;
+		}>,
+		apiCall: () => Promise<TResult>
+	): Promise<TResult> {
+		// Store original states
+		const rollbackStates = new Map<string, TEntity>();
+
+		// Apply all optimistic updates
+		for (const { itemId, optimisticUpdate } of updates) {
+			const currentItem = this.getItemById(itemId) || this.getItemByUuid(itemId);
+			if (currentItem) {
+				rollbackStates.set(itemId, JSON.parse(JSON.stringify(currentItem)));
+				const updatedItem = optimisticUpdate(currentItem);
+				this.updateItemInStore(itemId, updatedItem);
+			}
+		}
+
+		try {
+			const result = await apiCall();
+			return result;
+		} catch (error) {
+			// Rollback all changes
+			console.error('Batch optimistic update failed, rolling back:', error);
+			for (const [itemId, originalItem] of rollbackStates) {
+				this.updateItemInStore(itemId, originalItem);
+			}
+			throw error;
+		}
+	}
+
+
+
 
 	// Pagination nav methods
 	async nextPage(): Promise<void> {

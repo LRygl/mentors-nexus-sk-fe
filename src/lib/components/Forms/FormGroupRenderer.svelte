@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { FormFieldGroup, FormLayout, FormState } from '$lib/types/entities/forms';
 	import FormFieldRenderer from '$lib/components/Forms/FormFieldRenderer.svelte';
-	import { ChevronDown, ChevronUp } from 'lucide-svelte';
+	import { ChevronDown } from 'lucide-svelte';
 
 	interface Props {
 		group: FormFieldGroup;
@@ -9,7 +9,7 @@
 		layout?: FormLayout;
 		disabled?: boolean;
 		onChange: (fieldName: string, value: any) => void;
-		shouldRenderField: (field: any) => boolean;
+		visibleFields: string[];
 		shouldShowError: (fieldName: string) => boolean;
 	}
 
@@ -19,7 +19,7 @@
 		layout = 'single',
 		disabled = false,
 		onChange,
-		shouldRenderField,
+		visibleFields,
 		shouldShowError
 	}: Props = $props();
 
@@ -33,6 +33,43 @@
 		if (contentElement) {
 			contentHeight = contentElement.scrollHeight;
 		}
+	});
+
+	$effect(() => {
+		if (contentElement) {
+			// Access visibleFields to track it as a dependency
+			const _ = visibleFields.length;
+
+			// Small delay to let DOM update before measuring
+			requestAnimationFrame(() => {
+				if (contentElement) {
+					contentHeight = contentElement.scrollHeight;
+					console.log('📏 Recalculated height:', contentHeight, 'for group:', group.id);
+				}
+			});
+		}
+	});
+
+	$effect(() => {
+		console.log(`📦 Group "${group.id}" rendering check:`, {
+			totalFields: group.fields.length,
+			fieldNames: group.fields.map(f => f.name),
+			visibleFieldsSet: visibleFields,  // ✅ It's now an array, not a Set
+			fieldsToRender: group.fields.filter(f => visibleFields.includes(f.name)).map(f => f.name)  // ✅ Use .includes()
+		});
+	});
+
+	$effect(() => {
+		if (group.id === 'publishing') {
+			console.log('📦 Publishing group fields:', group.fields.map(f => f.name));
+			console.log('👁️ Visible fields in group:',
+				group.fields.filter(f => visibleFields.includes(f.name)).map(f => f.name)  // ✅ Use .includes()
+			);
+		}
+	});
+
+	const hasVisibleFields = $derived(() => {
+		return group.fields.some(field => visibleFields.includes(field.name));
 	});
 
 	// Get grid class based on layout
@@ -51,7 +88,7 @@
 	const variantStyles = $derived(() => {
 		switch (group.variant) {
 			case 'card':
-				return 'bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow p-6';
+				return 'bg-white border border-slate-200 rounded-xl shadow-sm hover:shadow-md transition-shadow p-3';
 			case 'minimal':
 				return 'pl-0 py-2';
 			default:
@@ -82,83 +119,78 @@
 	}
 </script>
 
-<div class="space-y-4 {group.className || ''}">
-	<div class={variantStyles()}>
-		<!-- Group Header -->
-		{#if group.title || group.description}
-			<button
-				type="button"
-				class="mb-6 w-full text-left {group.collapsible ? 'cursor-pointer' : 'cursor-default'}"
-				onclick={toggleCollapse}
-				disabled={!group.collapsible}
-				aria-expanded={group.collapsible ? !isCollapsed : undefined}
-				aria-controls={group.collapsible ? `group-${group.id}-content` : undefined}
-			>
-				<div class="flex items-start justify-between gap-3">
-					<div class="flex-1 min-w-0">
-						<div class="relative mb-6 pl-4">
-							{#if group.title}
-								<h3 class="text-base font-semibold bg-gradient-to-r {gradientColors()} bg-clip-text text-transparent mb-1">
-									{group.title}
-								</h3>
-							{/if}
-							{#if group.description}
-								<p class="text-sm text-slate-600 leading-relaxed">
-									{group.description}
-								</p>
-							{/if}
-							<!-- Decorative gradient accent stripe -->
-							<div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b {gradientColors()} rounded-full"></div>
-						</div>
-					</div>
-
-					<!-- Collapse Toggle Icon -->
-					{#if group.collapsible}
-						<div
-							class="flex-shrink-0 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200"
-							aria-hidden="true"
-						>
-							<div class="transition-transform duration-200 {isCollapsed ? '' : 'rotate-180'}">
-								<ChevronDown class="w-5 h-5" />
+{#if hasVisibleFields()}
+	<div class="space-y-8 {group.className || ''}">
+		<div class={variantStyles()}>
+			<!-- Group Header -->
+			{#if group.title || group.description}
+				<button
+					type="button"
+					class="mb-3 w-full text-left {group.collapsible ? 'cursor-pointer' : 'cursor-default'}"
+					onclick={toggleCollapse}
+					disabled={!group.collapsible}
+					aria-expanded={group.collapsible ? !isCollapsed : undefined}
+					aria-controls={group.collapsible ? `group-${group.id}-content` : undefined}
+				>
+					<div class="flex items-start justify-between gap-3">
+						<div class="flex-1 min-w-0">
+							<div class="relative pl-4">
+								{#if group.title}
+									<h3 class="text-base font-semibold bg-gradient-to-r {gradientColors()} bg-clip-text text-transparent mb-1">
+										{group.title}
+									</h3>
+								{/if}
+								{#if group.description}
+									<p class="text-sm text-slate-600 leading-relaxed">
+										{group.description}
+									</p>
+								{/if}
+								<!-- Decorative gradient accent stripe -->
+								<div class="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b {gradientColors()} rounded-full"></div>
 							</div>
 						</div>
-					{/if}
-				</div>
-			</button>
-		{/if}
 
-		<!-- Fields Grid with Smooth Collapse Animation -->
-		<div
-			id={group.collapsible ? `group-${group.id}-content` : undefined}
-			class="overflow-hidden transition-all duration-300 ease-in-out"
-			style="max-height: {isCollapsed ? '0' : `${contentHeight}px`}; opacity: {isCollapsed ? '0' : '1'}"
-		>
-			<div bind:this={contentElement}>
-				<div
-					class="grid grid-cols-1 {gridClass()} gap-x-6 gap-y-5"
-				>
-					{#each group.fields as field}
-						{#if shouldRenderField(field)}
-							<div class="space-y-2 {field.colSpan === 2 ? 'lg:col-span-2' : field.colSpan === 3 ? 'lg:col-span-3' : ''} {field.className || ''}">
-								<FormFieldRenderer
-									{field}
-									{formState}
-									{disabled}
-									{onChange}
-									{shouldShowError}
-								/>
+						<!-- Collapse Toggle Icon -->
+						{#if group.collapsible}
+							<div
+								class="flex-shrink-0 p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-all duration-200"
+								aria-hidden="true"
+							>
+								<div class="transition-transform duration-200 {isCollapsed ? '' : 'rotate-180'}">
+									<ChevronDown class="w-5 h-5" />
+								</div>
 							</div>
 						{/if}
-					{/each}
+					</div>
+				</button>
+			{/if}
+
+			<!-- Fields Grid with Smooth Collapse Animation -->
+			<div
+				id={group.collapsible ? `group-${group.id}-content` : undefined}
+				class="overflow-hidden transition-all duration-300 ease-in-out"
+				style="max-height: {isCollapsed ? '0' : `${contentHeight}px`}; opacity: {isCollapsed ? '0' : '1'}"
+			>
+				<div bind:this={contentElement}>
+					<div
+						class="grid grid-cols-1 {gridClass()} gap-x-6 gap-y-5"
+					>
+						{#each group.fields as field}
+							{#if visibleFields.includes(field.name)}
+							<div class="space-y-2 {field.colSpan === 2 ? 'lg:col-span-2' : field.colSpan === 3 ? 'lg:col-span-3' : ''} {field.className || ''}">
+									<FormFieldRenderer
+										{field}
+										{formState}
+										{disabled}
+										{onChange}
+										{shouldShowError}
+									/>
+								</div>
+							{/if}
+						{/each}
+					</div>
 				</div>
 			</div>
 		</div>
 	</div>
-</div>
-
-<style>
-    /* Smooth height transitions */
-    .overflow-hidden {
-        will-change: max-height, opacity;
-    }
-</style>
+{/if}

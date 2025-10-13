@@ -77,8 +77,25 @@
 	});
 
 	// Helper function to check if field should be rendered
+	const visibleFieldNames = $derived.by(() => {
+		const fields = allFields();
+		const visible = new Set<string>();
+
+		fields.forEach(field => {
+			if (FormDependencyHandler.isFieldVisible(field, formState.data)) {
+				visible.add(field.name);
+			}
+		});
+
+		console.log('👁️ Visible fields:', Array.from(visible));
+
+		// Return an array instead of a Set for better reactivity
+		return Array.from(visible);
+	});
+
+	// Keep the helper function for internal use
 	function shouldRenderField(field: FormField): boolean {
-		return FormDependencyHandler.isFieldVisible(field, formState.data);
+		return visibleFieldNames.includes(field.name);
 	}
 
 	// Get appropriate default value for field type
@@ -171,6 +188,8 @@
 
 	// Handle field changes
 	function handleFieldChange(fieldName: string, value: any) {
+		console.log('🔄 Field changed:', fieldName, '=', value);
+
 		formState.data[fieldName] = value;
 		formState.touched[fieldName] = true;
 		formState.isDirty = true;
@@ -182,6 +201,10 @@
 		const fields = allFields();
 		fields.forEach(field => {
 			if (field.dependencies?.some(dep => dep.field === fieldName)) {
+				console.log('🔍 Checking dependent field:', field.name);
+				console.log('  - Should be visible:', FormDependencyHandler.isFieldVisible(field, formState.data));
+				console.log('  - Current value:', formState.data[field.name]);
+
 				validateField(field.name);
 			}
 		});
@@ -270,7 +293,7 @@
 				layout={schema.layout}
 				{disabled}
 				onChange={handleFieldChange}
-				{shouldRenderField}
+				visibleFields={visibleFieldNames}
 				{shouldShowError}
 			/>
 		{/each}
@@ -278,8 +301,8 @@
 		<!-- Render Direct Fields (No Groups) -->
 		<div class="grid grid-cols-1 {schema.layout === 'two-column' ? 'lg:grid-cols-2' : ''} gap-4">
 			{#each schema.fields as field}
-				{#if shouldRenderField(field)}
-					<div class="space-y-2 {field.colSpan === 2 ? 'lg:col-span-2' : ''} {field.className || ''}">
+				{#if visibleFieldNames.includes(field.name)}
+				<div class="space-y-2 {field.colSpan === 2 ? 'lg:col-span-2' : ''} {field.className || ''}">
 						<FormFieldRenderer
 							{field}
 							{formState}

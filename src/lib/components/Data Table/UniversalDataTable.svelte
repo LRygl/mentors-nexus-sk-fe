@@ -5,6 +5,7 @@
 	import type { TableColumn, TableConfig, TableCallbacks } from '$lib/types/ui/table';
 	import type { ActionGroup } from '$lib/types';
 	import InlineActionButtons from '$lib/components/UI/InlineActionButtons.svelte';
+	import DateFormatter from '$lib/utils/DateTimeFormatter';
 
 	//FIXME Checking the checkbox in the header does not check all checkboxes in the table page
 	//FIXME Bulk Edit and Delete Selected should have propper formatting
@@ -21,6 +22,7 @@
 		filterable?: boolean;
 		selectable?: boolean;
 		exportable?: boolean;
+		sortable?: boolean;
 		callbacks?: TableCallbacks<T>;
 		selectedItems?: Set<string>;
 		getActions?: (item: T) => ActionGroup[];
@@ -41,6 +43,7 @@
 		filterable = false,
 		selectable = true,
 		exportable = false,
+		sortable = true,
 		callbacks = {},
 		selectedItems = $bindable(new Set<string>()),
 		getActions,
@@ -51,37 +54,61 @@
 		className = ''
 	}: Props = $props();
 
+	interface SortConfig {
+		column: keyof T | null;
+		direction: 'asc' | 'desc';
+	}
+
+	let sortConfig = $state<SortConfig>({
+		column: config.idField as keyof T, // Default sort by ID
+		direction: 'asc' // Ascending by default
+	});
+
 	// Internal state
 	let searchQuery = $state('');
 	let openDropdownId = $state<string | null>(null);
 
-
 	// Add this helper function
-	function getItemTitle(item: T): string {
-		if (config.titleField && config.titleField in item) {
-			const titleValue = item[config.titleField as keyof T];
-			if (titleValue !== undefined && titleValue !== null) {
-				return String(titleValue);
-			}
-		}
-		return String(item[config.idField] || 'Item');
-	}
-
-	// Filtered data based on search - fixed type assertion with debug
 	let filteredData = $derived.by(() => {
-		if (!searchQuery.trim()) {
-			return data;
+		// First, apply search filter
+		let result = data;
+
+		if (searchQuery.trim()) {
+			result = data.filter((item) => {
+				return columns.some(column => {
+					if (!column.searchable) return false;
+					const value = column.accessor ? column.accessor(item) : getNestedValue(item, String(column.key));
+					return String(value || '').toLowerCase().includes(searchQuery.toLowerCase());
+				});
+			});
 		}
 
-		const filtered = data.filter((item) => {
-			return columns.some(column => {
-				if (!column.searchable) return false;
-				const value = column.accessor ? column.accessor(item) : getNestedValue(item, String(column.key));
-				return String(value || '').toLowerCase().includes(searchQuery.toLowerCase());
-			});
-		});
+		// Then apply sorting
+		if (sortConfig.column) {
+			result = [...result].sort((a, b) => {
+				const aValue = a[sortConfig.column as keyof T];
+				const bValue = b[sortConfig.column as keyof T];
 
-		return filtered;
+				// Handle null/undefined values
+				if (aValue == null && bValue == null) return 0;
+				if (aValue == null) return 1;
+				if (bValue == null) return -1;
+
+				// Compare values
+				let comparison = 0;
+				if (typeof aValue === 'number' && typeof bValue === 'number') {
+					comparison = aValue - bValue;
+				} else if (aValue instanceof Date && bValue instanceof Date) {
+					comparison = aValue.getTime() - bValue.getTime();
+				} else {
+					comparison = String(aValue).localeCompare(String(bValue));
+				}
+
+				return sortConfig.direction === 'asc' ? comparison : -comparison;
+			});
+		}
+
+		return result;
 	});
 
 	// Selection state helpers with debug - fix function call issue
@@ -149,12 +176,17 @@
 
 	// Cell rendering based on renderType - fixed variable scoping and type safety
 	function renderCell(column: TableColumn<T>, item: T, value: any): string {
-
-		// Custome render function for column data is provided, use it
+		// Custom render function for column data is provided, use it
 		if (column.renderCustom) {
 			return column.renderCustom(item);
 		}
 
+		// Handle null/undefined values
+		if (value === null || value === undefined) {
+			return '<span class="text-slate-400 text-xs">—</span>';
+		}
+
+		// Default text rendering
 		if (!column.renderType || column.renderType === 'text') {
 			return String(value || '');
 		}
@@ -167,7 +199,8 @@
 					active: 'bg-green-100 text-green-800',
 					inactive: 'bg-red-100 text-red-800',
 					pending: 'bg-yellow-100 text-yellow-800',
-					draft: 'bg-gray-100 text-gray-800'
+					draft: 'bg-gray-100 text-gray-800',
+					published: 'bg-blue-100 text-blue-800'
 				};
 				const badgeColor = colorMap[status] || defaultColors[status] || 'bg-slate-100 text-slate-700';
 				return `<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium border border-slate-200 ${badgeColor}">${value}</span>`;
@@ -180,27 +213,52 @@
 					showZero = true,
 					color: countColor = 'bg-slate-100 text-slate-700'
 				} = column.renderOptions || {};
+
 				if (!showZero && count === 0) {
 					return '<span class="text-slate-400 text-xs">None</span>';
 				}
+
 				const label = count === 1 ? singular : plural;
-				return `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border border-slate-200 ${countColor}">${count} ${label}</span>`;
+				return `<span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium border border-slate-200 ${countColor}">${count} ${label || ''}</span>`;
 
 			case 'date':
-				const date = new Date(value);
-				const { format = 'short' } = column.renderOptions || {};
-				switch (format) {
-					case 'relative':
-						return formatRelativeTime(date);
-					case 'long':
-						return date.toLocaleDateString('en-US', {
-							year: 'numeric',
-							month: 'long',
-							day: 'numeric'
-						});
-					default:
-						return date.toLocaleDateString();
+				// NEW: Handle date formatting with DateFormatter
+				try {
+					const dateFormat = column.renderOptions?.dateFormat || 'date';
+					const format = column.renderOptions?.format || 'short';
+
+					const formattedDate = DateFormatter.format(value, {
+						type: dateFormat as 'date' | 'datetime' | 'time',
+						format: format as 'short' | 'long' | 'relative'
+					});
+
+					return `<span class="text-slate-700">${formattedDate}</span>`;
+				} catch (error) {
+					console.error('Error formatting date:', error);
+					return '<span class="text-red-500 text-xs">Invalid date</span>';
 				}
+
+			case 'color':
+				// Display color swatch
+				return `<div class="flex items-center gap-2">
+				<div class="w-6 h-6 rounded border border-slate-200" style="background-color: ${value}"></div>
+				<span class="text-xs text-slate-600">${value}</span>
+			</div>`;
+
+			case 'image':
+				// Display small image thumbnail
+				return `<img src="${value}" alt="Thumbnail" class="w-10 h-10 rounded object-cover" />`;
+
+			case 'user':
+				// Display user avatar + name (assumes value is { name, avatar })
+				if (typeof value === 'object' && value.name) {
+					const avatarUrl = value.avatar || '/default-avatar.png';
+					return `<div class="flex items-center gap-2">
+					<img src="${avatarUrl}" alt="${value.name}" class="w-8 h-8 rounded-full" />
+					<span class="text-sm font-medium">${value.name}</span>
+				</div>`;
+				}
+				return String(value);
 
 			default:
 				return String(value || '');
@@ -224,6 +282,27 @@
 			return current && current[key] !== undefined ? current[key] : undefined;
 		}, obj);
 	}
+
+	function handleSort(column: TableColumn<T>) {
+		if (!column.sortable) return;
+
+		const columnKey = column.key as keyof T;
+
+		if (sortConfig.column === columnKey) {
+			// Toggle direction if same column
+			sortConfig = {
+				column: columnKey,
+				direction: sortConfig.direction === 'asc' ? 'desc' : 'asc'
+			};
+		} else {
+			// New column, default to ascending
+			sortConfig = {
+				column: columnKey,
+				direction: 'asc'
+			};
+		}
+	}
+
 </script>
 
 <!-- Main Container -->
@@ -362,7 +441,7 @@
 
 	{:else}
 		<!-- Data Table -->
-		<div class="table-wrapper overflow-x-auto" class:dropdown-open={openDropdownId !== null}>
+		<div class="table-wrapper overflow-x-auto text-md" class:dropdown-open={openDropdownId !== null}>
 			<table class="w-full">
 				<thead class="bg-gradient-to-r from-slate-50 to-slate-100 border-b border-slate-200">
 				<tr>
@@ -393,10 +472,33 @@
 						</th>
 					{/if}
 
+					<!-- TABLE HEAD COLUMN DEFINITION -->
 					{#each columns as column}
 						<th
-							class={`px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider ${column.headerClassName || ''}`}>
-							{column.header}
+							class={`px-6 py-4 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider ${column.headerClassName || ''} ${column.sortable ? 'cursor-pointer hover:bg-slate-100 transition-colors select-none' : ''}`}
+							onclick={() => column.sortable && handleSort(column)}
+						>
+							<div class="flex items-center gap-2">
+								<span>{column.header}</span>
+								{#if column.sortable}
+									<div class="flex flex-col">
+										<svg
+											class={`w-3 h-3 ${sortConfig.column === column.key && sortConfig.direction === 'asc' ? 'text-indigo-600' : 'text-slate-300'}`}
+											fill="currentColor"
+											viewBox="0 0 20 20"
+										>
+											<path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" transform="rotate(180 10 10)"/>
+										</svg>
+										<svg
+											class={`w-3 h-3 -mt-1 ${sortConfig.column === column.key && sortConfig.direction === 'desc' ? 'text-indigo-600' : 'text-slate-300'}`}
+											fill="currentColor"
+											viewBox="0 0 20 20"
+										>
+											<path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
+										</svg>
+									</div>
+								{/if}
+							</div>
 						</th>
 					{/each}
 
