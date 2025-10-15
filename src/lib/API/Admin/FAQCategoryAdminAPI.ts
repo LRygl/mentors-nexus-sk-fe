@@ -9,7 +9,7 @@ import type {
 import type { PaginatedResult } from '$lib/types';
 
 export class FAQCategoryAdminAPI extends BaseApiService {
-	private static readonly ENDPOINT = API_CONFIG.ENDPOINTS.ADMIN.ADMIN_FAQ_CATEGORY;
+	private readonly ENDPOINT = API_CONFIG.ENDPOINTS.ADMIN.FAQ_CATEGORY;
 
 	constructor() {
 		super(API_CONFIG.BASE_URL);
@@ -28,7 +28,7 @@ export class FAQCategoryAdminAPI extends BaseApiService {
 
 		try {
 			return await this.get<PaginatedResult<FAQCategory>>(
-				FAQCategoryAdminAPI.ENDPOINT,
+				this.ENDPOINT,
 				queryParams,
 				{
 					cache: true,
@@ -43,7 +43,7 @@ export class FAQCategoryAdminAPI extends BaseApiService {
 
 	async getFAQCategoryById(id: string): Promise<FAQCategory> {
 		try {
-			return this.get<FAQCategory>(`${FAQCategoryAdminAPI.ENDPOINT}/${id}`);
+			return this.get<FAQCategory>(`${this.ENDPOINT}/${id}`);
 		} catch (error) {
 			throw error;
 		}
@@ -59,11 +59,11 @@ export class FAQCategoryAdminAPI extends BaseApiService {
 			slug: createRequest.slug || this.generateSlug(createRequest.name)
 		};
 
-		return await this.post<FAQCategory>(FAQCategoryAdminAPI.ENDPOINT, requestData);
+		return await this.post<FAQCategory>(this.ENDPOINT, requestData);
 	}
 
 	async deleteFAQCategory(id: string): Promise<void> {
-		await this.delete(`${FAQCategoryAdminAPI.ENDPOINT}/${id}`)
+		await this.delete(`${this.ENDPOINT}/${id}`)
 	}
 
 

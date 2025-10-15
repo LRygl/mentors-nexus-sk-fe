@@ -36,6 +36,7 @@ export abstract class BaseApiService {
 				fetch(url, {
 					method: 'GET',
 					headers,
+					credentials: 'include',
 					signal: this.createAbortSignal(config?.timeout),
 				}),
 			config
@@ -67,6 +68,7 @@ export abstract class BaseApiService {
 					method: 'POST',
 					headers,
 					body: body ? JSON.stringify(body) : undefined,
+					credentials: 'include',
 					signal: this.createAbortSignal(config?.timeout)
 				}),
 			config
@@ -96,6 +98,7 @@ export abstract class BaseApiService {
 					method: 'PUT',
 					headers,
 					body: body ? JSON.stringify(body) : undefined,
+					credentials: 'include',
 					signal: this.createAbortSignal(config?.timeout)
 				}),
 			config
@@ -128,6 +131,7 @@ export abstract class BaseApiService {
 				fetch(url, {
 					method: 'PATCH',
 					headers,
+					credentials: 'include',
 					signal: this.createAbortSignal(config?.timeout)
 				}),
 			config
@@ -155,6 +159,7 @@ export abstract class BaseApiService {
 				fetch(url, {
 					method: 'DELETE',
 					headers,
+					credentials: 'include',
 					signal: this.createAbortSignal(config?.timeout),
 				}),
 			config
@@ -181,7 +186,7 @@ export abstract class BaseApiService {
 
 /*
 		// Add authentication header if not skipped
-		if (!config?.skipAuth) {
+		if (!Config?.skipAuth) {
 			const token = await this.getAuthToken();
 			if (token) {
 				headers['Authorization'] = `Bearer ${token}`;
@@ -223,7 +228,7 @@ export abstract class BaseApiService {
 		let lastError: Error;
 
 		for (let attempt = 0; attempt <= maxRetries; attempt++) {
-			console.log("Retry attempt", attempt);
+			console.log("[API] Retry attempt", attempt);
 			try {
 				const response = await requestFn();
 
@@ -263,7 +268,7 @@ export abstract class BaseApiService {
 		if (!response.ok) {
 			if (contentType?.includes('application/json')) {
 				const errorData: APIErrorResponse = await response.json();
-				console.log("Error Log Notification trigger test");
+				console.log("[API] Error Log Notification trigger test");
 				toastService.warning(
 					errorData?.applicationErrorCode,
 					errorData?.applicationErrorMessage

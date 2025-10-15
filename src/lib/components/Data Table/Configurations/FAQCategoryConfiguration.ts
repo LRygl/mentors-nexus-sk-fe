@@ -43,7 +43,7 @@ const faqCategoryTableDefinition = defineTableConfig<FAQCategory>({
 			header: 'Questions',
 			searchable: false,
 			sortable: true,
-			renderType: 'badge',
+			renderType: 'default',
 			cellClassName: 'text-center',
 			render: (category: FAQCategory) => {
 				// ✅ Use faqs.length for accurate count
@@ -54,6 +54,12 @@ const faqCategoryTableDefinition = defineTableConfig<FAQCategory>({
 					className: 'bg-slate-100 text-slate-700'
 				};
 			}
+		},
+		{
+			key: 'isActive',
+			header: 'Visible',
+			type: 'badge',
+			format: 'short',
 		},
 		{
 			key: 'createdAt',
@@ -112,7 +118,6 @@ const faqCategoryTableDefinition = defineTableConfig<FAQCategory>({
 /**
  * Export preset for easy use in components
  */
-
 export const FAQCategoryTablePreset = createTablePreset(faqCategoryTableDefinition)
 
 /**

@@ -140,7 +140,7 @@ export class TableConfigFactory<T = any> {
 	}
 
 	/**
-	 * Build a single column from config
+	 * Build a single column from Config
 	 */
 	private buildColumn(config: EntityColumnConfig<T>): TableColumn<T> {
 		const baseColumn: TableColumn<T> = {

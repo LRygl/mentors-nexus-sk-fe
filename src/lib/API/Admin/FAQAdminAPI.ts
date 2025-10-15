@@ -4,8 +4,7 @@ import type { FAQ, FAQPaginationParams } from '$lib/types/entities/faq';
 import { API_CONFIG } from '$lib/API/APIConfiguration';
 
 export class FAQAdminApiService extends BaseApiService {
-	private static instance: FAQAdminApiService;
-	private static readonly ENDPOINT = API_CONFIG.ENDPOINTS.ADMIN.ADMIN_FAQ;
+	private readonly ENDPOINT = API_CONFIG.ENDPOINTS.ADMIN.FAQ;
 
 	constructor() {
 		super(API_CONFIG.BASE_URL);
@@ -13,7 +12,7 @@ export class FAQAdminApiService extends BaseApiService {
 
 	async getAll(): Promise<FAQ[]> {
 		try	{
-			return await this.get<FAQ[]>(FAQAdminApiService.ENDPOINT);
+			return await this.get<FAQ[]>(this.ENDPOINT);
 		} catch(e) {
 			throw (e as Error);
 		}
@@ -46,7 +45,7 @@ export class FAQAdminApiService extends BaseApiService {
 			// Use the BaseApiService get method with caching enabled
 			// Spring Boot returns Page<FAQ> which matches your PaginatedResult<T> interface
 			const result = await this.get<PaginatedResult<FAQ>>(
-				FAQAdminApiService.ENDPOINT,
+				this.ENDPOINT,
 				queryParams,
 				{
 					cache: true,
@@ -68,7 +67,9 @@ export class FAQAdminApiService extends BaseApiService {
 	 */
 	async getFAQById(uuid: string): Promise<FAQ> {
 		try {
-			const faq = await this.get<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}`, undefined, {
+			const faq = await this.get<FAQ>(
+				`${this.ENDPOINT}/${uuid}`,
+				undefined, {
 				cache: true,
 				timeout: 5000
 			});
@@ -84,7 +85,7 @@ export class FAQAdminApiService extends BaseApiService {
 	async createFAQ(createRequest: Partial<FAQ>) {
 		try {
 			const faq = await this.post<Partial<FAQ>>(
-				FAQAdminApiService.ENDPOINT,
+				this.ENDPOINT,
 				createRequest
 				)
 			return faq;
@@ -97,7 +98,7 @@ export class FAQAdminApiService extends BaseApiService {
 	async deleteFAQ(uuid: string): Promise<void> {
 		try {
 			await this.delete<FAQ>(
-				`${FAQAdminApiService.ENDPOINT}/${uuid}`
+				`${this.ENDPOINT}/${uuid}`
 			);
 		} catch (e) {
 			console.error('FAQ API: Error deleting FAQ:', e);
@@ -114,7 +115,7 @@ export class FAQAdminApiService extends BaseApiService {
 
 	async publishFAQ(uuid: string): Promise<FAQ> {
 		try {
-			const faq = await this.patch<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}/publish`);
+			const faq = await this.patch<FAQ>(`${this.ENDPOINT}/${uuid}/publish`);
 			// Transform date strings to Date objects
 			return this.transformFAQDates(faq);
 		} catch (error) {
@@ -126,7 +127,7 @@ export class FAQAdminApiService extends BaseApiService {
 
 	async unpublishFAQ(uuid: string): Promise<FAQ> {
 		try {
-			const faq = await this.patch<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}/unpublish`);
+			const faq = await this.patch<FAQ>(`${this.ENDPOINT}/${uuid}/unpublish`);
 			return this.transformFAQDates(faq);
 		} catch (error) {
 			console.error('FAQ API: Error unpublishFAQ:', error);
@@ -137,8 +138,8 @@ export class FAQAdminApiService extends BaseApiService {
 	async linkFAQToCategory(faqUuid:string, categoryUuid:string): Promise<FAQ> {
 		try {
 			return await this.patch<FAQ>(
-				`${FAQAdminApiService.ENDPOINT}/${faqUuid}/link/${categoryUuid}`,
-				undefined, {}
+				`${this.ENDPOINT}/${faqUuid}/link/${categoryUuid}`,
+			undefined, {}
 			);
 		} catch (error) {
 			console.error('FAQ API: Error linkFAQToCategory:', error);
@@ -148,7 +149,8 @@ export class FAQAdminApiService extends BaseApiService {
 
 	async unlinkFAQFromCategory(uuid: string): Promise<FAQ> {
 		try {
-			return await this.patch<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}/unlink`);
+			const faq = await this.patch<FAQ>(`${this.ENDPOINT}/${uuid}/unlink`);
+			return this.transformFAQDates(faq);
 		} catch (error) {
 			console.error('FAQ API: Error unlinkFAQFromCategory:', error);
 			throw error;
@@ -158,7 +160,7 @@ export class FAQAdminApiService extends BaseApiService {
 	
 	async feature(uuid: string): Promise<FAQ> {
 		try {
-			return await this.patch<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}/feature`);
+			return await this.patch<FAQ>(`${this.ENDPOINT}/${uuid}/feature`);
 		} catch (error) {
 			console.error('FAQ API: Error feature(uuid)', error);
 			throw error;
@@ -167,7 +169,7 @@ export class FAQAdminApiService extends BaseApiService {
 
 	async unfeature(uuid: string): Promise<FAQ> {
 		try {
-			return await this.patch<FAQ>(`${FAQAdminApiService.ENDPOINT}/${uuid}/unfeature`);
+			return await this.patch<FAQ>(`${this.ENDPOINT}/${uuid}/unfeature`);
 		} catch (error) {
 			console.error('FAQ API: Error feature(uuid)', error);
 			throw error;

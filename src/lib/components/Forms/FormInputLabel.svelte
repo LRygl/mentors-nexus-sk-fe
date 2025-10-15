@@ -33,11 +33,6 @@
 
 {#if field.type !== 'checkbox'}
 	<label class="flex items-center gap-1 text-sm font-medium text-slate-700 mb-1">
-		<DynamicIcon
-			iconName={getFieldIconName(field.type)}
-			class="w-4 h-4"
-			size={16}
-		/>
 		<span>
 			{field.label}
 		</span>

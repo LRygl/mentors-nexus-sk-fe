@@ -1,6 +1,6 @@
 <script lang="ts">
-	import HeaderSection from '\$lib/components/Sections/header-section.svelte';
-	import SubheadingSection from '\$lib/components/Sections/subheading-section.svelte';
+	import HeaderSection from '$lib/components/Sections/Public/header-section.svelte';
+	import SubheadingSection from '$lib/components/Sections/Public/subheading-section.svelte';
 	import {
 		AlertTriangle,
 		BookOpen,
@@ -10,7 +10,6 @@
 		Phone,
 		Scale,
 		Shield,
-		ShieldCheck,
 		User
 	} from 'lucide-svelte';
 

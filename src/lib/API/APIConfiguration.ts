@@ -1,28 +1,45 @@
-import {dev} from '$app/environment';
+// ============================================
+// API endpoint configuration for Backend API Calls
+// ============================================
 
+import {dev} from '$app/environment';
 
 export const API_CONFIG = {
 	BASE_URL: dev
 		? 'http://localhost:8080'
-		: 'http://localhost:8080',
+		: 'http://localhost:8080', // Update for production
 	PATH: 'api',
 	VERSION: 'v1',
+
 	ENDPOINTS: {
+		// Auth endpoints
+		AUTH: {
+			LOGIN: '/auth/login',
+			REGISTER: '/auth/register',
+			LOGOUT: '/auth/logout',
+			REFRESH: '/auth/refresh',
+			ME: '/auth/me',
+			FORGOT_PASSWORD: '/auth/forgot-password',
+			RESET_PASSWORD: '/auth/reset-password',
+		},
+
+		// Public endpoints
 		CATEGORY: '/category',
 		FAQ: '/faq',
 		FAQ_CATEGORY: '/faq-category',
 		USER: '/user',
-		AUTH: '/auth',
 		EVENT: '/event',
-		ADMIN: {
-			ADMIN_FAQ: '/admin/faq',
-			ADMIN_FAQ_CATEGORY: '/admin/faq-category',
-		}
 
-		// Add other endpoints as needed
+		// Admin endpoints
+		ADMIN: {
+			FAQ: '/admin/faq',
+			FAQ_CATEGORY: '/admin/faq-category',
+			USERS: '/user/all',
+			REPORTS: '/admin/reports',
+		}
 	},
 	get FULL_BASE_URL() {
-		return `${this.BASE_URL}/api/${this.VERSION}`;
+		return `${this.BASE_URL}/${this.PATH}/${this.VERSION}`;
 	}
 } as const;
 

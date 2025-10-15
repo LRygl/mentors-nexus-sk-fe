@@ -16,6 +16,7 @@
 	import { confirmationModal } from '$lib/components/Modals/ConfirmationModalService.svelte';
 	import { toastService } from '$lib/Services/ToastService.svelte';
 	import { FAQCategoryLinkPresets, FAQFormPresets } from '$lib/components/Forms/Schemas';
+	import { authStore } from '$lib/stores/Auth.svelte';
 
 
 	let selectedItems = $state<Set<string>>(new Set());
@@ -98,6 +99,7 @@
 	}
 
 	async function deleteFAQRecord(faqId: string): Promise<void> {
+		console.log("[PAGE]",authStore.user.role);
 		const confirmed = await confirmationModal.confirm({
 			variant: `delete`,
 			title: `Delete FAQ?`,

@@ -75,7 +75,7 @@
 		}
 	} satisfies Record<ConfirmVariant, any>;
 
-	// Get current variant config
+	// Get current variant Config
 	const config = $derived(variantConfig[state.variant || 'confirm']);
 	const IconComponent = $derived(config.icon);
 

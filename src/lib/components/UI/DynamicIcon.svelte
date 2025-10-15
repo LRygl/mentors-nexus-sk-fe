@@ -1,8 +1,8 @@
 <script lang="ts">
 
-	import { HelpCircle } from 'lucide-svelte';
 	import type { Component } from 'svelte';
 	import { getIconComponent } from '$lib/types/params/iconRegistry';
+	import { HelpCircle } from '@lucide/svelte';
 
 	interface Props {
 		iconName: string | Component | null | undefined;

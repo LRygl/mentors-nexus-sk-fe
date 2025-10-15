@@ -5,6 +5,9 @@ import {
 	type EntityFieldConfig,
 	type EntityGroupConfig
 } from './FormSchemaFactory';
+import { FAQPriority, FAQStatus } from '$lib/types';
+import { FAQ_PRIORITY_LABELS, FAQ_PRIORITY_STYLE } from '$lib/types/enums/faqPriority';
+import { FAQ_STATUS_LABELS, FAQ_STATUS_STYLE } from '$lib/types/enums/faqStatus';
 
 /**
  * FAQ Field Definitions
@@ -20,6 +23,25 @@ export function createFAQFields(categories: FAQCategory[] = []): EntityFieldConf
 			color: cat.colorCode
 		}))
 	];
+
+
+	// Build priority options from enum
+	const priorityOptions = Object.values(FAQPriority).map(priority => ({
+		label: FAQ_PRIORITY_LABELS[priority],
+		value: priority,
+		// Optional: Add styling metadata for custom rendering
+		style: FAQ_PRIORITY_STYLE[priority]
+	}));
+
+	// Build status options from enum
+	const statusOptions = Object.values(FAQStatus).map(status => ({
+		label: FAQ_STATUS_LABELS[status],
+		value: status,
+		// Optional: Add styling metadata for custom rendering
+		style: FAQ_STATUS_STYLE[status]
+	}));
+
+
 
 	return [
 		// Content fields
@@ -53,6 +75,18 @@ export function createFAQFields(categories: FAQCategory[] = []): EntityFieldConf
 
 		// Publishing fields
 		{
+			name: 'priority',
+			label: 'Priority',
+			type: 'select',
+			group: 'publishing',
+			variants: { standard: true, detailed: true, edit: true },
+			required: true,
+			options: priorityOptions,
+			defaultValue: FAQPriority.NORMAL,
+			helpText: 'FAQ importance level',
+			colSpan: 2
+		},
+		{
 			name: 'isPublished',
 			label: 'Published',
 			type: 'checkbox',
@@ -78,7 +112,7 @@ export function createFAQFields(categories: FAQCategory[] = []): EntityFieldConf
 			name: 'categoryId',
 			label: 'Category',
 			type: 'select',
-			group: 'category',
+			group: 'publishing',
 			variants: {
 				quick: true,
 				standard: true,
@@ -89,7 +123,7 @@ export function createFAQFields(categories: FAQCategory[] = []): EntityFieldConf
 			searchable: true,
 			placeholder: 'Choose a category',
 			helpText: 'Required when publishing',
-			colSpan: 2,
+			colSpan: 1,
 			dependencies: [{ field: 'isPublished', condition: 'truthy' }],
 			conditionalValidation: [{
 				when: { field: 'isPublished', condition: 'truthy' },
@@ -99,8 +133,58 @@ export function createFAQFields(categories: FAQCategory[] = []): EntityFieldConf
 				}]
 			}]
 		},
+		{
+			name: 'publishedDate',
+			label: 'Publish Date',
+			type: 'date',
+			group: 'publishing',
+			variants: {
+				quick: true,
+				standard: true,
+				detailed: true,
+				edit: true,
+			},
+			options: categoryOptions,
+			searchable: true,
+			placeholder: 'Choose publush date',
+			helpText: 'Required when publishing',
+			colSpan: 1,
+			dependencies: [{ field: 'isPublished', condition: 'truthy' }],
+			conditionalValidation: [{
+				when: { field: 'isPublished', condition: 'truthy' },
+				rules: [{  }]
+			}]
+		},
 
 		// Add more fields as needed...
+		{
+			name: 'slug',
+			label: 'Slug',
+			type: 'text',
+			group: 'seo',
+			variants: { edit: true },
+			required: true,
+			minLength: 10,
+			maxLength: 200,
+			placeholder: 'What would you like to know?',
+			helpText: 'Slugs are auto-generated on entity save',
+			colSpan: 2
+		},
+		{
+			name: 'metaDescription',
+			label: 'Meta Description',
+			type: 'textarea',
+			group: 'seo',
+			variants: { edit: true },
+			required: true,
+			minLength: 20,
+			maxLength: 2000,
+			rows: 6,
+			placeholder: 'Provide meta description for this entitz...',
+			helpText: 'Give detailed instructions',
+			colSpan: 2
+		},
+
 	];
 }
 
@@ -113,7 +197,7 @@ const faqGroups: EntityGroupConfig[] = [
 		title: 'Content',
 		description: 'Question and answer content',
 		icon: '📝',
-		variant: 'card',
+		variant: 'default',
 		variants: { quick: true, standard: true, detailed: true, edit: true }
 	},
 	{
@@ -124,17 +208,39 @@ const faqGroups: EntityGroupConfig[] = [
 		variant: 'card',
 		collapsible: true,
 		collapsed: false,
-		variants: { quick: false, standard: true, detailed: true, edit: true }
+		variants: { standard: true, detailed: true, edit: true }
+	}
+];
+
+
+const editFAQGroups: EntityGroupConfig[] = [
+	{
+		id: 'content',
+		title: 'Content',
+		description: 'Question and answer content',
+		icon: '📝',
+		variant: 'default',
+		variants: { quick: true, standard: true, detailed: true, edit: true }
 	},
 	{
-		id: 'category',
-		title: 'Category',
-		description: 'FAQ Category',
+		id: 'publishing',
+		title: 'Publishing',
+		description: 'Publication settings',
 		icon: '🚀',
-		variant: 'card',
+		variant: 'default',
 		collapsible: true,
 		collapsed: false,
 		variants: { quick: false, standard: true, detailed: true, edit: true }
+	},
+	{
+		id: 'seo',
+		title: 'SEO',
+		description: 'SEO settings',
+		icon: '🚀',
+		variant: 'card',
+		collapsible: true,
+		collapsed: true,
+		variants: { edit: true }
 	}
 ];
 
@@ -149,6 +255,24 @@ export function createFAQSchemaFactory(categories: FAQCategory[] = []) {
 		variantConfig: {
 			edit: {
 				submitLabel: 'Update FAQ',
+				variant: 'minimal',
+				showReset: false,
+				showCancel: true
+			}
+		}
+	});
+}
+
+
+export function editFAQSchemaFactory(categories: FAQCategory[] = []) {
+	return defineEntitySchema<FAQ>({
+		entity: 'FAQ',
+		fields: createFAQFields(categories),
+		groups: editFAQGroups,
+		variantConfig: {
+			edit: {
+				submitLabel: 'Update FAQ',
+				variant: 'minimal',
 				showReset: false,
 				showCancel: true
 			}
@@ -170,7 +294,7 @@ export const FAQFormPresets = {
 		createFAQSchemaFactory(categories).create('detailed'),
 
 	edit: (categories: FAQCategory[] = []) =>
-		createFAQSchemaFactory(categories).create('edit'),
+		editFAQSchemaFactory(categories).create('edit'),
 
 	link: () =>
 		createFAQSchemaFactory().create('link')
