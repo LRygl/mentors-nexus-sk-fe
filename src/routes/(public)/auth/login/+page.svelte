@@ -214,7 +214,7 @@
 									onclick={togglePasswordVisibility}
 									disabled={isLoading}
 									class="absolute inset-y-0 right-0 pr-4 flex items-center text-indigo-300 hover:text-white transition-colors disabled:cursor-not-allowed"
-									aria-label={showPassword ? 'Hide password' : 'Show password'}
+									aria-label={showPassword ? 'Hide forgot-password' : 'Show forgot-password'}
 								>
 									{#if showPassword}
 										<EyeOff class="h-5 w-5" />
@@ -240,7 +240,7 @@
 								<span class="ml-2 text-sm text-indigo-200 group-hover:text-white transition-colors">Remember me</span>
 							</label>
 							<a
-								href="/forgot-password"
+								href={ROUTES.PUBLIC.FORGOT_PASSWORD}
 								class="text-sm font-medium text-indigo-300 hover:text-white transition-colors"
 							>
 								Forgot password?

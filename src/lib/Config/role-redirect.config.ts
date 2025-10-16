@@ -25,17 +25,17 @@ export const ROLE_REDIRECTS: RoleRedirectConfig[] = [
 	},
 	{
 		role: 'USER',
-		path: ROUTES.USER.DASHBOARD,
+		path: ROUTES.USER.MY_COURSES,
 		priority: 10,
 		description: 'Regular users'
 	},
 	{
 		role: 'ROLE_USER',
-		path: ROUTES.USER.DASHBOARD,
+		path: ROUTES.USER.MY_COURSES,
 		priority: 10,
 		description: 'Regular users (Spring Security style)'
 	},
 ];
 
-export const DEFAULT_REDIRECT = ROUTES.USER.DASHBOARD;
+export const DEFAULT_REDIRECT = ROUTES.USER.MY_COURSES;
 export const LOGOUT_REDIRECT = ROUTES.PUBLIC.LOGIN;

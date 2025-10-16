@@ -12,12 +12,15 @@
 		User,
 		MessageCircleQuestionMark,
 		HelpCircle,
-		LogOut
+		LogOut,
+		Scale,
+		FolderClosed,
+		House
 	} from 'lucide-svelte';
 	import { authStore } from '$lib/stores/Auth.svelte';
 	import { sidebarConfig } from '$lib/Config/AdminSidebarConfig';
 	import UserMenu from '$lib/components/UI/UserMenu.svelte';
-	import { userMenuConfigs } from '$lib/Config/UserMenuConfig';
+	import { getMenuConfigForRole, userMenuConfigs } from '$lib/Config/UserMenuConfig';
 
 	const config = sidebarConfig;
 
@@ -31,7 +34,10 @@
 		User,
 		HelpCircle,
 		MessageCircleQuestionMark,
-		LogOut
+		LogOut,
+		Scale,
+		FolderClosed,
+		House
 	};
 
 	// Track which sections are expanded
@@ -40,17 +46,28 @@
 
 	// Get current user from auth store
 	let currentUser = $derived(authStore.user);
-	let userInitials = $derived(
-		currentUser?.name
-			? currentUser.name
-				.split(' ')
-				.map((n) => n[0])
-				.join('')
-				.toUpperCase()
-				.slice(0, 2)
-			: 'U'
-	);
 
+	let menuConfig = $derived.by(() => {
+		// If no user, return null (UserMenu will handle this)
+		if (!currentUser?.role) {
+			return null;
+		}
+
+		// Safe access to role with optional chaining
+		const role = currentUser?.role;
+
+		if (!role) {
+			return null;
+		}
+
+		// Your logic to determine menu config based on role
+		// Example:
+		if (role === 'ROLE_ADMIN' || role === 'ADMIN') {
+			return userMenuConfigs['admin'];
+		}
+
+		return userMenuConfigs['default'];
+	});
 
 	function toggleSection(sectionId: string) {
 		expandedSections[sectionId] = !expandedSections[sectionId];
@@ -171,7 +188,7 @@
 
 	<!-- User Section -->
 	<UserMenu
-		actions={userMenuConfigs.admin.actions}
+		actions={menuConfig.actions}
 		variant="sidebar"
 		dropdownPosition="top"
 	/>

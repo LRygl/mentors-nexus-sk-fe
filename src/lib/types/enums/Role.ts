@@ -5,6 +5,7 @@
  */
 export enum Role {
 	USER = 'USER',
+	ROLE_USER = 'ROLE_USER',
 	ROLE_ADMIN = 'ROLE_ADMIN',
 	ROLE_COURSE_OWNER = 'ROLE_COURSE_OWNER',
 	ADMIN = 'ADMIN'

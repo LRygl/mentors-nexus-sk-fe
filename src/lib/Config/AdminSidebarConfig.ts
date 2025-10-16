@@ -14,6 +14,12 @@ export const sidebarConfig: SidebarConfig = {
 			href: "/admin"
 		},
 		{
+			id: "analytics",
+			label: "Analytics",
+			icon: "BarChart3",
+			href: "/admin/analytics"
+		},
+		{
 			id: "users",
 			label: "Users",
 			icon: "Users",
@@ -44,31 +50,25 @@ export const sidebarConfig: SidebarConfig = {
 		{
 			id: "content",
 			label: "Content",
-			icon: "FileText",
-			href: "/admin/content",
+			icon: "FolderClosed",
+			href: "/admin/support",
 			children: [
 				{
-					id: "posts",
-					label: "Posts",
-					href: "/admin/content/posts"
+					id: "courses",
+					label: "Stations",
+					href: "/admin/course",
 				},
 				{
-					id: "pages",
-					label: "Pages",
-					href: "/admin/content/pages"
+					id: "course-category",
+					label: "Stations Categories",
+					href: "/admin/course-category",
 				},
 				{
-					id: "media",
-					label: "Media Library",
-					href: "/admin/content/media"
+					id: "lessons",
+					label: "Terminals",
+					href: "/admin/lesson",
 				}
 			]
-		},
-		{
-			id: "analytics",
-			label: "Analytics",
-			icon: "BarChart3",
-			href: "/admin/analytics"
 		},
 		{
 			id: "support",
@@ -84,6 +84,29 @@ export const sidebarConfig: SidebarConfig = {
 				{
 					id: "faq",
 					label: "FAQs",
+					href: "/admin/faq",
+				}
+			]
+		},
+		{
+			id: "legal",
+			label: "Legal",
+			icon: "Scale",
+			href: "/admin/legal",
+			children: [
+				{
+					id: "terms-and-conditions",
+					label: "Terms and Conditions",
+					href: "/admin/faq-categories",
+				},
+				{
+					id: "privacy-policy",
+					label: "Privacy Policy",
+					href: "/admin/faq",
+				},
+				{
+					id: "cookie-policy",
+					label: "Cookie Policy",
 					href: "/admin/faq",
 				}
 			]

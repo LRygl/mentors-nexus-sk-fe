@@ -11,26 +11,30 @@
 		FileText,
 		CreditCard,
 		GraduationCap,
-		Shield
+		Shield,
+		House
 	} from 'lucide-svelte';
 	import { authStore } from '$lib/stores/Auth.svelte';
 	import type { UserMenuAction, UserRole } from '$lib/types/user-menu';
+	import { userMenuConfigs } from '$lib/Config/UserMenuConfig';
+	import { Role } from '$lib/types/enums/Role';
 
 	interface Props {
-		configKey?: string; // 'admin', 'main', or 'mixed'
-		actions?: UserMenuAction[]; // Override with custom actions
-		variant?: 'sidebar' | 'navbar'; // Visual variant
-		dropdownPosition?: 'top' | 'bottom'; // Where dropdown appears
+		configKey?: string;
+		actions?: UserMenuAction[];
+		variant?: 'sidebar' | 'navbar';
+		dropdownPosition?: 'top' | 'bottom';
+		autoSelectConfig?: boolean;
 	}
 
 	let {
 		configKey = 'admin',
-		actions = [],
+		actions,
 		variant = 'sidebar',
-		dropdownPosition = 'top'
+		dropdownPosition = 'top',
+		autoSelectConfig = false
 	}: Props = $props();
 
-	// Icon mapping
 	const iconMap: Record<string, any> = {
 		User,
 		Settings,
@@ -41,34 +45,81 @@
 		FileText,
 		CreditCard,
 		GraduationCap,
-		Shield
+		Shield,
+		House
 	};
 
 	let showDropdown = $state(false);
 
-	// Get current user from auth store
+	// ✅ Use $derived for reactive values (NOT functions!)
 	let currentUser = $derived(authStore.user);
 	let userRole = $derived((currentUser?.role as UserRole) || 'guest');
-	let userInitials = $derived(
-		currentUser?.name
-			? currentUser.name
-				.split(' ')
-				.map((n) => n[0])
-				.join('')
-				.toUpperCase()
-				.slice(0, 2)
-			: 'U'
-	);
+
+	// Auto-determine configKey based on role if enabled
+	let effectiveConfigKey = $derived.by(() => {
+		if (autoSelectConfig) {
+			console.log("[MENU] Auto-selecting config for role:", userRole);
+
+			if (!currentUser || userRole === 'guest') {
+				return 'main';
+			}
+			switch (userRole) {
+				case Role.ADMIN:
+					return 'admin';
+				case Role.USER:
+					return 'main';
+				default:
+					return 'main';
+			}
+		}
+		return configKey;
+	});
+
+	let userInitials = $derived.by(() => {
+		if (!currentUser) return 'U';
+
+		const first = currentUser.firstName?.[0] ?? '';
+		const last = currentUser.lastName?.[0] ?? '';
+
+		return (first + last).toUpperCase() || 'U';
+	});
+
+	// Load actions from config if not provided via props
+	let menuActions = $derived.by(() => {
+		// Handle null/undefined gracefully
+		if (!actions && !effectiveConfigKey) {
+			return [];
+		}
+
+		const config = userMenuConfigs[effectiveConfigKey];
+		return actions ?? config?.actions ?? [];
+	});
+
 
 	// Filter actions based on user role
-	let filteredActions = $derived(
-		actions.filter((action) => {
-			// If no roles specified, show to everyone
+	let filteredActions = $derived.by(() => {
+		return menuActions.filter((action) => {
+			if (action.type === 'divider') return true;
 			if (!action.roles || action.roles.length === 0) return true;
-			// Check if user's role is in the allowed roles
-			return action.roles.includes(userRole);
-		})
-	);
+			if (!userRole || userRole === 'guest') return false;
+			return action.roles.includes(userRole as Role);
+		});
+	});
+
+	let cleanedActions = $derived.by(() => {
+		return filteredActions.reduce((acc: UserMenuAction[], action, index) => {
+			if (action.type === 'divider') {
+				const isFirst = acc.length === 0;
+				const prevWasDivider = acc[acc.length - 1]?.type === 'divider';
+				const isLast = index === filteredActions.length - 1;
+
+				if (isFirst || prevWasDivider || isLast) {
+					return acc;
+				}
+			}
+			return [...acc, action];
+		}, []);
+	});
 
 	async function handleAction(action: UserMenuAction) {
 		showDropdown = false;
@@ -92,29 +143,26 @@
 
 <div class="user-menu-container {variant === 'sidebar' ? 'border-t border-slate-700/50 p-3' : ''}">
 	<div class="relative">
-		<!-- User Button -->
 		<button
 			onclick={() => (showDropdown = !showDropdown)}
 			class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 {variant === 'sidebar' ? 'hover:bg-slate-800' : 'hover:bg-slate-100'}"
 		>
-			<!-- Avatar -->
 			<div
 				class="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center font-semibold shadow-lg {variant === 'sidebar' ? 'text-white' : ''}"
 			>
 				{userInitials}
 			</div>
 
-			<!-- User Info -->
 			<div class="flex-1 text-left">
 				<p
 					class="text-sm font-medium truncate {variant === 'sidebar' ? 'text-white' : 'text-slate-900'}"
 				>
-					{currentUser?.name || 'User'}
+					{currentUser?.firstName || 'Guest'} {currentUser?.lastName || 'Guest'}
 				</p>
 				<p
 					class="text-xs truncate {variant === 'sidebar' ? 'text-slate-400' : 'text-slate-500'}"
 				>
-					{currentUser?.email || 'user@example.com'}
+					{currentUser?.email || 'Not signed in'}
 				</p>
 			</div>
 
@@ -123,12 +171,11 @@
 			/>
 		</button>
 
-		<!-- Dropdown Menu -->
-		{#if showDropdown}
+		{#if showDropdown && cleanedActions.length > 0}
 			<div
 				class="absolute left-0 right-0 rounded-lg shadow-xl border py-2 animate-slideIn z-50 {dropdownPosition === 'top' ? 'bottom-full mb-2' : 'top-full mt-2'} {variant === 'sidebar' ? 'bg-slate-800 border-slate-700' : 'bg-white border-slate-200'}"
 			>
-				{#each filteredActions as action}
+				{#each cleanedActions as action}
 					{#if action.type === 'divider'}
 						<div
 							class="h-px my-2 {variant === 'sidebar' ? 'bg-slate-700' : 'bg-slate-200'}"

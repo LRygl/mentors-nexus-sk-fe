@@ -21,7 +21,7 @@ export class UserStoreSvelte extends BaseStoreSvelte<
 			this._data = await this.apiService.getAllUsers();
 			return this._data;
 		} catch (error) {
-			console.error('[STORE] Error fetching all FAQs:', error);
+			console.error('[STORE] Error fetching all Users:', error);
 			throw error;
 		} finally {
 			this._loading = false;

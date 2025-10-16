@@ -48,6 +48,7 @@ class AuthService extends BaseApiService {
 	 */
 	async logout(): Promise<void> {
 		try {
+			console.log("Logout request")
 			await this.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, {});
 			// Spring Boot deletes the cookies
 		} catch (error) {
@@ -89,7 +90,7 @@ class AuthService extends BaseApiService {
 	}
 
 	/**
-	 * Request password reset
+	 * Request forgot-password reset
 	 */
 	async forgotPassword(email: string): Promise<void> {
 		await this.post(
@@ -100,7 +101,7 @@ class AuthService extends BaseApiService {
 	}
 
 	/**
-	 * Reset password with token
+	 * Reset forgot-password with token
 	 */
 	async resetPassword(token: string, newPassword: string): Promise<void> {
 		await this.post(

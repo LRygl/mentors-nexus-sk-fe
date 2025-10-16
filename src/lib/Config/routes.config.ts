@@ -11,7 +11,6 @@ export const ROUTES = {
 		LOGIN: '/auth/login',
 		REGISTER: '/auth/register',
 		FORGOT_PASSWORD: '/auth/forgot-password',
-		RESET_PASSWORD: '/auth/reset-password',
 		ABOUT: '/about',
 		CONTACT: '/contact',
 		TERMS: '/terms',
@@ -22,7 +21,7 @@ export const ROUTES = {
 	// USER ROUTES (Authenticated users)
 	// ============================================
 	USER: {
-		DASHBOARD: '/dashboard',
+		MY_COURSES: '/my-learning',
 		PROFILE: '/profile',
 		SETTINGS: '/settings',
 		ORDERS: '/orders',

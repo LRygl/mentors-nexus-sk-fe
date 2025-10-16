@@ -5,8 +5,10 @@
 
 import { authService } from '$lib/Services/AuthService';
 import type { User } from '$lib/types/entities/User';
-import { goto } from '$app/navigation';
+import { goto, invalidateAll } from '$app/navigation';
 import { browser } from '$app/environment';
+import { ROUTES } from '$lib/Config/routes.config';
+import { tick } from 'svelte';
 
 class AuthStore {
 	user = $state<User | null>(null);
@@ -129,23 +131,62 @@ class AuthStore {
 	 */
 	async logout() {
 		this.isLoading = true;
-		try {
-			await authService.logout();
 
-			// Stop session management
+		try {
+			console.log('[Auth] Starting logout...');
+
+			// 1. Call backend logout first
+			await authService.logout();
+			console.log('[Auth] Backend logout successful');
+
+		} catch (error) {
+			console.error('[Auth] Backend logout error:', error);
+			// Continue with local cleanup even if backend fails
+		}
+
+		try {
+			// 2. Stop session management
 			this.stopSessionManagement();
 
+			// 3. Clear local state immediately
 			this.user = null;
 			this.lastCheck = 0;
+			this.isInitialized = false;
 
-			console.log('[Auth] Logout successful');
-			// Redirect
-			await goto('/');
+			console.log('[Auth] Local state cleared');
+			console.log('[Auth] isAuthenticated:', this.isAuthenticated);
+
+			// 4. Force SvelteKit to invalidate all data
+			await invalidateAll();
+			await tick();
+
+			// 5. Small delay to ensure reactivity propagates
+			await new Promise(resolve => setTimeout(resolve, 100));
+
+			console.log('[Auth] Logout complete, redirecting...');
+
+			// 6. Navigate to home with replace to prevent back button issues
+			// Use window.location for a hard navigation that clears everything
+			//window.location.href = ROUTES.PUBLIC.LOGIN;
+
+			await goto(ROUTES.PUBLIC.LOGIN, {
+				replaceState: true,
+				invalidateAll: true,
+				state: undefined,
+
+			});
+
+		} catch (error) {
+			console.error('[Auth] Logout cleanup error:', error);
+
+			// Force hard reload as fallback
+			if (browser) {
+				window.location.href = '/';
+			}
 		} finally {
 			this.isLoading = false;
 		}
 	}
-
 	/**
 	 * Refresh user data from server
 	 */

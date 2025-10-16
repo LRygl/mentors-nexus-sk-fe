@@ -17,7 +17,7 @@ export interface User extends BaseEntity {
 	telephoneNumber?: string;
 
 	// Password is write-only in backend, not included in responses
-	// password?: string; // Only for registration/update requests
+	// forgot-password?: string; // Only for registration/update requests
 
 	// Subject details
 	lastLoginDate?: string; // ISO date string

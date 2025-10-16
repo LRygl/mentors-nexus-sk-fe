@@ -36,15 +36,6 @@
 	// Form schema
 	const categories = $derived(faqCategoryStore.data || []);
 	const createFormSchema = $derived(FAQFormPresets.standard(categories));
-
-	// Add logging separately if needed
-	$effect(() => {
-		console.log('🔍 Schema groups:', createFormSchema.groups?.map(g => ({
-			id: g.id,
-			fields: g.fields.map(f => f.name)
-		})));
-	});
-
 	const linkFAQCategoryFormSchema = $derived(FAQCategoryLinkPresets.link(categories))
 
 	// Data table configuration

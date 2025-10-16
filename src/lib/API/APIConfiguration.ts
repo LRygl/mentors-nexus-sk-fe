@@ -19,8 +19,8 @@ export const API_CONFIG = {
 			LOGOUT: '/auth/logout',
 			REFRESH: '/auth/refresh',
 			ME: '/auth/me',
-			FORGOT_PASSWORD: '/auth/forgot-password',
-			RESET_PASSWORD: '/auth/reset-password',
+			FORGOT_PASSWORD: '/auth/forgot-forgot-password',
+			RESET_PASSWORD: '/auth/reset-forgot-password',
 		},
 
 		// Public endpoints
@@ -35,6 +35,9 @@ export const API_CONFIG = {
 			FAQ: '/admin/faq',
 			FAQ_CATEGORY: '/admin/faq-category',
 			USERS: '/user/all',
+			COURSES: '/course',
+			COURSE_CATEGORY: '/category',
+			LESSONS: '/lesson',
 			REPORTS: '/admin/reports',
 		}
 	},

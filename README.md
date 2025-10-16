@@ -1,6 +1,32 @@
 # sv
 
 ## TODO
+- [ ] Create course management view
+  - [ ] CRUD
+  - [ ] Assign lesson to course
+  - [ ] Manage course sections
+  - [ ] Reorder lessons within course and its sections
+- [ ] Create lesson management view
+  - [ ] CRUD
+  - [ ] Specify lesson type to be displayed on course screen
+- [ ] Create public courses view 
+  - [ ] Sort/Filter courses
+  - [ ] Allow users to preview free lessons in course
+  - [ ] For protected lessons redirect to purchase page
+- 
+- 
+## Authentication
+- [ ] User without purchased course cannot view protected lessons
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
+- 
 - [x] Implement custom confirmation modal service which will alow me to trigger actions for user confirmation. Should have variuants like Confirm | success | warning | error | infor
 - [x] Implement toas notification that will have following
   - [x] To be dismissed

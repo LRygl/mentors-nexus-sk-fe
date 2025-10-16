@@ -1,7 +1,6 @@
 import { redirect } from '@sveltejs/kit';
 import type { LayoutLoad } from './$types';
 import { authStore } from '$lib/stores/Auth.svelte.js';
-import { browser } from '$app/environment';
 
 /**
  * Admin route guard
@@ -9,44 +8,48 @@ import { browser } from '$app/environment';
  * Requires authentication AND admin role
  */
 export const load: LayoutLoad = async ({ url }) => {
-	// Only run in browser (static adapter requirement)
-	if (!browser) {
-		return {};
-	}
+	console.log('[ADMIN GUARD] 🔒 Checking access to:', url.pathname);
 
-	console.log('[ADMIN GUARD] 🔒 Admin guard checking access to:', url.pathname);
+	// ✅ Check authStore directly (it's always up-to-date)
+	console.log('[ADMIN GUARD] 📊 AuthStore state:', {
+		isAuthenticated: authStore.isAuthenticated,
+		hasUser: !!authStore.user,
+		userRole: authStore.user?.role,
+		isInitialized: authStore.isInitialized
+	});
 
-	// Initialize auth if not done yet
+	// Ensure auth is initialized
 	if (!authStore.isInitialized) {
 		console.log('[ADMIN GUARD] ⏳ Initializing auth...');
 		await authStore.initialize();
 	}
 
 	// Check if user is authenticated
-	if (!authStore.isAuthenticated) {
-		console.log('[ADMIN GUARD] ❌ Not Authenticated for: ', url.pathname);
+	if (!authStore.isAuthenticated || !authStore.user) {
+		console.log('[ADMIN GUARD] ❌ Not authenticated');
 		throw redirect(302, `/auth/login?returnUrl=${url.pathname}&error=admin_required`);
 	}
 
-	// Check if user has admin role
-	const user = authStore.user;
-	const isAdmin = user?.role === 'ROLE_ADMIN' || user?.role === 'ADMIN';
+	// Check admin role
+	const userRole = authStore.user.role?.toUpperCase();
+	const isAdmin = userRole === 'ROLE_ADMIN' || userRole === 'ADMIN';
 
-	console.log('[ADMIN GUARD] 👤 User:', user?.email, 'Role:', user?.role, 'Is Admin:', isAdmin);
+	console.log('[ADMIN GUARD] 🔒 User role:', userRole, 'Is Admin:', isAdmin);
 
 	if (!isAdmin) {
-		console.log('[ADMIN GUARD]  ❌ Not admin - access denied for: ', url.pathname);
+		console.log('[ADMIN GUARD] ❌ Not admin - access denied');
 		throw redirect(302, '/?error=unauthorized');
 	}
 
-	console.log('[ADMIN GUARD] Admin access granted');
+	console.log('[ADMIN GUARD] ✅ Admin access granted');
 
-	// Return user data to page
+	// Return user data (fresh from authStore)
 	return {
-		user: authStore.user
+		user: authStore.user,
+		isAuthenticated: true,
+		isAdminArea: true
 	};
 };
 
-// CRITICAL: Disable SSR for static adapter
 export const ssr = false;
 export const prerender = false;

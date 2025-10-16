@@ -7,7 +7,7 @@ export class UserAdminApiService extends BaseApiService {
 
 	constructor() {
 		super(API_CONFIG.BASE_URL);
-	}
+	};
 
 	async getAllUsers(): Promise<User[]> {
 		try {
@@ -15,7 +15,7 @@ export class UserAdminApiService extends BaseApiService {
 		} catch (error) {
 			throw error;
 		}
-	}
+	};
 
 }
 

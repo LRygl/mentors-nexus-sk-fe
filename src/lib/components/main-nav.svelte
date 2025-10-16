@@ -21,25 +21,33 @@
 	import { onMount } from 'svelte';
 	import { authStore } from '$lib/stores/Auth.svelte.js';
 	import { goto } from '$app/navigation';
+	import { getMenuConfigForRole, userMenuConfigs } from '$lib/Config/UserMenuConfig';
+	import UserMenu from '$lib/components/UI/UserMenu.svelte';
 
 	let currentMode = mode.current;
+
+
 
 	// Reactive auth state using Svelte 5 runes
 	let isAuthenticated = $derived(authStore.isAuthenticated);
 	let user = $derived(authStore.user);
+	let menuConfig = $derived(getMenuConfigForRole(user?.role))
 	let isLoading = $derived(authStore.isLoading);
-	let userInitials = $derived(
-		user ?
-			`${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() ||
-			user.email?.[0]?.toUpperCase() || 'U'
-			: 'U'
-	);
 
 	// Dropdown states
 	let courseMenuOpen = $state(false);
 	let aboutMenuOpen = $state(false);
 	let userMenuOpen = $state(false);
 	let mobileMenuOpen = $state(false);
+
+	// Debug logging
+	$effect(() => {
+		console.log('[MAINNAV] Auth state changed:', {
+			isAuthenticated,
+			hasUser: !!user,
+			userEmail: user?.email
+		});
+	});
 
 	// Close dropdowns when clicking outside
 	function handleClickOutside(event: MouseEvent) {
@@ -256,72 +264,12 @@
 					<Button variant="ghost" size="sm" disabled class="hidden md:flex">
 						<div class="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent"></div>
 					</Button>
-				{:else if isAuthenticated && user}
-					<!-- User Menu -->
-					<div class="relative dropdown-container hidden md:block">
-						<button
-							onclick={() => { userMenuOpen = !userMenuOpen; }}
-							class="flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg hover:bg-accent transition-colors"
-						>
-							<div class="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs font-semibold">
-								{userInitials}
-							</div>
-							<span class="hidden lg:inline">{user.firstName || user.email}</span>
-							<ChevronDown class={`h-4 w-4 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
-						</button>
-
-						{#if userMenuOpen}
-							<div class="absolute right-0 mt-2 w-56 origin-top-right rounded-lg border bg-popover shadow-lg animate-in fade-in-0 zoom-in-95">
-								<!-- User Info Header -->
-								<div class="px-4 py-3 border-b">
-									<p class="text-sm font-medium">
-										{user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.email}
-									</p>
-									<p class="text-xs text-muted-foreground">{user?.email}</p>
-								</div>
-
-								<!-- Menu Items -->
-								<div class="p-2">
-									<button
-										onclick={() => navigate('/profile')}
-										class="flex items-center gap-3 w-full p-2 rounded-md hover:bg-accent transition-colors text-left"
-									>
-										<User class="h-4 w-4" />
-										<span class="text-sm">Profile</span>
-									</button>
-
-									<button
-										onclick={() => navigate('/settings')}
-										class="flex items-center gap-3 w-full p-2 rounded-md hover:bg-accent transition-colors text-left"
-									>
-										<Settings class="h-4 w-4" />
-										<span class="text-sm">Settings</span>
-									</button>
-
-									{#if user?.role === 'ROLE_ADMIN' || user?.role === 'ADMIN'}
-										<div class="my-2 border-t"></div>
-										<button
-											onclick={() => navigate('/admin/users')}
-											class="flex items-center gap-3 w-full p-2 rounded-md hover:bg-accent transition-colors text-left"
-										>
-											<Shield class="h-4 w-4" />
-											<span class="text-sm">Admin Panel</span>
-										</button>
-									{/if}
-
-									<div class="my-2 border-t"></div>
-
-									<button
-										onclick={handleLogout}
-										class="flex items-center gap-3 w-full p-2 rounded-md hover:bg-destructive hover:text-destructive-foreground transition-colors text-left"
-									>
-										<LogOut class="h-4 w-4" />
-										<span class="text-sm">Logout</span>
-									</button>
-								</div>
-							</div>
-						{/if}
-					</div>
+				{:else if authStore.isAuthenticated && authStore.user && menuConfig}
+					<UserMenu
+						actions={menuConfig.actions}
+						variant="navbar"
+						dropdownPosition="bottom"
+					/>
 				{:else}
 					<Button onclick={handleLogin} variant="default" size="sm" class="hidden md:flex">
 						<LogIn class="h-4 w-4 mr-2" />
@@ -426,29 +374,11 @@
 
 				<!-- Auth Actions -->
 				{#if isAuthenticated && user}
-					<button
-						onclick={() => navigate('/profile')}
-						class="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium rounded-lg hover:bg-accent transition-colors text-left"
-					>
-						<User class="h-4 w-4" />
-						Profile
-					</button>
-
-					<button
-						onclick={() => navigate('/settings')}
-						class="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium rounded-lg hover:bg-accent transition-colors text-left"
-					>
-						<Settings class="h-4 w-4" />
-						Settings
-					</button>
-
-					<button
-						onclick={handleLogout}
-						class="flex items-center gap-3 w-full px-4 py-3 text-sm font-medium rounded-lg hover:bg-destructive hover:text-destructive-foreground transition-colors text-left"
-					>
-						<LogOut class="h-4 w-4" />
-						Logout
-					</button>
+					<UserMenu
+						actions={menuConfig.actions}
+						variant="navbar"
+						dropdownPosition="bottom"
+					/>
 				{:else}
 					<button
 						onclick={handleLogin}

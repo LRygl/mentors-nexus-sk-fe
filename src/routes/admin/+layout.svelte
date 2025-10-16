@@ -5,15 +5,7 @@
  export const reset = true;
  import "../../app.css";
  import Breadcrumb from '$lib/components/Breadcrumb.svelte';
- import { page } from '$app/state';
-	import { afterNavigate } from '$app/navigation';
-	import { guardRoute, GUARDS } from '$lib/Guards/AuthGuard';
-	import AdminSidebar from '$lib/components/AdminSidebar.svelte';
-
- interface PageInfo {
-	 title: string;
-	 parent?: string;
- }
+ import AdminSidebar from '$lib/components/AdminSidebar.svelte';
 
  interface Props {
 	 children: Snippet;
@@ -21,39 +13,6 @@
 
  //export const ssr = false;
  let { children }: Props = $props();
-
-
- // Guard state
- let isVerifying = $state(true);
- let accessGranted = $state(false);
-
- /**
-	* Verify admin access
-	*/
- async function verifyAccess() {
-	 isVerifying = true;
-
-	 const allowed = await guardRoute(GUARDS.admin, page.url.pathname);
-
-	 accessGranted = allowed;
-	 isVerifying = false;
- }
-
- // Re-verify on navigation
- afterNavigate(() => {
-	 verifyAccess();
- });
-
- // Optional: Re-verify periodically (every 5 minutes)
- onMount(() => {
-	 const interval = setInterval(() => {
-		 if (accessGranted) {
-			 verifyAccess();
-		 }
-	 }, 5 * 60 * 1000);
-
-	 return () => clearInterval(interval);
- });
 
 </script>
 
