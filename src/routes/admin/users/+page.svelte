@@ -5,6 +5,7 @@ import { UserTablePreset } from '$lib/components/Data Table/Configurations/UserT
 import { userStore } from '$lib/stores/defaults/UserStore.js';
 import type { TableCallbacks } from '$lib/types/ui/table';
 import { onMount } from 'svelte';
+import type { User } from '$lib/types/entities/User';
 
 let selectedItems = $state<Set<string>>(new Set());
 
@@ -19,7 +20,7 @@ onMount(async () => {
 // Table callbacks adapted for BaseStoreSvelte
 const tableCallbacks: TableCallbacks<User> = {
 	onRowClick: (user) => {
-		console.log(`[PAGE] Data table user row ${category.id} clicked`);
+		console.log(`[PAGE] Data table user row ${user.id} clicked`);
 	},
 
 	onCreate: () => {

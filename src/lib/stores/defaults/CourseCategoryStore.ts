@@ -26,6 +26,17 @@ export class CourseCategoryStore extends BaseStoreSvelte<
 		}
 	};
 
+	/*
+	* BASIC CRUD ACTIONS
+ 	*/
+	async createItem(createData: Partial<CourseCategory>): Promise<CourseCategory> {
+		return await this.apiService.createCourseCategory(createData);
+	}
+
+	async deleteItem(id: string): Promise<void> {
+		return await this.apiService.deleteCourseCategory(id);
+	}
+
 }
 
 export const courseCategoryStore = new CourseCategoryStore();

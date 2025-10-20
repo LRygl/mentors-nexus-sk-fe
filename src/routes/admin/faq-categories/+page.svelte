@@ -17,6 +17,7 @@
 	import { confirmationModal } from '$lib/components/Modals/ConfirmationModalService.svelte';
 	import { toastService } from '$lib/Services/ToastService.svelte';
 	import { FAQCategoryTablePreset } from '$lib/components/Data Table/Configurations/FAQCategoryConfiguration';
+	import { ROUTES } from '$lib/Config/routes.config';
 
 	// Modal and Form State
 	let isCreateModalOpen = $state<boolean>(false);
@@ -51,19 +52,14 @@
 
 	// Table callbacks adapted for BaseStoreSvelte
 	const tableCallbacks: TableCallbacks<FAQCategory> = {
-		onRowClick: (category) => {
-			console.log(`FAQ Categor row ${category.id} clicked`);
-			goto(`/admin/faq-categories/${category.id}`);
+		onRowClick: async (category) => {
+			await goto(`${ROUTES.ADMIN.FAQ_CATEGORIES}/${category.id}`);
 		},
 
 		onAction: async (actionId, category) => {
 			switch (actionId) {
 				case 'view':
-					console.log("View Action was called by the user in the dropdown")
-					await goto(`/admin/faq-categories/${category.id}`);
-					break;
-				case 'edit':
-					await goto(`/admin/faq-categories/${category.id}/edit`);
+					await goto(`${ROUTES.ADMIN.FAQ_CATEGORIES}/${category.id}`);
 					break;
 				case 'duplicate':
 					// Use the store's create method
@@ -131,8 +127,6 @@
 			}
 		}
 	};
-
-
 
 	/*
 	* MODAL ACTION HANDLING

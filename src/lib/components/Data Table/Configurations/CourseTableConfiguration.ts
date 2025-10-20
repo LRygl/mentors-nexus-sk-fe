@@ -68,6 +68,14 @@ const courseTableDefinition = defineTableConfig<Course>({
 			variant: ActionType.DEFAULT,
 			group: 'Actions'
 		},
+		{
+			id: 'delete',
+			label: 'Delete',
+			description: 'Delete course record',
+			icon: Eye,
+			variant: ActionType.DANGER,
+			group: 'Management'
+		},
 	],
 
 	searchable: true,

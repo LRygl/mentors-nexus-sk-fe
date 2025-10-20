@@ -30,6 +30,27 @@ export class FormValidator {
 	 * Validate single field
 	 */
 	static validateField(value: any, field: FormField, formData?: Record<string, any>): string | null {
+		// 🔍 DEBUG
+		console.log(`[VALIDATOR] 🔍 Validating field: ${field.name}`, {
+			type: field.type,
+			value: value,
+			isArray: Array.isArray(value),
+			length: Array.isArray(value) ? value.length : 'N/A'
+		});
+
+		// ✅ Handle multiselect/tags BEFORE general validation
+		if (field.type === 'multiselect') {
+			const error = this.validateMultiSelect(value, field);
+			console.log(`  ✓ MultiSelect validation result:`, error || 'VALID');
+			return error;
+		}
+
+		if (field.type === 'tags') {
+			const error = this.validateTagInput(value, field);
+			console.log(`  ✓ Tags validation result:`, error || 'VALID');
+			return error;
+		}
+
 		if (!field.validationRules || field.validationRules.length === 0) {
 			return null;
 		}
@@ -64,9 +85,17 @@ export class FormValidator {
 				return this.validateUrl(value, rule, field);
 
 			case 'min':
+				// ⚠️ Skip max validation for arrays (multiselect/tags)
+				if (Array.isArray(value)) {
+					return null;
+				}
 				return this.validateMin(value, rule, field);
 
 			case 'max':
+				// ⚠️ Skip max validation for arrays (multiselect/tags)
+				if (Array.isArray(value)) {
+					return null;
+				}
 				return this.validateMax(value, rule, field);
 
 			case 'minLength':
@@ -80,6 +109,12 @@ export class FormValidator {
 
 			case 'custom':
 				return this.validateCustom(value, rule, field, formData);
+
+			case 'tags':
+				return this.validateTagInput(value, field);
+
+			case 'multiselect':
+				return this.validateMultiSelect(value, field);
 
 			default:
 				return null;
@@ -167,6 +202,88 @@ export class FormValidator {
 		if (!regex.test(String(value))) {
 			return rule.message || `${field.label} format is invalid`;
 		}
+		return null;
+	}
+
+	/**
+	 * Validates tag input fields
+	 */
+	private static validateTagInput(value: any, field: FormField): string | null {
+		const tags = Array.isArray(value) ? value : [];
+
+		// Required validation
+		if (field.required && tags.length === 0) {
+			return field.validationRules?.find(r => r.type === 'required')?.message
+				|| `${field.label} is required`;
+		}
+
+		// Minimum tags validation
+		if (field.minTags !== undefined && tags.length < field.minTags) {
+			return `${field.label} must have at least ${field.minTags} tag${field.minTags !== 1 ? 's' : ''}`;
+		}
+
+		// Maximum tags validation
+		if (field.maxTags !== undefined && tags.length > field.maxTags) {
+			return `${field.label} cannot have more than ${field.maxTags} tag${field.maxTags !== 1 ? 's' : ''}`;
+		}
+
+		// Individual tag length validation
+		if (field.tagMaxLength) {
+			const tooLongTag = tags.find(tag => tag.length > field.tagMaxLength!);
+			if (tooLongTag) {
+				return `Tag "${tooLongTag}" exceeds maximum length of ${field.tagMaxLength} characters`;
+			}
+		}
+
+		// Pattern validation for tags
+		if (field.tagPattern) {
+			const invalidTag = tags.find(tag => !field.tagPattern!.test(tag));
+			if (invalidTag) {
+				return field.validationRules?.find(r => r.type === 'pattern')?.message
+					|| `Tag "${invalidTag}" contains invalid characters`;
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * Validates multiselect fields
+	 */
+	private static validateMultiSelect(value: any, field: FormField): string | null {
+		const items = Array.isArray(value) ? value : [];
+
+		console.log(`  📊 MultiSelect validation for ${field.name}:`, {
+			items: items,
+			count: items.length,
+			required: field.required,
+			minItems: field.minItems,
+			maxItems: field.maxItems
+		});
+
+		// Required validation
+		if (field.required && items.length === 0) {
+			const message = field.validationRules?.find(r => r.type === 'required')?.message
+				|| `${field.label} is required`;
+			console.log(`    ✗ Required check failed`);
+			return message;
+		}
+
+		// Minimum items validation
+		if (field.minItems !== undefined && items.length < field.minItems) {
+			const message = `${field.label} must have at least ${field.minItems} item${field.minItems !== 1 ? 's' : ''}`;
+			console.log(`    ✗ Min items check failed: ${items.length} < ${field.minItems}`);
+			return message;
+		}
+
+		// Maximum items validation
+		if (field.maxItems !== undefined && items.length > field.maxItems) {
+			const message = `${field.label} cannot have more than ${field.maxItems} item${field.maxItems !== 1 ? 's' : ''}`;
+			console.log(`    ✗ Max items check failed: ${items.length} > ${field.maxItems}`);
+			return message;
+		}
+
+		console.log(`    ✓ All checks passed`);
 		return null;
 	}
 

@@ -183,11 +183,8 @@ export function createFAQCategorySchemaFactory() {
  */
 export const FAQCategoryFormPresets = {
 	quick: () => createFAQCategorySchemaFactory().create('quick'),
-
 	standard: () => createFAQCategorySchemaFactory().create('standard'),
-
 	detailed: () => createFAQCategorySchemaFactory().create('detailed'),
-
 	edit: () => createFAQCategorySchemaFactory().create('edit')
 };
 

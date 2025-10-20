@@ -14,10 +14,20 @@ export class CourseAdminApiService extends BaseApiService {
 		try {
 			return await this.get<Course[]>(`${this.ENDPOINT}/all`);
 		} catch (error) {
-			return error;
+			throw error;
 		}
 	}
 
+	async createCourse(createData: Partial<Course>): Promise<Course> {
+		const requestData = {
+			...createData
+		}
+		return await this.post<Course>(`${this.ENDPOINT}`, requestData);
+	}
+
+	async deleteCourse(id: string) {
+		await this.delete(`${this.ENDPOINT}/${id}`)
+	}
 }
 
 export const courseAdminApiService = new CourseAdminApiService();

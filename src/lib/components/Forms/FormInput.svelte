@@ -10,6 +10,9 @@
 	import SelectInput from '$lib/components/Forms/Fields/SelectInput.svelte';
 	import DateInput from '$lib/components/Forms/Fields/DateInput.svelte';
 	import DateTImeInput from '$lib/components/Forms/Fields/DateTImeInput.svelte';
+	import { TagIcon } from 'lucide-svelte';
+	import TagInput from '$lib/components/Forms/Fields/TagInput.svelte';
+	import MultiSelect from '$lib/components/Forms/Fields/MultiSelect.svelte';
 
 	interface Props {
 		field: FormField;
@@ -51,6 +54,10 @@
 	<IconSelectInput {field} {value} {error} {showError} {disabled} {onChange} />
 {:else if field.type === 'color'}
 	<ColorInput {field} {value} {error} {showError} {disabled} {onChange} />
+{:else if field.type === 'tags'}
+	<TagInput {field} {value} {error} {showError} {disabled} {onChange} />
+{:else if field.type === 'multiselect'}
+	<MultiSelect {field} {value} {error} {showError} {disabled} {onChange} />
 {:else}
 	<div class="text-sm text-red-600 border border-red-500 bg-red-50 p-2 rounded">
 		Unknown field type: {field.type}

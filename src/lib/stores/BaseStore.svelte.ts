@@ -229,7 +229,7 @@ export abstract class BaseStoreSvelte<
 	}
 
 	async delete(id: string): Promise<boolean> {
-		console.log("Base Store DELETE Callsed")
+		console.log("Base Store DELETE Called")
 		if (this._deleting) return false;
 
 		this._deleting = true;

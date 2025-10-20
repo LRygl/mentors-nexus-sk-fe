@@ -3,7 +3,7 @@ import {
 	defineTableConfig
 } from '$lib/components/Data Table/Configurations/DataTableConfigurationFactory';
 import type { Lesson } from '$lib/types/entities/Lesson';
-import { Eye } from '@lucide/svelte';
+import { Eye, Trash2Icon } from '@lucide/svelte';
 import { ActionType } from '$lib/types';
 import type { User } from '$lib/types/entities/User';
 
@@ -65,6 +65,14 @@ const lessonTableDefinition = defineTableConfig<Lesson>({
 			variant: ActionType.DEFAULT,
 			group: 'Actions'
 		},
+		{
+			id: 'delete',
+			label: 'Delete',
+			description: 'Delete course record',
+			icon: Trash2Icon,
+			variant: ActionType.DANGER,
+			group: 'Management'
+		},
 	],
 
 	searchable: true,
@@ -73,10 +81,10 @@ const lessonTableDefinition = defineTableConfig<Lesson>({
 	exportable: true,
 	sortable: true,
 
-	emptyTitle: 'No Lessons',
+	emptyTitle: 'No Terminals',
 	emptyDescription: 'Get started by defining questions which might be interesting to your users and provide simple answers.',
-	emptyActionLabel: 'Create your first FAQ Category!',
-	loadingTitle: 'Loading FAQ Categories',
+	emptyActionLabel: 'Create your first Terminal!',
+	loadingTitle: 'Loading Terminals',
 	loadingDescription: 'Please wait while we fetch your FAQ Categories...',
 	searchPlaceholder: 'Search FAQ Categories...'
 });

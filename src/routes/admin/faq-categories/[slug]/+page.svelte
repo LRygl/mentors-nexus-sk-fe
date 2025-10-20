@@ -15,6 +15,7 @@
 	import { createFAQLinkFormSchema } from '$lib/components/Forms/Schemas/FAQLinkFormSchema';
 	import { toastService } from '$lib/Services/ToastService.svelte';
 	import { FAQListTablePreset } from '$lib/components/Data Table/Configurations/FAQCategoryFAQsConfiguration';
+	import { ROUTES } from '$lib/Config/routes.config';
 
 	// Get category ID from URL params
 	const categoryId = page.params.slug as string;
@@ -44,10 +45,6 @@
 		}));
 	});
 
-	console.log("RETURNED FAQ LIST", faqs)
-
-	console.log("RETURNED FAQ LIST",faqs)
-
 	const availableFAQs = $derived.by(() => {
 		if (faqStore.data.length === 0) {
 			return [];
@@ -60,7 +57,6 @@
 			!linkedUuids.has(faq.uuid)
 		);
 
-		console.log('📋 Available FAQs for linking:', filtered.length);
 		return filtered;
 	});
 
@@ -113,17 +109,14 @@
 	}
 
 	const tableActionCallbacks: TableCallbacks<FAQ> = {
-			onRowClick: (faq) => {
-				goto(`/admin/faq/${faq.id}`);
+			onRowClick: async (faq) => {
+				await goto(`${ROUTES.ADMIN.FAQ}/${faq.id}`);
 			},
 
 			onAction: async (actionId, faq) => {
 				switch (actionId) {
 					case 'view':
-						await goto(`/admin/faq/${faq.id}`);
-						break;
-					case 'edit':
-						await goto(`/admin/faq/${faq.id}`);
+						await goto(`${ROUTES.ADMIN.FAQ}/${faq.id}`);
 						break;
 					case 'unlink-faq':
 						await handleUnlinkFAQFromCategory(faq.uuid)

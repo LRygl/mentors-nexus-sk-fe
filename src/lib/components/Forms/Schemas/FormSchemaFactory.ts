@@ -13,7 +13,7 @@ export type FormVariant = 'quick' | 'standard' | 'detailed' | 'edit' | 'link';
 export interface EntityFieldConfig {
 	name: string;
 	label: string;
-	type: 'text' | 'textarea' | 'number' | 'checkbox' | 'select' | 'date' | 'tags';
+	type: 'text' | 'textarea' | 'number' | 'checkbox' | 'select' | 'date' | 'tags' | 'multiselect';
 
 	// Visibility in different form variants
 	variants: {
@@ -40,6 +40,10 @@ export interface EntityFieldConfig {
 	options?: any[];
 	searchable?: boolean;
 	multiple?: boolean;
+
+	// MultiSelect specific
+	maxItems?: number;
+	minItems?: number;
 
 	// Dependencies and conditional validation
 	dependencies?: FormFieldDependency[];
@@ -270,6 +274,14 @@ export class FormSchemaFactory<T = any> {
 				builder.tags(field.name, field.label, {
 					...baseOptions,
 					maxTags: field.maxLength
+				});
+				break;
+			case 'multiselect':
+				builder.multiselect(field.name, field.label, field.options || [], {
+					...baseOptions,
+					maxItems: field.maxItems,
+					minItems: field.minItems,
+					searchable: field.searchable
 				});
 				break;
 		}

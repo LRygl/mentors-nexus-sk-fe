@@ -42,6 +42,9 @@ export const ROUTES = {
 		FAQ_CATEGORIES: '/admin/faq-categories',
 		SETTINGS: '/admin/settings',
 		REPORTS: '/admin/reports',
+		COURSE: '/admin/course',
+		COURSE_CATEGORIES: '/admin/course-category',
+		LESSON: '/admin/lesson',
 	},
 
 } as const;

@@ -26,7 +26,18 @@ export class CourseStore extends BaseStoreSvelte<
 			this._loading = false;
 		}
 	}
-	
+
+	/*
+	* BASIC CRUD ACTIONS
+	*/
+	async createItem(createData: Partial<Course>): Promise<Course> {
+		return await this.apiService.createCourse(createData);
+	}
+
+	async deleteItem(id: string): Promise<void> {
+		return await this.apiService.deleteCourse(id);
+	}
+
 }
 
 export const courseStore = new CourseStore();

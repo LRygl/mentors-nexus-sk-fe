@@ -5,25 +5,102 @@ import { onMount } from 'svelte';
 import type { TableCallbacks } from '$lib/types/ui/table';
 import { CourseCategoryTablePreset } from '$lib/components/Data Table/Configurations/CourseCategoryTableConfiguration';
 import { courseCategoryStore } from '$lib/stores/defaults/CourseCategoryStore';
+import type { CourseCategory } from '$lib/types/entities/CourseCategory';
+import { FileText } from 'lucide-svelte';
+import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
+import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
+import { CourseCategoryFormPresets } from '$lib/components/Forms/Schemas/CourseCategoryFormSchema';
+import type { FAQCategoryFormData } from '$lib/types/entities/faqCategory';
+import { toastService } from '$lib/Services/ToastService.svelte';
+import { goto } from '$app/navigation';
+import { confirmationModal } from '$lib/components/Modals/ConfirmationModalService.svelte';
+import { ROUTES } from '$lib/Config/routes.config';
 
+	let isCreateModalOpen = $state<boolean>(false);
 	let selectedItems = $state<Set<string>>(new Set);
+	let formRef: any;
 
 	const tableConfig = CourseCategoryTablePreset.all();
+
 
 	onMount(async () => {
 		await courseCategoryStore.fetchAll();
 	});
 
 const tableCallbacks: TableCallbacks<CourseCategory> = {
-	onRowClick: (courseCategory) => {
+	onRowClick: async (courseCategory) => {
 		console.log(`[PAGE] Data table user row ${courseCategory.id} clicked`);
+		await goto(`${ROUTES.ADMIN.COURSE_CATEGORIES}/${courseCategory.id}`);
+
+	},
+	onAction: async (actionId, courseCategory) => {
+		switch (actionId) {
+			case 'view':
+				console.log("View Action was called by the user in the dropdown")
+				await goto(`/admin/faq-categories/${courseCategory.id}`);
+				break;
+			case 'delete':
+				const confirmed = await confirmationModal.delete(`Delete FAQ Category?`,`Are you sure you want to delete this category?`)
+				if (confirmed) {
+					try {
+						await courseCategoryStore.delete(courseCategory.id);
+						console.log('Category deleted successfully');
+					} catch (error) {
+						console.error('Failed to delete category:', error);
+						toastService.error('Failed to delete category:',`Operation failed with error: ${error}`);
+					}
+				}
+				break;
+			default:
+				console.warn('Unknown action:', actionId);
+		}
 	},
 
 	onCreate: () => {
-		return;
+		console.log('[PAGE] Creating new course category');
+		createModal();
 	}
 }
 
+/*
+* MODAL ACTION HANDLING
+*/
+async function createModal() {
+	isCreateModalOpen = true;
+}
+
+function closeCreateModal() {
+	isCreateModalOpen = false;
+	formRef?.reset();
+}
+
+// Called when form validation passes
+async function handleValidFormSubmit(data: FAQCategoryFormData) {
+	try {
+		const newCourseCategorz = await courseCategoryStore.create(data);
+		if (newCourseCategorz && newCourseCategorz?.id) {
+			closeCreateModal();
+			toastService.success(`Course Category Created`,`Lipsum`)
+			// TODO: Add notifications notification
+		}
+	} catch (error) {
+		console.error('Failed to create category:', error);
+	}
+}
+
+// Form callbacks
+const formCallbacks = {
+	onSubmit: handleValidFormSubmit,
+	onChange: (field: string, value: any) => {
+
+	}
+};
+
+// Modal submit
+function handleModalSubmit(event: Event) {
+	event.preventDefault()
+	formRef?.submit();
+}
 
 </script>
 
@@ -50,3 +127,26 @@ const tableCallbacks: TableCallbacks<CourseCategory> = {
 
 
 </section>
+
+<!-- Create Category Modal -->
+<UniversalCreateModal
+	isOpen={isCreateModalOpen}
+	title="Create FAQ Category"
+	subtitle="Add a new category to organize your FAQs"
+	icon={FileText}
+	iconBgColor="from-indigo-500 to-purple-600"
+	loading={courseCategoryStore.creating}
+	error={courseCategoryStore.createError}
+	submitLabel="Create Category"
+	onclose={closeCreateModal}
+	onsubmit={handleModalSubmit}
+>
+	{#snippet children()}
+		<UniversalForm
+			bind:this={formRef}
+			schema={CourseCategoryFormPresets.standard()}
+			callbacks={formCallbacks}
+			className="space-y-6"
+		/>
+	{/snippet}
+</UniversalCreateModal>

@@ -59,7 +59,10 @@ export type FormFieldValidationRuleType =
 	| 'min'
 	| 'max'
 	| 'pattern'
+	| 'tags'
+	| 'multiselect'
 	| 'custom';
+
 
 // ============================================================================
 // FIELD CONFIGURATION
@@ -118,7 +121,9 @@ export interface FormField {
 	className?: string;
 	variant?: FormVariant;
 
-	// Type-specific properties
+	/*
+	* Type-specific properties
+	*/
 	min?: number;
 	max?: number;
 	step?: number;
@@ -129,6 +134,18 @@ export interface FormField {
 	multiple?: boolean;
 	accept?: string;
 	pattern?: string;
+
+	// Tag input specific (NEW)
+	maxTags?: number;         // Maximum number of tags allowed
+	minTags?: number;         // Minimum number of tags required
+	allowDuplicates?: boolean; // Whether to allow duplicate tags
+	tagPattern?: RegExp;      // Optional regex pattern for tag validation
+	tagMaxLength?: number;    // Maximum length for individual tags
+	tagValidator?: (tag: string) => boolean;
+
+	minItems?: number;
+	maxItems?: number;
+
 
 	// Options for select, radio, etc.
 	options?: FieldOption[];
@@ -156,9 +173,6 @@ export interface FormField {
 	componentProps?: Record<string, any>;
 
 	// Tags-specific
-	maxTags?: number;
-	allowDuplicates?: boolean;
-	tagValidator?: (tag: string) => boolean;
 
 	// File upload
 	maxFilesize?: number;

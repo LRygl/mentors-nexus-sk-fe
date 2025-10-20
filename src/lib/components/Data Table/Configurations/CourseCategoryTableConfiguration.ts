@@ -3,7 +3,7 @@ import {
 	defineTableConfig
 } from '$lib/components/Data Table/Configurations/DataTableConfigurationFactory';
 import type { CourseCategory } from '$lib/types/entities/CourseCategory';
-import { Eye } from '@lucide/svelte';
+import { Eye, Trash } from '@lucide/svelte';
 import { ActionType } from '$lib/types';
 import type { Course } from '$lib/types/entities/Course';
 
@@ -63,6 +63,14 @@ const courseCategoryTableDefinition = defineTableConfig<CourseCategory>({
 			icon: Eye,
 			variant: ActionType.DEFAULT,
 			group: 'Actions'
+		},
+		{
+			id: 'delete',
+			label: 'Delete Category',
+			description: 'Remove the Course Category',
+			icon: Trash,
+			variant: ActionType.DANGER,
+			group: 'Management'
 		},
 	],
 

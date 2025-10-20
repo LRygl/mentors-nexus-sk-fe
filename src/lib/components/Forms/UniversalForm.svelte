@@ -116,6 +116,10 @@
 				return false;
 			case 'select':
 				return field.options?.[0]?.value ?? '';
+			case 'tags':
+				return [];
+			case 'multiselect':
+				return [];
 			default:
 				return '';
 		}
@@ -186,6 +190,55 @@
 	}
 
 
+	function handleFieldChange(fieldName: string, value: any) {
+		console.log('🔄 Field changed - RAW PARAMS:', {
+			param1_fieldName: fieldName,
+			param1_type: typeof fieldName,
+			param1_isArray: Array.isArray(fieldName),
+			param2_value: value,
+			param2_type: typeof value,
+			param2_isArray: Array.isArray(value)
+		});
+
+		// Check if parameters are swapped (defensive programming)
+		let actualFieldName: string;
+		let actualValue: any;
+
+		if (Array.isArray(fieldName) && typeof value === 'string') {
+			// Parameters are swapped!
+			console.warn('⚠️ PARAMETERS SWAPPED! Correcting...');
+			actualFieldName = value;
+			actualValue = fieldName;
+		} else {
+			actualFieldName = fieldName;
+			actualValue = value;
+		}
+
+		console.log('🔄 After correction:', actualFieldName, '=', actualValue);
+
+		formState.data[actualFieldName] = actualValue;
+		formState.touched[actualFieldName] = true;
+		formState.isDirty = true;
+
+		// Validate the changed field
+		validateField(actualFieldName);
+
+		// Re-validate all fields that might depend on this field
+		const fields = allFields();
+		fields.forEach(field => {
+			if (field.dependencies?.some(dep => dep.field === actualFieldName)) {
+				console.log('🔍 Checking dependent field:', field.name);
+				console.log('  - Should be visible:', FormDependencyHandler.isFieldVisible(field, formState.data));
+				console.log('  - Current value:', formState.data[field.name]);
+
+				validateField(field.name);
+			}
+		});
+
+		callbacks.onChange?.(actualFieldName, actualValue, formState);
+	}
+
+/*
 	// Handle field changes
 	function handleFieldChange(fieldName: string, value: any) {
 		console.log('🔄 Field changed:', fieldName, '=', value);
@@ -211,7 +264,7 @@
 
 		callbacks.onChange?.(fieldName, value, formState);
 	}
-
+*/
 	export function submit() {
 		formElement?.requestSubmit();
 	}

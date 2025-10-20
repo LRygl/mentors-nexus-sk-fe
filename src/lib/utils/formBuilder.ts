@@ -6,7 +6,8 @@ import type {
 	FormFieldGroup,
 	FormLayout,
 	FormSchema,
-	FormVariant
+	FormVariant,
+	ValidationRule
 } from '$lib/types/entities/forms';
 import { FormValidator } from '$lib/utils/formValidator';
 
@@ -539,6 +540,53 @@ export class FormBuilder<T = Record<string, any>> {
 			validationRules
 		});
 	}
+
+
+	/**
+	 * Add a multiselect field
+	 */
+	multiselect(
+		name: string,
+		label: string,
+		options: Array<{ value: string; label: string; disabled?: boolean }>,
+		fieldOptions: {
+			placeholder?: string;
+			helpText?: string;
+			required?: boolean;
+			minItems?: number;
+			maxItems?: number;
+			searchable?: boolean;
+			colSpan?: 1 | 2 | 3 | 4;
+			defaultValue?: string[];
+			dependencies?: FormFieldDependency[];
+			conditionalValidation?: ConditionalValidation[];
+		} = {}
+	): FormBuilder<T> {
+		const validationRules = [];
+
+		if (fieldOptions.required) {
+			validationRules.push(FormValidator.rules.required(`${label} is required`));
+		}
+
+		return this.addField({
+			name,
+			label,
+			type: 'multiselect',
+			placeholder: fieldOptions.placeholder,
+			helpText: fieldOptions.helpText,
+			required: fieldOptions.required,
+			colSpan: fieldOptions.colSpan,
+			defaultValue: fieldOptions.defaultValue || [],
+			options: options,
+			minItems: fieldOptions.minItems,
+			maxItems: fieldOptions.maxItems,
+			searchable: fieldOptions.searchable ?? true,
+			dependencies: fieldOptions.dependencies,
+			conditionalValidation: fieldOptions.conditionalValidation,
+			validationRules
+		});
+	}
+
 
 	/**
 	 * Add a custom field
