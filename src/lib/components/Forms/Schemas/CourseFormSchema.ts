@@ -7,7 +7,6 @@ import {
 import type { CourseCategory } from '$lib/types/entities/CourseCategory';
 
 export function createCourseFields(courseCategories: CourseCategory[] = []): EntityFieldConfig[] {
-
 	const categoryOptions = courseCategories.map(c => ({
 		value: c.id?.toString(),
 		label: c.name,
@@ -81,7 +80,6 @@ const courseGroup: EntityGroupConfig[] = [
 ]
 
 export function createCourseSchemaFactory(courseCategories: CourseCategory[] = []) {
-	console.log('🏭 createCourseSchemaFactory - Input categories:', courseCategories);
 	return defineEntitySchema<Course>({
 		entity: 'Course',
 		fields: createCourseFields(courseCategories),

@@ -173,7 +173,7 @@
 				// Fetch the single category to refresh the store data
 				await faqCategoryStore.fetchItem(categoryId);
 				closeLinkModal();
-				toastService.success('Success', `FAQ "${linkedFaq.question}" was linked successfully`);
+				toastService.success('Success', `FAQ"${linkedFaq.question}" was linked successfully`);
 			}
 		} catch (error) {
 			console.error('Error linking FAQ:', error);

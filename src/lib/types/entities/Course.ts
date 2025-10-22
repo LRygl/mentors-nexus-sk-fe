@@ -1,4 +1,5 @@
 import type { BaseEntity } from '$lib/types';
+import type { CourseSection } from '$lib/types/entities/CourseSection';
 
 /**
  * Course Interface (minimal)
@@ -15,6 +16,7 @@ export interface Course extends BaseEntity {
 	updated?: Date;
 	published?: Date;
 	featured?: boolean;
+	sections: CourseSection[];
 
 }
 
