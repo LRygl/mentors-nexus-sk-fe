@@ -12,91 +12,246 @@ export function createCourseFields(courseCategories: CourseCategory[] = []): Ent
 		label: c.name,
 	}));
 
-	return [
+	const fields: EntityFieldConfig[] = [
+		// Basic Information
 		{
 			name: 'name',
-			label: 'Course name',
+			label: 'Terminal Name',
 			type: 'text',
-			group: 'content',
-			variants: { quick: true, standard: true, detailed: true, edit: true },
+			group: 'basic',
+			variants: { quick: true, standard: true, detailed: true, edit: true, embedded: true },
 			required: true,
 			minLength: 3,
-			maxLength: 20,
-			placeholder: 'Name of the new category?',
-			helpText: 'Keep it clear and concise',
+			maxLength: 100,
+			placeholder: 'Enter terminal name',
+			helpText: 'A clear, descriptive name for your terminal',
 			colSpan: 2
 		},
 		{
 			name: 'price',
 			label: 'Price',
 			type: 'number',
-			group: 'content',
-			variants: { quick: true, standard: true, detailed: true, edit: true },
+			group: 'basic',
+			variants: { quick: true, standard: true, detailed: true, edit: true, embedded: true },
 			required: true,
-			minLength: 3,
-			maxLength: 20,
-			placeholder: 'Name of the new category?',
-			helpText: 'Keep it clear and concise',
-			colSpan: 2
+			min: 0,
+			placeholder: '0.00',
+			helpText: 'Terminal price in CZK',
+			colSpan: 1
 		},
+		{
+			name: 'status',
+			label: 'Status',
+			type: 'select',
+			group: 'publishing',
+			variants: { standard: true, detailed: true, edit: true, embedded: true },
+			required: true,
+			options: [
+				{ value: 'DRAFT', label: 'Draft' },
+				{ value: 'UNPUBLISHED', label: 'Unpublished' },
+				{ value: 'PUBLISHED', label: 'Published' }
+			],
+			defaultValue: 'DRAFT',
+			helpText: 'Current publication status',
+			colSpan: 1
+		},
+
+		// Metadata
 		{
 			name: 'labels',
 			label: 'Labels',
 			type: 'tags',
-			group: 'content',
-			variants: { quick: true, standard: true, detailed: true, edit: true },
-			required: true,
-			placeholder: 'Name of the new category?',
-			helpText: 'Keep it clear and concise',
+			group: 'metadata',
+			variants: { standard: true, detailed: true, edit: true, embedded: true },
+			required: false,
+			placeholder: 'Add labels...',
+			helpText: 'Keywords for organization and search',
 			colSpan: 2
 		},
 		{
 			name: 'categories',
-			label: 'Course Categories',
+			label: 'Categories',
 			type: 'multiselect',
-			group: 'content',
-			variants: { standard: true, edit: true },
+			group: 'metadata',
+			variants: { standard: true, detailed: true, edit: true, embedded: true },
 			required: true,
 			minItems: 1,
 			maxItems: 5,
 			searchable: true,
 			options: categoryOptions,
 			placeholder: 'Select categories...',
-			helpText: 'Choose the categories this course belongs to',
+			helpText: 'Assign this terminal to one or more categories',
 			colSpan: 2
+		},
+
+		// Publishing
+		{
+			name: 'published',
+			label: 'Publish Date',
+			type: 'date',
+			group: 'publishing',
+			variants: { detailed: true, edit: true, embedded: true },
+			required: false,
+			helpText: 'Schedule when this terminal should be published',
+			colSpan: 1,
+			dependencies: [
+				{
+					field: 'status',
+					condition: 'equals',
+					value: 'PUBLISHED'
+				}
+			]
+		},
+		{
+			name: 'featured',
+			label: 'Featured Terminal',
+			type: 'checkbox',
+			group: 'publishing',
+			variants: { detailed: true, edit: true, embedded: true },
+			required: false,
+			defaultValue: false,
+			helpText: 'Display this terminal prominently on the homepage',
+			colSpan: 1
 		}
-	]
+	];
+
+	// Debug: log field configurations
+	console.log('[SCHEMA] Field configurations:', fields.map(f => ({
+		name: f.name,
+		type: f.type,
+		required: f.required,
+		minLength: f.minLength,
+		maxLength: f.maxLength,
+		min: f.min,
+		max: f.max,
+		minItems: f.minItems,
+		maxItems: f.maxItems
+	})));
+
+	return fields;
 }
 
-const courseGroup: EntityGroupConfig[] = [
+const courseGroups: EntityGroupConfig[] = [
+	// EMBEDDED VARIANT - clean headings
 	{
-		id: 'content',
-		title: 'Content',
-		description: 'Question and answer content',
+		id: 'basic',
+		title: 'Terminal Details',
+		description: 'Basic information about your terminal',
 		icon: '📝',
 		variant: 'default',
+		collapsible: false,
+		variants: { embedded: true }
+	},
+	{
+		id: 'metadata',
+		title: 'Organization',
+		description: 'Labels and categories for organization',
+		icon: '🗂️',
+		variant: 'default',
+		collapsible: false,
+		variants: { embedded: true }
+	},
+	{
+		id: 'publishing',
+		title: 'Publishing',
+		description: 'Publication status and scheduling',
+		icon: '🚀',
+		variant: 'default',
+		collapsible: false,
+		variants: { embedded: true }
+	},
+
+	// EDIT/STANDARD VARIANTS - rounded cards
+	{
+		id: 'basic',
+		title: 'Terminal Details',
+		description: 'Basic information about your terminal',
+		icon: '📝',
+		variant: 'default',
+		collapsible: false,
+		variants: { standard: true, edit: true }
+	},
+	{
+		id: 'metadata',
+		title: 'Organization',
+		description: 'Labels and categories for organization',
+		icon: '🗂️',
+		variant: 'default',
+		collapsible: true,
+		variants: { standard: true, edit: true }
+	},
+	{
+		id: 'publishing',
+		title: 'Publishing',
+		description: 'Publication status and scheduling',
+		icon: '🚀',
+		variant: 'default',
+		collapsible: true,
+		collapsed: true,
 		variants: { standard: true, edit: true }
 	}
-]
+];
 
 export function createCourseSchemaFactory(courseCategories: CourseCategory[] = []) {
-	return defineEntitySchema<Course>({
+	const schema = defineEntitySchema<Course>({
 		entity: 'Course',
 		fields: createCourseFields(courseCategories),
-		groups: courseGroup,
+		groups: courseGroups,
 		variantConfig: {
 			standard: {
-				title: 'Create Course',
-				submitLabel: 'Create Course',
+				title: 'Create Terminal',
+				submitLabel: 'Create Terminal',
+				layout: 'two-column',
 				showReset: true,
 				showCancel: true,
+			},
+			edit: {
+				title: 'Edit Terminal',
+				submitLabel: 'Save Changes',
+				layout: 'two-column',
+				showReset: false,
+				showCancel: true,
+			},
+			embedded: {
+				title: '',
+				submitLabel: 'Save',
+				layout: 'two-column',
+				showReset: false,
+				showCancel: false,
+				validateOnChange: true,
 			}
 		}
 	});
+
+	return schema;
 }
 
 export const CourseFormPresets = {
 	standard: (categories: CourseCategory[] = []) => {
-		return createCourseSchemaFactory(categories).create('standard');  // ← PASS HERE!
+		const schema = createCourseSchemaFactory(categories).create('standard');
+		console.log('[SCHEMA] Generated standard schema:', schema);
+		console.log('[SCHEMA] Fields with validation rules:', schema.groups?.flatMap(g => g.fields).map(f => ({
+			name: f.name,
+			validationRules: f.validationRules
+		})));
+		return schema;
+	},
+	edit: (categories: CourseCategory[] = []) => {
+		const schema = createCourseSchemaFactory(categories).create('edit');
+		console.log('[SCHEMA] Generated edit schema:', schema);
+		console.log('[SCHEMA] Fields with validation rules:', schema.groups?.flatMap(g => g.fields).map(f => ({
+			name: f.name,
+			validationRules: f.validationRules
+		})));
+		return schema;
+	},
+	embedded: (categories: CourseCategory[] = []) => {
+		const schema = createCourseSchemaFactory(categories).create('embedded');
+		console.log('[SCHEMA] Generated embedded schema:', schema);
+		console.log('[SCHEMA] Fields with validation rules:', schema.groups?.flatMap(g => g.fields).map(f => ({
+			name: f.name,
+			validationRules: f.validationRules
+		})));
+		return schema;
 	}
 };

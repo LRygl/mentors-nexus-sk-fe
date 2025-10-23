@@ -107,7 +107,7 @@ export class FormBuilder<T = Record<string, any>> {
 			icon?: string;
 			collapsible?: boolean;
 			collapsed?: boolean;
-			variant?: 'default' | 'card' | 'minimal';
+			variant?: 'default' | 'card' | 'minimal' | 'embedded';
 		}
 	): FormBuilder<T> {
 		let options: any = {};

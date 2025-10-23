@@ -9,11 +9,12 @@
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
 	import { CourseSectionFormPresets } from '$lib/components/Forms/Schemas/CourseSectionFromSchema';
 	import { toastService } from '$lib/Services/ToastService.svelte';
+	import StickyFormHeader from '$lib/components/UI/StickyFormHeader.svelte';
+	import { CourseFormPresets } from '$lib/components/Forms/Schemas/CourseFormSchema';
+	import type { CourseCategory } from '$lib/types/entities/CourseCategory';
+	import { ROUTES } from '$lib/Config/routes.config';
 
-	// TODO Define new form type - embedded with the style of the current page sections and form items
-
-	// TODO move to separate file
-	// Type definitions matching your Spring Boot backend
+	// Type definitions
 	interface Owner {
 		id: number;
 		firstName: string;
@@ -56,7 +57,6 @@
 		students?: number;
 	}
 
-	// Type for component (with 'items')
 	interface SectionWithItems extends BaseSectionItem {
 		id?: number;
 		uuid?: string;
@@ -66,46 +66,45 @@
 		items: Lesson[];
 	}
 
-	// Map course.sections to component format
+	// Props
+	let { courseId = page.params.id } = $props<{ courseId?: number }>();
+
+	// State
+	let course = $derived(courseStore.selectedItem);
+	let isLoading = $derived(courseStore.loadingItem);
+	let error = $derived(courseStore.itemError);
+	let isSaving = $state(false);
+	let formRef: any; // Section form ref
+	let courseFormRef: any; // Course form ref
+	let isCreateSectionModalOpen = $state<boolean>(false);
+
+	// Form state for embedded course form
+	let hasFormChanges = $state(false);
+	let isFormValid = $state(true);
+	let formErrors = $state<Record<string, string>>({});
+
+	// Available course categories
+	let courseCategories = $state<CourseCategory[]>([
+		{ id: 1, name: 'Payments' },
+		{ id: 2, name: 'Development' },
+		{ id: 3, name: 'Design' },
+		{ id: 4, name: 'Marketing' }
+	]);
+
+	// Schemas
+	const courseFormSchema = $derived(CourseFormPresets.embedded(courseCategories));
+	const createSectionFormSchema = $derived(CourseSectionFormPresets.standard());
+
+	// Map course sections to component format
 	let componentSections = $derived.by((): SectionWithItems[] => {
 		if (!course) return [];
 		return course.sections.map(section => ({
 			...section,
-			items: section.lessons  // Map lessons → items
+			items: section.lessons
 		}));
 	});
 
-	let formRef: any;
-	let isCreateSectionModalOpen = $state<boolean>(false);
-
-	const createSectionFormSchema = $derived(CourseSectionFormPresets.standard());
-
-
-	// Icon definitions
-	const bookIcon = `<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-</svg>`;
-
-	const usersIcon = `<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
-</svg>`;
-
-	// Props - you'd pass the course ID from your route params
-	let { courseId = page.params.id } = $props<{ courseId?: number }>();
-
-	// State management
-	let originalCourse = $state<Course | null>(null);
-	let course = $derived(courseStore.selectedItem);
-	let isLoading = $derived(courseStore.loadingItem);
-	let isSaving = $state(false);
-	let error = $derived(courseStore.itemError);
-
-	// Check if course has been modified
-	let hasChanges = $derived(
-		course && originalCourse && JSON.stringify(course) !== JSON.stringify(originalCourse)
-	);
-
-	// Derived metadata items
+	// Metadata items
 	let metadataItems = $derived.by((): MetadataItemConfig[] => {
 		if (!course) return [];
 
@@ -134,88 +133,8 @@
 			}
 		];
 	});
-	const statusOptions = ['DRAFT', 'UNPUBLISHED', 'PUBLISHED'];
 
-	onMount(async () => {
-		await loadCourse();
-	});
-
-	async function loadCourse() {
-		isLoading = true;
-		error = null;
-
-		try {
-			// Replace with your actual API endpoint
-			const data = await courseStore.fetchItem(courseId);
-			console.log("[PAGE] Loaded Course Data: ",data);
-
-			// Sort sections by orderIndex
-			data.sections.sort((a: CourseSection, b: CourseSection) => a.orderIndex - b.orderIndex);
-
-			// Sort lessons within each section
-			data.sections.forEach((section: CourseSection) => {
-				section.lessons.sort((a: Lesson, b: Lesson) => a.orderIndex - b.orderIndex);
-			});
-
-			originalCourse = JSON.parse(JSON.stringify(data));
-			course = data;
-		} catch (err) {
-			error = err instanceof Error ? err.message : 'An error occurred';
-		} finally {
-			isLoading = false;
-		}
-	}
-
-	async function saveCourse() {
-		if (!course) return;
-
-		isSaving = true;
-		error = null;
-
-		try {
-			const response = await fetch(`/api/courses/${courseId}`, {
-				method: 'PUT',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify(course),
-			});
-
-			if (!response.ok) {
-				throw new Error('Failed to save course');
-			}
-
-			const updatedCourse = await response.json();
-			originalCourse = JSON.parse(JSON.stringify(updatedCourse));
-			course = updatedCourse;
-		} catch (err) {
-			error = err instanceof Error ? err.message : 'Failed to save course';
-		} finally {
-			isSaving = false;
-		}
-	}
-
-	function discardChanges() {
-		if (!originalCourse) return;
-
-		if (confirm('Are you sure you want to discard all changes?')) {
-			course = JSON.parse(JSON.stringify(originalCourse));
-		}
-	}
-
-
-	function updateCourseField(field: keyof Course, value: any) {
-		if (!course) return;
-		course = { ...course, [field]: value };
-	}
-
-	function formatPrice(price: number): string {
-		return new Intl.NumberFormat('cs-CZ', {
-			style: 'currency',
-			currency: 'CZK',
-		}).format(price);
-	}
-
+	// Status colors for metadata card
 	let statusColors = $derived(course ? getStatusColors(course.status) : { from: 'slate-800', to: 'slate-700' });
 
 	function getStatusColors(status: string) {
@@ -231,6 +150,122 @@
 		}
 	}
 
+	// Icons
+	const bookIcon = `<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+	</svg>`;
+
+	const usersIcon = `<svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+		<path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+	</svg>`;
+
+	// Lifecycle
+	onMount(async () => {
+		await loadCourse();
+	});
+
+	async function loadCourse() {
+		try {
+			const data = await courseStore.fetchItem(courseId);
+			console.log("[PAGE] Loaded Course Data:", data);
+
+			// Sort sections and lessons
+			data.sections.sort((a: CourseSection, b: CourseSection) => a.orderIndex - b.orderIndex);
+			data.sections.forEach((section: CourseSection) => {
+				section.lessons.sort((a: Lesson, b: Lesson) => a.orderIndex - b.orderIndex);
+			});
+		} catch (err) {
+			console.error('Error loading course:', err);
+		}
+	}
+
+	// Course form callbacks
+	const courseFormCallbacks = {
+		onSubmit: handleCourseSubmit,
+		onChange: (field: string, value: any) => {
+			console.log('[PAGE] Field changed:', field, value);
+		},
+		onValidate: (result: any) => {
+			// Update validation state when form validates
+			console.log('[PAGE] Validation callback - isValid:', result.isValid, 'errors:', result.errors);
+			isFormValid = result.isValid;
+			formErrors = result.errors || {};
+		}
+	};
+
+	async function handleCourseSubmit(formData: Partial<Course>) {
+		console.log("[PAGE] Course Form Submit:", formData);
+
+		isSaving = true;
+		try {
+			// Call API to update course
+			// await courseStore.updateItem(courseId, formData);
+
+			// Simulate API call
+			await new Promise(resolve => setTimeout(resolve, 1000));
+
+			toastService.success('Success', 'Terminal updated successfully');
+
+			// Reset form to mark as saved - this clears dirty state
+			courseFormRef?.reset(formData);
+
+			// Explicitly set hasFormChanges to false after successful save
+			hasFormChanges = false;
+			console.log('[PAGE] Form saved, hasFormChanges set to false');
+		} catch (error) {
+			console.error('Error updating course:', error);
+			toastService.error('Error', 'Failed to update terminal');
+		} finally {
+			isSaving = false;
+		}
+	}
+
+	function handleFormDirtyChange(isDirty: boolean) {
+		console.log('[PAGE] 🔔 onDirtyChange callback - isDirty:', isDirty);
+		hasFormChanges = isDirty;
+
+		// Also check validation state when dirty state changes
+		if (courseFormRef) {
+			const valid = courseFormRef.isFormValid();
+			console.log('[PAGE] Validation check after dirty change - isValid:', valid);
+			isFormValid = valid;
+		}
+
+		console.log('[PAGE] State updated - hasFormChanges:', hasFormChanges, 'isFormValid:', isFormValid);
+	}
+
+	function handleSaveClick() {
+		console.log('[PAGE] 💾 Save clicked - hasChanges:', hasFormChanges, 'isValid:', isFormValid);
+
+		if (courseFormRef && hasFormChanges) {
+			// Check validation before submitting
+			const valid = courseFormRef.isFormValid();
+			console.log('[PAGE] Pre-submit validation check:', valid);
+
+			if (valid) {
+				console.log('[PAGE] ✅ Submitting form...');
+				courseFormRef.submit();
+			} else {
+				console.log('[PAGE] Validation failed, showing error toast');
+				toastService.error('Validation Error', 'Please fix the errors before saving');
+			}
+		} else {
+			console.log('[PAGE] Cannot save - hasFormChanges:', hasFormChanges, 'formRef:', !!courseFormRef);
+		}
+	}
+
+	function handleDiscardClick() {
+		console.log('[PAGE] Discard clicked');
+		if (courseFormRef && hasFormChanges) {
+			if (confirm('Are you sure you want to discard all changes?')) {
+				courseFormRef.discard();
+				hasFormChanges = false;
+				console.log('[PAGE] Changes discarded');
+			}
+		}
+	}
+
+	// Section management
 	function handleAddSection() {
 		isCreateSectionModalOpen = true;
 	}
@@ -239,26 +274,23 @@
 		console.log("Handle remove Section");
 	}
 
-	// Form callbacks - validation is handled by UniversalForm
 	const formCreateSectionCallbacks = {
-		onSubmit: handleValidCourseSectionSubmit,         // CHANGE: point to new function
+		onSubmit: handleValidCourseSectionSubmit,
 		onChange: (field: string, value: any) => {
-			if (field === 'isPublished' && !value) {
-				// Clear category if needed
-			}
+			// Handle changes if needed
 		}
 	};
 
 	async function handleValidCourseSectionSubmit(section: CourseSection) {
-		console.log("[PAGE] Form Submit: ",section);
+		console.log("[PAGE] Form Submit:", section);
 		try {
 			const courseSection = await courseStore.createSection(courseId, section);
 			closeSectionModal();
-			toastService.success('Success',`Section was created successfully`);
+			toastService.success('Success', 'Section was created successfully');
 			console.log(courseSection);
-
 		} catch (error) {
 			console.error('Error creating Course Section:', error);
+			toastService.error('Error', 'Failed to create section');
 		}
 	}
 
@@ -267,12 +299,10 @@
 		formRef?.reset();
 	}
 
-	// Modal submit
 	function handleCourseSectionSubmit(event: Event) {
 		event.preventDefault();
 		formRef?.submit();
 	}
-
 </script>
 
 <div class="min-h-screen py-8">
@@ -292,48 +322,44 @@
 				</button>
 			</div>
 		{:else if course}
-			<!-- Sticky Action Bar -->
-			<div class="sticky top-0 z-50 mb-6">
-				<div class="bg-white/95 backdrop-blur-sm border border-slate-200 rounded-xl shadow-lg px-6 py-4">
-					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-4">
-							<a href="/courses" class="p-2 hover:bg-slate-100 rounded-lg transition-colors">
-								<svg class="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
-								</svg>
-							</a>
-							<div>
-								<h1 class="text-xl font-bold text-slate-900">Edit Terminal</h1>
-								<p class="text-sm text-slate-500">{course.name}</p>
-							</div>
-						</div>
-
-						<div class="flex items-center gap-3">
-							{#if hasChanges}
-								<div class="flex items-center gap-2 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-lg">
-									<div class="w-2 h-2 bg-amber-400 rounded-full animate-pulse"></div>
-									<span class="text-sm font-medium text-amber-700">Unsaved changes</span>
-								</div>
-							{/if}
-
-							<button
-								onclick={discardChanges}
-								disabled={!hasChanges}
-								class="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-							>
-								Discard
-							</button>
-							<button
-								onclick={saveCourse}
-								disabled={isSaving || !hasChanges}
-								class="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
-							>
-								{isSaving ? 'Saving...' : 'Save Changes'}
-							</button>
-						</div>
-					</div>
+			<!-- DEBUG INFO -->
+			<div class="mb-4 p-4 bg-gray-100 rounded text-xs font-mono">
+				<div class="font-bold mb-2">🐛 Debug Info:</div>
+				<div>hasFormChanges: <span class="font-bold {hasFormChanges ? 'text-orange-600' : 'text-green-600'}">{hasFormChanges}</span></div>
+				<div>isFormValid: <span class="font-bold {isFormValid ? 'text-green-600' : 'text-red-600'}">{isFormValid}</span></div>
+				<div>errorCount: <span class="font-bold {Object.keys(formErrors).length > 0 ? 'text-red-600' : 'text-green-600'}">{Object.keys(formErrors).length}</span></div>
+				<div>isSaving: <span class="font-bold">{isSaving}</span></div>
+				<div class="mt-2 text-xs text-gray-600">
+					{#if !hasFormChanges}
+						✅ No changes detected
+					{:else if !isFormValid}
+						❌ Has changes but form is invalid ({Object.keys(formErrors).length} errors)
+					{:else}
+						🟠 Has valid changes - Save button should be enabled
+					{/if}
 				</div>
+				{#if Object.keys(formErrors).length > 0}
+					<div class="mt-2 pt-2 border-t border-gray-300">
+						<div class="font-bold mb-1">Errors:</div>
+						{#each Object.entries(formErrors) as [field, error]}
+							<div class="text-red-600">• {field}: {error}</div>
+						{/each}
+					</div>
+				{/if}
 			</div>
+
+			<!-- Sticky Action Header -->
+			<StickyFormHeader
+				title="Edit Terminal"
+				subtitle={course.name}
+				backUrl={ROUTES.ADMIN.COURSE}
+				hasChanges={hasFormChanges}
+				isSaving={isSaving}
+				isValid={isFormValid}
+				errors={formErrors}
+				onSave={handleSaveClick}
+				onDiscard={handleDiscardClick}
+			/>
 
 			<!-- Metadata Card -->
 			<MetadataCard
@@ -341,97 +367,26 @@
 				subtitle="System information"
 				icon={bookIcon}
 				badge={{
-          text: `${course.students || 0} Students`,
-          icon: usersIcon
-        }}				items={metadataItems}
+					text: `${course.students || 0} Students`,
+					icon: usersIcon
+				}}
+				items={metadataItems}
 				columns={4}
 				gradientFrom={statusColors.from}
 				gradientTo={statusColors.to}
 			/>
 
-			<!-- Course Details -->
-			<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-				<h2 class="text-xl font-bold text-slate-900 mb-6">Terminal Details</h2>
+			<!-- Embedded Form for Course Details -->
+			<UniversalForm
+				bind:this={courseFormRef}
+				schema={courseFormSchema}
+				initialData={course}
+				callbacks={courseFormCallbacks}
+				mode="embedded"
+				onDirtyChange={handleFormDirtyChange}
+			/>
 
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-					<div>
-						<label class="block text-sm font-medium text-slate-700 mb-2">Terminal Name</label>
-						<input
-							type="text"
-							value={course.name}
-							oninput={(e) => updateCourseField('name', e.currentTarget.value)}
-							class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-						/>
-					</div>
-
-					<div>
-						<label class="block text-sm font-medium text-slate-700 mb-2">Price</label>
-						<input
-							type="number"
-							value={course.price}
-							oninput={(e) => updateCourseField('price', parseFloat(e.currentTarget.value))}
-							step="0.01"
-							class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-						/>
-						<p class="text-sm text-slate-500 mt-1">{formatPrice(course.price)}</p>
-					</div>
-
-					<div>
-						<label class="block text-sm font-medium text-slate-700 mb-2">Labels</label>
-						<input
-							type="text"
-							value={course.labels.join(', ')}
-							oninput={(e) => updateCourseField('labels', e.currentTarget.value.split(',').map(l => l.trim()).filter(l => l))}
-							placeholder="Comma-separated labels"
-							class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-						/>
-					</div>
-
-					<div>
-						<label class="block text-sm font-medium text-slate-700 mb-2">Categories</label>
-						<input
-							type="text"
-							value={course.categories.join(', ')}
-							oninput={(e) => updateCourseField('categories', e.currentTarget.value.split(',').map(c => c.trim()).filter(c => c))}
-							placeholder="Comma-separated categories"
-							class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-						/>
-					</div>
-				</div>
-			</div>
-
-			<!-- Publishing Section -->
-			<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 mb-6">
-				<h2 class="text-xl font-bold text-slate-900 mb-6">Publishing</h2>
-
-				<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-					<div>
-						<label class="block text-sm font-medium text-slate-700 mb-2">Status</label>
-						<select
-							value={course.status}
-							onchange={(e) => updateCourseField('status', e.currentTarget.value)}
-							class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow bg-white"
-						>
-							{#each statusOptions as status}
-								<option value={status}>{status}</option>
-							{/each}
-						</select>
-					</div>
-
-					<div>
-						<label class="block text-sm font-medium text-slate-700 mb-2">Publish Date</label>
-						<input
-							type="datetime-local"
-							value={course.published ? new Date(course.published).toISOString().slice(0, 16) : ''}
-							onchange={(e) => updateCourseField('published', e.currentTarget.value ? new Date(e.currentTarget.value).toISOString() : null)}
-							class="w-full px-4 py-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
-						/>
-					</div>
-				</div>
-			</div>
-
-
-			<!-- START Course Sections Component -->
+			<!-- Course Sections -->
 			<SectionManager
 				sections={componentSections}
 				sectionTitle="Terminal Sections"
@@ -445,26 +400,21 @@
 				onDeleteSection={handleRemoveSection}
 				onAddItem={handleAddSection}
 				onDeleteItem={handleRemoveSection}
-			>
-			</SectionManager>
-			<!-- END Course Sections Component -->
-
+			/>
 		{/if}
 	</div>
 </div>
 
-
-
-<!-- Create Link FAQ Modal -->
+<!-- Create Section Modal -->
 <UniversalCreateModal
 	isOpen={isCreateSectionModalOpen}
-	title="Link Category to FAQ"
-	subtitle="Link existing FAQ Category"
+	title="Create Terminal Section"
+	subtitle="Add a new section to organize lessons"
 	icon={Link2}
 	iconBgColor="from-blue-500 to-indigo-600"
 	loading={courseStore.loading}
 	error={courseStore.error}
-	submitLabel="Link FAQ Category"
+	submitLabel="Create Section"
 	onclose={closeSectionModal}
 	onsubmit={handleCourseSectionSubmit}
 >

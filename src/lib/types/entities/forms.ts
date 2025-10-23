@@ -96,6 +96,11 @@ export interface FieldOption {
 	group?: string;
 }
 
+// Extend the existing FieldOption type
+interface SelectOption extends FieldOption {
+	description?: string;  // Add our optional property
+}
+
 // ============================================================================
 // FORM FIELD DEFINITION
 // The complete field definition used at runtime

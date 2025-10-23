@@ -1,8 +1,14 @@
 <!-- src/lib/components/Forms/Fields/SelectInput.svelte -->
 <script lang="ts">
-	import { ChevronDown, Check, Search, AlertCircle, X } from 'lucide-svelte';
-	import type { FormField } from '$lib/types/entities/forms';
+	import { ChevronDown, Check, Search, X } from 'lucide-svelte';
+	import type { FormField, FieldOption } from '$lib/types/entities/forms';
 	import { onMount } from 'svelte';
+	import FormValidationIndicator from '$lib/components/Forms/FormValidationIndicator.svelte';
+
+	// Extended option type with description support
+	interface SelectOption extends FieldOption {
+		description?: string;
+	}
 
 	interface Props {
 		field: FormField;
@@ -25,15 +31,33 @@
 	// Component state
 	let showDropdown = $state(false);
 	let isHovered = $state(false);
+	let originalValue = $state(value);  // Track the ORIGINAL value (on mount/reset)
+	let previousValue = $state(value);  // Track previous value for reset detection
 	let buttonRef: HTMLButtonElement;
 	let dropdownRef: HTMLDivElement;
 	let portalContainer: HTMLDivElement;
 	let dropdownPosition = $state({ top: 0, left: 0, width: 0 });
 	let searchQuery = $state('');
 
+	// Compute if value has changed from original
+	const hasChanged = $derived(value !== originalValue);
+
+	// Reset originalValue when value changes externally (e.g., form discard/reset)
+	$effect(() => {
+		// Detect external value changes (not from user selection)
+		if (value !== previousValue) {
+			// If dropdown is closed, this is likely a programmatic change (discard/reset)
+			if (!showDropdown) {
+				originalValue = value;  // Update original value on external change
+				console.log('[SelectInput] 🔄 Reset detected for:', field.name, { newOriginal: value });
+			}
+			previousValue = value;
+		}
+	});
+
 	// Get selected option
 	let selectedOption = $derived(
-		field.options?.find(opt => opt.value === value)
+		(field.options as SelectOption[])?.find(opt => opt.value === value)
 	);
 
 	let placeholder = $derived(field.placeholder || 'Select an option...');
@@ -41,9 +65,9 @@
 	// Filter options based on search
 	let filteredOptions = $derived(() => {
 		if (!searchQuery || !field.searchable) {
-			return field.options || [];
+			return (field.options as SelectOption[]) || [];
 		}
-		return (field.options || []).filter(option =>
+		return ((field.options as SelectOption[]) || []).filter(option =>
 			option.label.toLowerCase().includes(searchQuery.toLowerCase())
 		);
 	});
@@ -78,6 +102,7 @@
 	}
 
 	function handleSelect(optionValue: string) {
+		previousValue = optionValue;  // Update tracked value
 		onChange(field.name, optionValue);
 		showDropdown = false;
 		searchQuery = '';
@@ -85,6 +110,7 @@
 
 	function clearSelection(e: Event) {
 		e.stopPropagation();
+		previousValue = '';  // Update tracked value
 		onChange(field.name, '');
 	}
 
@@ -146,7 +172,7 @@
 		if (disabled) return '';
 		if (showError) return 'from-red-400 to-red-500';
 		if (showDropdown) return 'from-indigo-500 via-purple-500 to-pink-500';
-		if (selectedOption) return 'from-emerald-400 to-teal-500';
+		if (selectedOption && hasChanged) return 'from-emerald-400 to-teal-500';  // Only show green if changed
 		if (isHovered) return 'from-slate-400 to-slate-500';
 		return '';
 	});
@@ -154,7 +180,7 @@
 	const bgStyle = $derived(() => {
 		if (disabled) return 'bg-slate-50';
 		if (showError) return 'bg-red-50/50';
-		if (selectedOption && !showDropdown) return 'bg-emerald-50/20';
+		if (selectedOption && !showDropdown && hasChanged) return 'bg-emerald-50/20';  // Only show green if changed
 		if (showDropdown) return 'bg-indigo-50/30';
 		if (isHovered) return 'bg-slate-50';
 		return 'bg-white';
@@ -228,12 +254,16 @@
 				</div>
 			</button>
 
-			<!-- Error Icon -->
-			{#if showError}
-				<div class="absolute right-12 top-1/2 -translate-y-1/2 animate-shake">
-					<AlertCircle class="w-4 h-4 text-red-500" />
-				</div>
-			{/if}
+			<!-- Validation Indicator -->
+			<div class="absolute right-12 top-1/2 -translate-y-1/2">
+				<FormValidationIndicator
+					hasValue={!!selectedOption}
+					hasError={!!error}
+					showError={showError}
+					isTouched={hasChanged}
+					variant="default"
+				/>
+			</div>
 		</div>
 	</div>
 </div>
@@ -321,16 +351,6 @@
             opacity: 1;
             transform: translateY(0);
         }
-    }
-
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-4px); }
-        75% { transform: translateX(4px); }
-    }
-
-    .animate-shake {
-        animation: shake 0.3s ease-out;
     }
 
     .animate-slide-down {

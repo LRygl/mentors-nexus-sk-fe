@@ -20,6 +20,9 @@
 		className?: string;
 		disabled?: boolean;
 		showValidationSummary?: boolean;
+		// EMBEDDED MODE PROPS
+		mode?: 'standard' | 'embedded'; // embedded = inline editing with change tracking
+		onDirtyChange?: (isDirty: boolean) => void; // Callback when dirty state changes
 	}
 
 	let {
@@ -28,11 +31,16 @@
 		callbacks = {},
 		className = '',
 		disabled = false,
-		showValidationSummary = true
+		showValidationSummary = true,
+		mode = 'standard',
+		onDirtyChange
 	}: Props = $props();
 
 	// Form element reference for external access
 	let formElement = $state<HTMLFormElement>();
+
+	// Store original data for change detection (embedded mode)
+	let originalData = $state<Record<string, any>>({});
 
 	// Get all Fields from schema (either from groups or direct Fields)
 	const allFields = $derived(() => {
@@ -54,8 +62,45 @@
 		submitCount: 0
 	});
 
+	// Check if form has unsaved changes (embedded mode only)
+	const hasChanges = $derived(() => {
+		if (mode !== 'embedded') return false;
+		const currentData = JSON.stringify(formState.data);
+		const original = JSON.stringify(originalData);
+		const isDifferent = currentData !== original;
+		console.log('[FORM] hasChanges check:', {
+			isDifferent,
+			mode,
+			currentKeys: Object.keys(formState.data),
+			originalKeys: Object.keys(originalData)
+		});
+		return isDifferent;
+	});
+
+	// Update isDirty when hasChanges updates (embedded mode)
+	$effect(() => {
+		if (mode === 'embedded') {
+			const dirty = hasChanges();
+			console.log('[FORM] Dirty effect triggered - dirty:', dirty, 'formState.isDirty:', formState.isDirty);
+			if (formState.isDirty !== dirty) {
+				formState.isDirty = dirty;
+				console.log('[FORM] 🔔 Calling onDirtyChange with:', dirty);
+				onDirtyChange?.(dirty);
+			}
+		}
+	});
+
+	// Watch validation state and trigger callback when it changes
+	$effect(() => {
+		const isValid = formState.isValid;
+		const errors = formState.errors;
+		console.log('[FORM] Validation state effect:', { isValid, errorCount: Object.keys(errors).length });
+
+		// Trigger validation callback whenever validation state changes
+		callbacks.onValidate?.({ isValid, errors });
+	});
+
 	// Helper function to check if we should show error for a field
-	// This is the KEY fix - only show errors after field is touched OR form submitted
 	function shouldShowError(fieldName: string): boolean {
 		return !!(
 			formState.errors[fieldName] &&
@@ -73,10 +118,21 @@
 		});
 
 		formState.data = defaultData;
-		validateForm();
+
+		// Store original data for embedded mode
+		if (mode === 'embedded') {
+			originalData = JSON.parse(JSON.stringify(defaultData));
+		}
+
+		// Don't validate on mount - form starts as valid
+		// Validation will happen when user interacts with fields
+		formState.isValid = true;
+		formState.errors = {};
+
+		console.log('[FORM] Initialized - no validation on mount');
 	});
 
-	// Helper function to check if field should be rendered
+	// Helper to check if field should be rendered
 	const visibleFieldNames = $derived.by(() => {
 		const fields = allFields();
 		const visible = new Set<string>();
@@ -87,13 +143,9 @@
 			}
 		});
 
-		console.log('👁️ Visible fields:', Array.from(visible));
-
-		// Return an array instead of a Set for better reactivity
 		return Array.from(visible);
 	});
 
-	// Keep the helper function for internal use
 	function shouldRenderField(field: FormField): boolean {
 		return visibleFieldNames.includes(field.name);
 	}
@@ -109,6 +161,8 @@
 			case 'textarea':
 			case 'color':
 			case 'icon-selector':
+			case 'date':
+			case 'datetime-local':
 				return '';
 			case 'number':
 				return field.min ?? 0;
@@ -127,16 +181,15 @@
 
 	// Validation
 	function validateForm(): FormValidationResult {
+		console.log('[FORM] validateForm() called');
 		const fields = allFields();
 		const errors: Record<string, string> = {};
 
 		fields.forEach(field => {
-			// Skip validation for invisible fields
 			if (!FormDependencyHandler.isFieldVisible(field, formState.data)) {
 				return;
 			}
 
-			// Get current validation rules
 			const currentRules = FormDependencyHandler.getConditionalValidationRules(field, formState.data);
 			const fieldWithCurrentRules = { ...field, validationRules: currentRules };
 
@@ -154,23 +207,30 @@
 		formState.errors = errors;
 		formState.isValid = Object.keys(errors).length === 0;
 
+		console.log('[FORM] Validation complete:', {
+			isValid: formState.isValid,
+			errorCount: Object.keys(errors).length,
+			errors
+		});
+
 		const result = { isValid: formState.isValid, errors };
-		callbacks.onValidate?.(result);
+
+		// Note: Don't call callback here, let the $effect handle it to avoid double-calling
 		return result;
 	}
 
 	function validateField(fieldName: string) {
+		console.log('[FORM] validateField():', fieldName);
 		const fields = allFields();
 		const field = fields.find(f => f.name === fieldName);
 		if (!field) return;
 
-		// Skip validation if field is not visible
 		if (!FormDependencyHandler.isFieldVisible(field, formState.data)) {
 			delete formState.errors[fieldName];
+			formState.isValid = Object.keys(formState.errors).length === 0;
 			return;
 		}
 
-		// Get current validation rules (including conditional ones)
 		const currentRules = FormDependencyHandler.getConditionalValidationRules(field, formState.data);
 		const fieldWithCurrentRules = { ...field, validationRules: currentRules };
 
@@ -186,27 +246,23 @@
 			delete formState.errors[fieldName];
 		}
 
-		formState.isValid = Object.values(formState.errors).every(err => !err);
+		formState.isValid = Object.keys(formState.errors).length === 0;
+
+		console.log('[FORM] Field validation complete:', {
+			field: fieldName,
+			hasError: !!error,
+			isValid: formState.isValid
+		});
 	}
 
-
 	function handleFieldChange(fieldName: string, value: any) {
-		console.log('🔄 Field changed - RAW PARAMS:', {
-			param1_fieldName: fieldName,
-			param1_type: typeof fieldName,
-			param1_isArray: Array.isArray(fieldName),
-			param2_value: value,
-			param2_type: typeof value,
-			param2_isArray: Array.isArray(value)
-		});
+		console.log('[FORM] handleFieldChange:', fieldName, value);
 
-		// Check if parameters are swapped (defensive programming)
+		// Defensive parameter check
 		let actualFieldName: string;
 		let actualValue: any;
 
 		if (Array.isArray(fieldName) && typeof value === 'string') {
-			// Parameters are swapped!
-			console.warn('⚠️ PARAMETERS SWAPPED! Correcting...');
 			actualFieldName = value;
 			actualValue = fieldName;
 		} else {
@@ -214,23 +270,21 @@
 			actualValue = value;
 		}
 
-		console.log('🔄 After correction:', actualFieldName, '=', actualValue);
-
 		formState.data[actualFieldName] = actualValue;
 		formState.touched[actualFieldName] = true;
-		formState.isDirty = true;
+
+		// Don't set isDirty here in embedded mode - let the effect handle it
+		if (mode !== 'embedded') {
+			formState.isDirty = true;
+		}
 
 		// Validate the changed field
 		validateField(actualFieldName);
 
-		// Re-validate all fields that might depend on this field
+		// Re-validate dependent fields
 		const fields = allFields();
 		fields.forEach(field => {
 			if (field.dependencies?.some(dep => dep.field === actualFieldName)) {
-				console.log('🔍 Checking dependent field:', field.name);
-				console.log('  - Should be visible:', FormDependencyHandler.isFieldVisible(field, formState.data));
-				console.log('  - Current value:', formState.data[field.name]);
-
 				validateField(field.name);
 			}
 		});
@@ -238,43 +292,79 @@
 		callbacks.onChange?.(actualFieldName, actualValue, formState);
 	}
 
-/*
-	// Handle field changes
-	function handleFieldChange(fieldName: string, value: any) {
-		console.log('🔄 Field changed:', fieldName, '=', value);
+	/**
+	 * Public API - These methods can be called from parent components
+	 */
+	export function submit() {
+		console.log('[FORM] submit() called externally');
+		formElement?.requestSubmit();
+	}
 
-		formState.data[fieldName] = value;
-		formState.touched[fieldName] = true;
-		formState.isDirty = true;
+	export function reset(newData?: Partial<any>) {
+		console.log('[FORM] reset() called:', newData);
+		if (newData) {
+			formState.data = { ...formState.data, ...newData };
+			if (mode === 'embedded') {
+				originalData = JSON.parse(JSON.stringify(formState.data));
+			}
+		}
+		formState.errors = {};
+		formState.touched = {};
+		formState.isDirty = false;
+		formState.submitCount = 0;
+		validateForm();
+	}
 
-		// Validate the changed field
-		validateField(fieldName);
+	// EMBEDDED MODE: Discard changes and revert to original
+	export function discard() {
+		console.log('[FORM] discard() called');
+		if (mode === 'embedded') {
+			formState.data = JSON.parse(JSON.stringify(originalData));
+			formState.errors = {};
+			formState.touched = {};
+			formState.isDirty = false;
+			formState.submitCount = 0;
+			validateForm();
+		}
+	}
 
-		// Re-validate all fields that might depend on this field
-		const fields = allFields();
-		fields.forEach(field => {
-			if (field.dependencies?.some(dep => dep.field === fieldName)) {
-				console.log('🔍 Checking dependent field:', field.name);
-				console.log('  - Should be visible:', FormDependencyHandler.isFieldVisible(field, formState.data));
-				console.log('  - Current value:', formState.data[field.name]);
+	// EMBEDDED MODE: Get current form data
+	export function getFormData() {
+		return { ...formState.data };
+	}
 
-				validateField(field.name);
+	// EMBEDDED MODE: Get list of changed fields
+	export function getChangedFields(): string[] {
+		if (mode !== 'embedded') return [];
+		const changed: string[] = [];
+		Object.keys(formState.data).forEach(key => {
+			if (JSON.stringify(formState.data[key]) !== JSON.stringify(originalData[key])) {
+				changed.push(key);
 			}
 		});
-
-		callbacks.onChange?.(fieldName, value, formState);
+		return changed;
 	}
-*/
-	export function submit() {
-		formElement?.requestSubmit();
+
+	// EMBEDDED MODE: Check if form is valid
+	export function isFormValid(): boolean {
+		console.log('[FORM] isFormValid() called, returning:', formState.isValid);
+		return formState.isValid;
+	}
+
+	// EMBEDDED MODE: Check for unsaved changes
+	export function hasUnsavedChanges(): boolean {
+		return mode === 'embedded' ? hasChanges() : false;
 	}
 
 	// Handle form submission
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
+		console.log('[FORM] handleSubmit() triggered');
 
-		// Prevent double submission
-		if (formState.isSubmitting) return;
+		if (formState.isSubmitting) {
+			console.log('[FORM] Already submitting, ignoring');
+			return;
+		}
 
 		const fields = allFields();
 		formState.submitCount++;
@@ -288,25 +378,27 @@
 
 		// Validate before submitting
 		const validationResult = validateForm();
+		console.log('[FORM] Pre-submit validation:', validationResult);
+
 		if (validationResult.isValid) {
 			formState.isSubmitting = true;
 			try {
+				console.log('[FORM] Calling onSubmit callback with data:', formState.data);
 				await callbacks.onSubmit?.(formState.data);
+				// Update original data after successful submit (embedded mode)
+				if (mode === 'embedded') {
+					originalData = JSON.parse(JSON.stringify(formState.data));
+					formState.submitCount = 0;
+					console.log('[FORM] Submit successful, updated original data');
+				}
+			} catch (error) {
+				console.error('[FORM] Submit error:', error);
 			} finally {
 				formState.isSubmitting = false;
 			}
+		} else {
+			console.log('[FORM] Validation failed, not submitting');
 		}
-	}
-
-	export function reset(newData?: Partial<any>) {
-		if (newData) {
-			formState.data = { ...formState.data, ...newData };
-		}
-		formState.errors = {};
-		formState.touched = {};
-		formState.isDirty = false;
-		formState.submitCount = 0; // Reset submit count
-		validateForm(); //Remove?
 	}
 
 	// Helper to get field label for error display
@@ -333,10 +425,13 @@
 		return formState.errors;
 	});
 
+	// Adjust validation summary default based on mode
+	const shouldShowSummary = $derived(
+		mode === 'embedded' ? false : showValidationSummary
+	);
 </script>
 
-<form bind:this={formElement}  onsubmit={handleSubmit} class="space-y-6 {className}">
-
+<form bind:this={formElement} onsubmit={handleSubmit} class="space-y-6 {className}">
 	<!-- Render Grouped Fields -->
 	{#if schema.groups}
 		{#each schema.groups as group}
@@ -355,7 +450,7 @@
 		<div class="grid grid-cols-1 {schema.layout === 'two-column' ? 'lg:grid-cols-2' : ''} gap-4">
 			{#each schema.fields as field}
 				{#if visibleFieldNames.includes(field.name)}
-				<div class="space-y-2 {field.colSpan === 2 ? 'lg:col-span-2' : ''} {field.className || ''}">
+					<div class="space-y-2 {field.colSpan === 2 ? 'lg:col-span-2' : ''} {field.className || ''}">
 						<FormFieldRenderer
 							{field}
 							{formState}
@@ -369,9 +464,8 @@
 		</div>
 	{/if}
 
-
-	<!-- Validation Error Summary -->
-	{#if showValidationSummary && Object.keys(visibleValidationErrors()).length > 0}
+	<!-- Validation Error Summary (hidden by default in embedded mode) -->
+	{#if shouldShowSummary && Object.keys(visibleValidationErrors()).length > 0}
 		<div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
 			<div class="flex items-start gap-2">
 				<div class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5">

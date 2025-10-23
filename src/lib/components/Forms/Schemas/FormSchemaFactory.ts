@@ -4,7 +4,7 @@ import { FormBuilder } from '$lib/utils/formBuilder';
 /**
  * Standard form variants supported by the system
  */
-export type FormVariant = 'quick' | 'standard' | 'detailed' | 'edit' | 'link';
+export type FormVariant = 'quick' | 'standard' | 'detailed' | 'edit' | 'link' | 'embedded';
 
 /**
  * Field configuration for entity properties
@@ -22,6 +22,7 @@ export interface EntityFieldConfig {
 		detailed?: boolean;
 		edit?: boolean;
 		link?: boolean;
+		embedded?: boolean;
 	};
 
 	// Field properties
@@ -61,7 +62,7 @@ export interface EntityGroupConfig {
 	title: string;
 	description?: string;
 	icon?: string;
-	variant?: 'default' | 'card' | 'minimal';
+	variant?: 'default' | 'card' | 'minimal' | 'embedded';
 	collapsible?: boolean;
 	collapsed?: boolean;
 
@@ -72,6 +73,7 @@ export interface EntityGroupConfig {
 		detailed?: boolean;
 		edit?: boolean;
 		link?: boolean;
+		embedded?: boolean;
 	};
 }
 
@@ -91,6 +93,7 @@ export interface EntitySchemaDefinition<T = any> {
 		detailed?: Partial<FormSchemaConfig>;
 		edit?: Partial<FormSchemaConfig>;
 		link?: Partial<FormSchemaConfig>;
+		embedded?: Partial<FormSchemaConfig>;
 	};
 }
 
@@ -106,6 +109,7 @@ export interface FormSchemaConfig {
 	submitLabel?: string;
 	showReset?: boolean;
 	showCancel?: boolean;
+	validateOnChange?: boolean;
 }
 
 /**
@@ -325,6 +329,13 @@ export class FormSchemaFactory<T = any> {
 				title: `Link ${this.definition.entity}`,
 				layout: 'single',
 				variant: 'minimal',
+				size: 'md'
+			},
+			embedded: {
+				title: `Edit ${this.definition.entity}`,
+				description: `Update ${this.definition.entity.toLowerCase()} information`,
+				layout: 'two-column',
+				variant: 'default',
 				size: 'md'
 			}
 		};

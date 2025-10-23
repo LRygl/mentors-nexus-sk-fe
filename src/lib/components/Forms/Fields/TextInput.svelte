@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { FormField } from '$lib/types/entities/forms';
-	import { Check, AlertCircle, Copy, CopyCheck } from 'lucide-svelte';
+	import { Copy, CopyCheck } from 'lucide-svelte';
+	import FormValidationIndicator from '$lib/components/Forms/FormValidationIndicator.svelte';
 
 	interface Props {
 		field: FormField;
@@ -21,8 +22,25 @@
 	}: Props = $props();
 
 	let isFocused = $state(false);
-	let hasInteracted = $state(false);
+	let originalValue = $state(value);  // Track the ORIGINAL value (on mount/reset)
+	let previousValue = $state(value);  // Track previous value for reset detection
 	let justCopied = $state(false);
+
+	// Compute if value has changed from original
+	const hasChanged = $derived(value !== originalValue);
+
+	// Reset originalValue when value changes externally (e.g., form discard/reset)
+	$effect(() => {
+		// Detect external value changes (not from user input)
+		if (value !== previousValue) {
+			// If not focused, this is likely a programmatic change (discard/reset)
+			if (!isFocused) {
+				originalValue = value;  // Update original value on external change
+				console.log('[TextInput] 🔄 Reset detected for:', field.name, { from: previousValue, to: value });
+			}
+			previousValue = value;
+		}
+	});
 
 	// Calculate character count
 	const charCount = $derived(value?.length || 0);
@@ -34,24 +52,29 @@
 	const borderGradient = $derived(() => {
 		if (showError) return 'from-red-400 to-red-500';
 		if (isFocused) return 'from-indigo-500 via-purple-500 to-pink-500';
-		if (value && !error) return 'from-emerald-400 to-teal-500';
+		if (value && !error && hasChanged) return 'from-emerald-400 to-teal-500';
 		return '';
 	});
 
 	// Background styling
 	const bgStyle = $derived(() => {
 		if (showError) return 'bg-red-50/50';
-		if (value && !error && !isFocused) return 'bg-emerald-50/20';
+		if (value && !error && !isFocused && hasChanged) return 'bg-emerald-50/20';
 		return 'bg-white';
 	});
 
 	function handleFocus() {
 		isFocused = true;
-		hasInteracted = true;
 	}
 
 	function handleBlur() {
 		isFocused = false;
+	}
+
+	function handleInput(e: Event) {
+		const target = e.currentTarget as HTMLInputElement;
+		previousValue = target.value;  // Update tracked value
+		onChange(field.name, target.value);
 	}
 
 	async function copyToClipboard() {
@@ -78,10 +101,7 @@
 				type="text"
 				name={field.name}
 				bind:value
-				oninput={(e) => {
-					const target = e.currentTarget;
-					onChange(field.name, target.value);
-				}}
+				oninput={handleInput}
 				onfocus={handleFocus}
 				onblur={handleBlur}
 				placeholder={field.placeholder}
@@ -133,19 +153,15 @@
 					</button>
 				{/if}
 
-				<!-- Success Icon -->
-				{#if value && !error && hasInteracted}
-					<div class="animate-scale-in">
-						<Check class="w-4 h-4 text-emerald-500" />
-					</div>
-				{/if}
-
-				<!-- Error Icon -->
-				{#if showError}
-					<div class="animate-shake">
-						<AlertCircle class="w-4 h-4 text-red-500" />
-					</div>
-				{/if}
+				<!-- Validation Indicator (Success/Error Icons) -->
+				<FormValidationIndicator
+					hasValue={!!value}
+					hasError={!!error}
+					showError={showError}
+					isTouched={hasChanged}
+					position="right-0"
+					variant="default"
+				/>
 			</div>
 		</div>
 	</div>
@@ -164,30 +180,3 @@
 		</div>
 	{/if}
 </div>
-
-<style>
-    @keyframes scale-in {
-        from {
-            transform: scale(0);
-            opacity: 0;
-        }
-        to {
-            transform: scale(1);
-            opacity: 1;
-        }
-    }
-
-    @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        25% { transform: translateX(-4px); }
-        75% { transform: translateX(4px); }
-    }
-
-    .animate-scale-in {
-        animation: scale-in 0.2s ease-out;
-    }
-
-    .animate-shake {
-        animation: shake 0.3s ease-out;
-    }
-</style>
