@@ -9,7 +9,7 @@ export interface Lesson extends BaseEntity {
 	length?: number; // Duration in seconds
 	createdDate?: Date;
 	updatedDate?: Date;
-	orderIndex?: number;
+	orderIndex: number;
 
 	// Relations
 	//course?: Course;

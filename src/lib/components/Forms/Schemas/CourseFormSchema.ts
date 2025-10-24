@@ -7,12 +7,12 @@ import {
 import type { CourseCategory } from '$lib/types/entities/CourseCategory';
 
 export function createCourseFields(courseCategories: CourseCategory[] = []): EntityFieldConfig[] {
-	const categoryOptions = courseCategories.map(c => ({
+	const categoryOptions = courseCategories.map((c) => ({
 		value: c.id?.toString(),
-		label: c.name,
+		label: c.name
 	}));
 
-	const fields: EntityFieldConfig[] = [
+	return [
 		// Basic Information
 		{
 			name: 'name',
@@ -114,21 +114,6 @@ export function createCourseFields(courseCategories: CourseCategory[] = []): Ent
 			colSpan: 1
 		}
 	];
-
-	// Debug: log field configurations
-	console.log('[SCHEMA] Field configurations:', fields.map(f => ({
-		name: f.name,
-		type: f.type,
-		required: f.required,
-		minLength: f.minLength,
-		maxLength: f.maxLength,
-		min: f.min,
-		max: f.max,
-		minItems: f.minItems,
-		maxItems: f.maxItems
-	})));
-
-	return fields;
 }
 
 const courseGroups: EntityGroupConfig[] = [
@@ -148,7 +133,7 @@ const courseGroups: EntityGroupConfig[] = [
 		description: 'Labels and categories for organization',
 		icon: '🗂️',
 		variant: 'default',
-		collapsible: false,
+		collapsible: true,
 		variants: { embedded: true }
 	},
 	{
@@ -157,7 +142,7 @@ const courseGroups: EntityGroupConfig[] = [
 		description: 'Publication status and scheduling',
 		icon: '🚀',
 		variant: 'default',
-		collapsible: false,
+		collapsible: true,
 		variants: { embedded: true }
 	},
 
@@ -193,7 +178,7 @@ const courseGroups: EntityGroupConfig[] = [
 ];
 
 export function createCourseSchemaFactory(courseCategories: CourseCategory[] = []) {
-	const schema = defineEntitySchema<Course>({
+	return defineEntitySchema<Course>({
 		entity: 'Course',
 		fields: createCourseFields(courseCategories),
 		groups: courseGroups,
@@ -203,14 +188,14 @@ export function createCourseSchemaFactory(courseCategories: CourseCategory[] = [
 				submitLabel: 'Create Terminal',
 				layout: 'two-column',
 				showReset: true,
-				showCancel: true,
+				showCancel: true
 			},
 			edit: {
 				title: 'Edit Terminal',
 				submitLabel: 'Save Changes',
 				layout: 'two-column',
 				showReset: false,
-				showCancel: true,
+				showCancel: true
 			},
 			embedded: {
 				title: '',
@@ -218,40 +203,20 @@ export function createCourseSchemaFactory(courseCategories: CourseCategory[] = [
 				layout: 'two-column',
 				showReset: false,
 				showCancel: false,
-				validateOnChange: true,
+				validateOnChange: true
 			}
 		}
 	});
-
-	return schema;
 }
 
 export const CourseFormPresets = {
 	standard: (categories: CourseCategory[] = []) => {
-		const schema = createCourseSchemaFactory(categories).create('standard');
-		console.log('[SCHEMA] Generated standard schema:', schema);
-		console.log('[SCHEMA] Fields with validation rules:', schema.groups?.flatMap(g => g.fields).map(f => ({
-			name: f.name,
-			validationRules: f.validationRules
-		})));
-		return schema;
+		return createCourseSchemaFactory(categories).create('standard');
 	},
 	edit: (categories: CourseCategory[] = []) => {
-		const schema = createCourseSchemaFactory(categories).create('edit');
-		console.log('[SCHEMA] Generated edit schema:', schema);
-		console.log('[SCHEMA] Fields with validation rules:', schema.groups?.flatMap(g => g.fields).map(f => ({
-			name: f.name,
-			validationRules: f.validationRules
-		})));
-		return schema;
+		return createCourseSchemaFactory(categories).create('edit');
 	},
 	embedded: (categories: CourseCategory[] = []) => {
-		const schema = createCourseSchemaFactory(categories).create('embedded');
-		console.log('[SCHEMA] Generated embedded schema:', schema);
-		console.log('[SCHEMA] Fields with validation rules:', schema.groups?.flatMap(g => g.fields).map(f => ({
-			name: f.name,
-			validationRules: f.validationRules
-		})));
-		return schema;
+		return createCourseSchemaFactory(categories).create('embedded');
 	}
 };

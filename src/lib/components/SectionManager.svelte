@@ -1,6 +1,9 @@
 <script lang="ts" generics="TSection extends BaseSectionItem, TItem extends BaseItem">
 
 	// Base types that your data must extend
+	import ConfirmModal from '$lib/components/Modals/ConfirmModal.svelte';
+	import { courseStore } from '$lib/stores/defaults/CourseStore';
+
 	export interface BaseItem {
 		id?: number | string;
 		orderIndex: number;
@@ -23,7 +26,7 @@
 		onItemsReorder?: (sectionIndex: number, items: TItem[]) => void;
 		onAddSection?: () => void;
 		onDeleteSection?: (section: TSection & { items: TItem[] }, index: number) => void;
-		onAddItem?: (sectionIndex: number) => void;
+		onAddItem?: (section: TSection & { items: TItem[] }, sectionIndex: number) => void;
 		onDeleteItem?: (sectionIndex: number, item: TItem, itemIndex: number) => void;
 		onSectionUpdate?: (sectionIndex: number, field: keyof TSection, value: any) => void;
 		onItemUpdate?: (sectionIndex: number, itemIndex: number, field: keyof TItem, value: any) => void;
@@ -151,13 +154,12 @@
 	}
 
 	function handleDeleteSection(section: TSection & { items: TItem[] }, index: number) {
-		if (confirm(`Are you sure you want to delete this ${sectionTitle.toLowerCase()}?`)) {
 			onDeleteSection?.(section, index);
-		}
 	}
 
 	function handleAddItem(sectionIndex: number) {
-		onAddItem?.(sectionIndex);
+		const section = sections[sectionIndex];
+		onAddItem?.(section, sectionIndex);
 	}
 
 	function handleDeleteItem(sectionIndex: number, item: TItem, itemIndex: number) {

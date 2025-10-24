@@ -2,8 +2,6 @@ import { BaseApiService } from '$lib/API/APIBase';
 import { API_CONFIG } from '$lib/API/APIConfiguration';
 import type { Course } from '$lib/types/entities/Course';
 import type { CreateSectionRequest } from '$lib/stores/defaults/CourseStore';
-import { Section } from 'lucide-svelte';
-
 
 export class CourseAdminApiService extends BaseApiService {
 	private readonly ENDPOINT = API_CONFIG.ENDPOINTS.ADMIN.COURSES;
@@ -41,9 +39,17 @@ export class CourseAdminApiService extends BaseApiService {
 		await this.delete(`${this.ENDPOINT}/${id}`)
 	}
 
+	async deleteSection(sectionId: string) {
+		await this.delete(`${this.ENDPOINT}/section/${sectionId}`);
+	}
 
 	async createSection(courseId: string, sectionData: CreateSectionRequest): Promise<Course> {
-		return await this.post<Section>(`${this.ENDPOINT}/${courseId}/section`, sectionData);
+		return await this.post<Course>(`${this.ENDPOINT}/${courseId}/section`, sectionData);
+	}
+
+
+	async reorderSections(courseId: string, sectionIds: number[]) {
+		return await this.post<Course>(`${this.ENDPOINT}/section/reorder`, sectionIds);
 	}
 }
 

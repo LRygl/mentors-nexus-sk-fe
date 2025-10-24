@@ -1,5 +1,6 @@
 import type { BaseEntity } from '$lib/types';
 import type { CourseSection } from '$lib/types/entities/CourseSection';
+import type { CourseStatus } from '$lib/types/enums/CourseStatus';
 
 /**
  * Course Interface (minimal)
@@ -10,7 +11,7 @@ export interface Course extends BaseEntity {
 	uuid?: string;
 	name?: string;
 	category?: string;
-	//status?: CourseStatus;
+	status?: CourseStatus;
 	price?: number;
 	created?: Date;
 	updated?: Date;

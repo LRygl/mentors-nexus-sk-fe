@@ -32,17 +32,6 @@ export function createCourseSectionFields(): EntityFieldConfig[] {
 			placeholder: 'Name of the new category?',
 			helpText: 'Keep it clear and concise',
 			colSpan: 2
-		},
-		{
-			name: 'orderIndex',
-			label: 'Order',
-			type: 'number',
-			group: 'content',
-			variants: { quick: true, standard: true, detailed: true, edit: true },
-			required: true,
-			placeholder: 'Name of the new category?',
-			helpText: 'Keep it clear and concise',
-			colSpan: 2
 		}
 	]
 }

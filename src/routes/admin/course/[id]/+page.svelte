@@ -4,7 +4,7 @@
 	import { courseStore } from '$lib/stores/defaults/CourseStore';
 	import MetadataCard, { type MetadataItemConfig } from '$lib/components/Analytics/MetadataCard.svelte';
 	import SectionManager, { type BaseSectionItem } from '$lib/components/SectionManager.svelte';
-	import { Link2 } from 'lucide-svelte';
+	import { Link2, type Section } from 'lucide-svelte';
 	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
 	import { CourseSectionFormPresets } from '$lib/components/Forms/Schemas/CourseSectionFromSchema';
@@ -13,49 +13,10 @@
 	import { CourseFormPresets } from '$lib/components/Forms/Schemas/CourseFormSchema';
 	import type { CourseCategory } from '$lib/types/entities/CourseCategory';
 	import { ROUTES } from '$lib/Config/routes.config';
-
-	// Type definitions
-	interface Owner {
-		id: number;
-		firstName: string;
-		lastName: string;
-		email: string;
-	}
-
-	interface Lesson {
-		id?: number;
-		uuid?: string;
-		title: string;
-		description: string;
-		videoUrl?: string | null;
-		duration?: string;
-		orderIndex: number;
-	}
-
-	interface CourseSection {
-		id?: number;
-		uuid?: string;
-		title: string;
-		description: string;
-		orderIndex: number;
-		lessons: Lesson[];
-	}
-
-	interface Course {
-		id?: number;
-		uuid?: string;
-		created?: string;
-		updated?: string | null;
-		published?: string | null;
-		price: number;
-		status: string;
-		name: string;
-		labels: string[];
-		categories: string[];
-		owner: Owner;
-		sections: CourseSection[];
-		students?: number;
-	}
+	import { CourseStatus, getCourseStatusColor } from '$lib/types/enums/CourseStatus';
+	import type { CourseSection } from '$lib/types/entities/CourseSection';
+	import type { Lesson } from '$lib/types/entities/Lesson';
+	import type { Course } from '$lib/types/entities/Course';
 
 	interface SectionWithItems extends BaseSectionItem {
 		id?: number;
@@ -83,6 +44,7 @@
 	let isFormValid = $state(true);
 	let formErrors = $state<Record<string, string>>({});
 
+	// TODO Get from categoryStore
 	// Available course categories
 	let courseCategories = $state<CourseCategory[]>([
 		{ id: 1, name: 'Payments' },
@@ -134,21 +96,10 @@
 		];
 	});
 
-	// Status colors for metadata card
-	let statusColors = $derived(course ? getStatusColors(course.status) : { from: 'slate-800', to: 'slate-700' });
-
-	function getStatusColors(status: string) {
-		switch (status) {
-			case 'PUBLISHED':
-				return { from: 'emerald-500', to: 'emerald-600' };
-			case 'DRAFT':
-				return { from: 'amber-500', to: 'amber-600' };
-			case 'UNPUBLISHED':
-				return { from: 'slate-500', to: 'slate-600' };
-			default:
-				return { from: 'slate-800', to: 'slate-700' };
-		}
-	}
+	//TODO Fix mapping
+	let status = $state<CourseStatus>(course?.status);
+	//TODO Fix usage
+	let statusColors = $derived(() => getCourseStatusColor(status));
 
 	// Icons
 	const bookIcon = `<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -220,6 +171,28 @@
 		}
 	}
 
+	async function handleSectionReorder(reorderedSections: SectionWithItems[]) {
+		// Extract section IDs in the new order
+		const sectionIds = reorderedSections
+			.map(section => {
+				// Get the ID (convert string to number if needed for backend)
+				const id = section.id || section.uuid;
+				return id ? (typeof id === 'string' ? parseInt(id, 10) : id) : null;
+			})
+			.filter((id): id is number => id !== null); // Remove nulls and type guard
+
+		if (sectionIds.length === 0) {
+			toastService.error('Error', 'No valid section IDs found');
+			return;
+		}
+
+		try {
+			await courseStore.reorderSections(courseId, sectionIds);
+		} catch (error) {
+			console.error('[PAGE] Error reordering sections:', error);
+		}
+	}
+
 	function handleFormDirtyChange(isDirty: boolean) {
 		console.log('[PAGE] 🔔 onDirtyChange callback - isDirty:', isDirty);
 		hasFormChanges = isDirty;
@@ -270,8 +243,21 @@
 		isCreateSectionModalOpen = true;
 	}
 
-	function handleRemoveSection() {
-		console.log("Handle remove Section");
+	async function handleRemoveSection(section: Section, index: number) {
+
+		console.log(section.id);
+
+		try {
+			await courseStore.deleteSection(section.id);
+
+		}	catch (error) {
+			console.error(error);
+		}
+
+	}
+
+	function handleAddLesson(section: Section, sectionIndex: number) {
+		console.log('[PAGE] Add lesson for section:', section.id);
 	}
 
 	const formCreateSectionCallbacks = {
@@ -322,32 +308,6 @@
 				</button>
 			</div>
 		{:else if course}
-			<!-- DEBUG INFO -->
-			<div class="mb-4 p-4 bg-gray-100 rounded text-xs font-mono">
-				<div class="font-bold mb-2">🐛 Debug Info:</div>
-				<div>hasFormChanges: <span class="font-bold {hasFormChanges ? 'text-orange-600' : 'text-green-600'}">{hasFormChanges}</span></div>
-				<div>isFormValid: <span class="font-bold {isFormValid ? 'text-green-600' : 'text-red-600'}">{isFormValid}</span></div>
-				<div>errorCount: <span class="font-bold {Object.keys(formErrors).length > 0 ? 'text-red-600' : 'text-green-600'}">{Object.keys(formErrors).length}</span></div>
-				<div>isSaving: <span class="font-bold">{isSaving}</span></div>
-				<div class="mt-2 text-xs text-gray-600">
-					{#if !hasFormChanges}
-						✅ No changes detected
-					{:else if !isFormValid}
-						❌ Has changes but form is invalid ({Object.keys(formErrors).length} errors)
-					{:else}
-						🟠 Has valid changes - Save button should be enabled
-					{/if}
-				</div>
-				{#if Object.keys(formErrors).length > 0}
-					<div class="mt-2 pt-2 border-t border-gray-300">
-						<div class="font-bold mb-1">Errors:</div>
-						{#each Object.entries(formErrors) as [field, error]}
-							<div class="text-red-600">• {field}: {error}</div>
-						{/each}
-					</div>
-				{/if}
-			</div>
-
 			<!-- Sticky Action Header -->
 			<StickyFormHeader
 				title="Edit Terminal"
@@ -394,11 +354,11 @@
 				showSectionDescription={true}
 				collapsible={true}
 				defaultExpanded={false}
-				onSectionsReorder={(newSections) => { console.log('New section order:', newSections); }}
+				onSectionsReorder={handleSectionReorder}
 				onItemsReorder={(sectionIndex, items) => { console.log('New items order:', items); }}
 				onAddSection={handleAddSection}
 				onDeleteSection={handleRemoveSection}
-				onAddItem={handleAddSection}
+				onAddItem={handleAddLesson}
 				onDeleteItem={handleRemoveSection}
 			/>
 		{/if}
