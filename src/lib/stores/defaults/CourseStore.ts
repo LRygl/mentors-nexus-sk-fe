@@ -61,6 +61,10 @@ constructor() {
 		return await this.apiService.createCourse(createData);
 	}
 
+	async updateItem(id: string, updateData: Partial<Course>): Promise<Course> {
+		return await this.apiService.updateCourse(id, updateData);
+	}
+
 	async deleteItem(id: string): Promise<void> {
 		return await this.apiService.deleteCourse(id);
 	}

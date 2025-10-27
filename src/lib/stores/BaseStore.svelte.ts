@@ -229,7 +229,7 @@ export abstract class BaseStoreSvelte<
 	}
 
 	async delete(id: string): Promise<boolean> {
-		console.log("Base Store DELETE Called")
+		console.log("Base Store DELETE Called", id);
 		if (this._deleting) return false;
 
 		this._deleting = true;
@@ -240,18 +240,28 @@ export abstract class BaseStoreSvelte<
 
 			// Remove from data array
 			this._data = this._data.filter(item => {
-				const itemId = (item as any).uuid || item.id;
-				return itemId !== id;
-			}
-			);
+				const itemUuid = (item as any).uuid;
+				const itemId = item.id;
+
+				// ✅ Match against BOTH id and uuid
+				// Remove the item if either matches
+				const matchesId = String(itemId) === String(id);
+				const matchesUuid = itemUuid && String(itemUuid) === String(id);
+
+				// Keep the item only if NEITHER matches
+				return !matchesId && !matchesUuid;
+			});
 
 			// Update total count
 			this._totalElements = Math.max(0, this._totalElements - 1);
 
 			// Clear selection if it was the deleted item
-			if (this._selectedItem?.id === id) {
+			const selectedId = this._selectedItem?.id;
+			const selectedUuid = (this._selectedItem as any)?.uuid;
+			if (String(selectedId) === String(id) || String(selectedUuid) === String(id)) {
 				this._selectedItem = null;
 			}
+
 			return true;
 		} catch (error) {
 			this._deleteError = error instanceof Error ? error.message : 'Failed to delete item';

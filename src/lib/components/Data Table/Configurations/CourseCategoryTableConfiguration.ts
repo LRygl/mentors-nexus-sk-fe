@@ -31,12 +31,18 @@ const courseCategoryTableDefinition = defineTableConfig<CourseCategory>({
 			cellClassName: 'font-mono text-xs text-slate-500',
 		},
 		{
-			key: 'color',
-			header: 'Color',
-			type: 'text',
-			searchable: true,
+			key: 'courses',
+			header: 'Terminals',
+			type: 'badge',
+			searchable: false,
 			sortable: true,
-			cellClassName: 'font-mono text-xs text-slate-500',
+			color: 'bg-blue-100 text-blue-700',
+			width: 'w-32',
+			accessor: (category: CourseCategory) => {
+				const count = category.courses?.length ?? 0;
+				if (count === 0) return 'No Terminals';
+				return `${count} ${count === 1 ? 'terminal' : 'Terminals'}`;
+			}
 		},
 		{
 			key: 'created',

@@ -1,6 +1,7 @@
 import { createTablePreset, defineTableConfig } from '$lib/components/Data Table/Configurations/DataTableConfigurationFactory';
 import { ActionType, type FAQ } from '$lib/types';
 import { Eye, LinkIcon, CheckCircle, XCircle } from '@lucide/svelte';
+import type { CourseCategory } from '$lib/types/entities/CourseCategory';
 
 /**
  * Table Definition
@@ -34,18 +35,22 @@ const faqCategoryFAQsTableDefinition = defineTableConfig<FAQ>({
 			cellClassName: 'font-semibold text-slate-900'
 		},
 		{
-			key: 'categoryName',
-			header: 'Category',
+			key: 'courseCount',
+			header: 'Courses',
 			type: 'badge',
-			searchable: true,
+			searchable: false,
 			sortable: true,
 			color: 'bg-blue-100 text-blue-700',
-			width: 'w-40',
-			accessor: (faq: FAQ)=> {
-				console.log('FAQ object:', faq);
-				console.log('Has category?:', !!faq.category);
-				console.log('Category:', faq.category);				if (!faq.category) return 'Uncategorized';
-				return faq.category.name;
+			width: 'w-32',
+			accessor: (category: CourseCategory) => {
+				console.log('Category object:', category);
+				console.log('Has courses?:', !!category.courses);
+				console.log('Courses count:', category.courses?.length);
+
+				const count = category.courses?.length ?? 0;
+
+				if (count === 0) return 'No courses';
+				return `${count} ${count === 1 ? 'course' : 'courses'}`;
 			}
 		},
 		{

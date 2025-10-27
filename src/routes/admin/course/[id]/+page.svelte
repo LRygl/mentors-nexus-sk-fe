@@ -11,15 +11,15 @@
 	import { toastService } from '$lib/Services/ToastService.svelte';
 	import StickyFormHeader from '$lib/components/UI/StickyFormHeader.svelte';
 	import { CourseFormPresets } from '$lib/components/Forms/Schemas/CourseFormSchema';
-	import type { CourseCategory } from '$lib/types/entities/CourseCategory';
 	import { ROUTES } from '$lib/Config/routes.config';
 	import { CourseStatus, getCourseStatusColor } from '$lib/types/enums/CourseStatus';
 	import type { CourseSection } from '$lib/types/entities/CourseSection';
 	import type { Lesson } from '$lib/types/entities/Lesson';
 	import type { Course } from '$lib/types/entities/Course';
+	import { courseCategoryStore } from '$lib/stores/defaults/CourseCategoryStore';
 
 	interface SectionWithItems extends BaseSectionItem {
-		id?: number;
+		id?: string;
 		uuid?: string;
 		title: string;
 		description: string;
@@ -28,30 +28,34 @@
 	}
 
 	// Props
-	let { courseId = page.params.id } = $props<{ courseId?: number }>();
+	let { courseId = page.params.id } = $props<{ courseId?: string }>();
 
 	// State
 	let course = $derived(courseStore.selectedItem);
 	let isLoading = $derived(courseStore.loadingItem);
 	let error = $derived(courseStore.itemError);
 	let isSaving = $state(false);
-	let formRef: any; // Section form ref
-	let courseFormRef: any; // Course form ref
+	let formRef: UniversalForm; // Section form ref
+	let courseFormRef: UniversalForm; // Course form ref
 	let isCreateSectionModalOpen = $state<boolean>(false);
+
+	let courseCategories = $derived(courseCategoryStore.data);
 
 	// Form state for embedded course form
 	let hasFormChanges = $state(false);
 	let isFormValid = $state(true);
 	let formErrors = $state<Record<string, string>>({});
 
-	// TODO Get from categoryStore
-	// Available course categories
-	let courseCategories = $state<CourseCategory[]>([
-		{ id: 1, name: 'Payments' },
-		{ id: 2, name: 'Development' },
-		{ id: 3, name: 'Design' },
-		{ id: 4, name: 'Marketing' }
-	]);
+
+	// Transform Category categoryIds to strings for the form
+	let formInitialData = $derived.by(() => {
+		if (!course) return null;
+
+		return {
+			...course,
+			categoryIds: course.categoryIds?.map(id => String(id))
+		};
+	});
 
 	// Schemas
 	const courseFormSchema = $derived(CourseFormPresets.embedded(courseCategories));
@@ -96,10 +100,8 @@
 		];
 	});
 
-	//TODO Fix mapping
-	let status = $state<CourseStatus>(course?.status);
-	//TODO Fix usage
-	let statusColors = $derived(() => getCourseStatusColor(status));
+	let status = $derived(course?.status as CourseStatus ?? CourseStatus.DRAFT);
+	let statusColors = $derived(getCourseStatusColor(status));
 
 	// Icons
 	const bookIcon = `<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,14 +114,15 @@
 
 	// Lifecycle
 	onMount(async () => {
-		await loadCourse();
+		await Promise.all([
+			loadCourse(),
+			loadCategories()
+		]);
 	});
 
 	async function loadCourse() {
 		try {
 			const data = await courseStore.fetchItem(courseId);
-			console.log("[PAGE] Loaded Course Data:", data);
-
 			// Sort sections and lessons
 			data.sections.sort((a: CourseSection, b: CourseSection) => a.orderIndex - b.orderIndex);
 			data.sections.forEach((section: CourseSection) => {
@@ -130,46 +133,60 @@
 		}
 	}
 
+	async function loadCategories() {
+		try {
+			await courseCategoryStore.fetchAll();
+		} catch (err) {
+			toastService.error('Error', 'Failed to load course categories');
+		}
+	}
+
 	// Course form callbacks
 	const courseFormCallbacks = {
 		onSubmit: handleCourseSubmit,
 		onChange: (field: string, value: any) => {
-			console.log('[PAGE] Field changed:', field, value);
 		},
 		onValidate: (result: any) => {
 			// Update validation state when form validates
-			console.log('[PAGE] Validation callback - isValid:', result.isValid, 'errors:', result.errors);
 			isFormValid = result.isValid;
 			formErrors = result.errors || {};
 		}
 	};
 
+
 	async function handleCourseSubmit(formData: Partial<Course>) {
-		console.log("[PAGE] Course Form Submit:", formData);
+
+		if (!courseId) {
+			toastService.error('Error', 'Course ID not found');
+			return;
+		}
 
 		isSaving = true;
 		try {
-			// Call API to update course
-			// await courseStore.updateItem(courseId, formData);
+			// Convert categoryIds from strings to numbers for backend
+			const apiData = {
+				...formData,
+				categoryIds: formData.categoryIds?.map(id =>
+					typeof id === 'string' ? parseInt(id, 10) : id
+				),
+				published: formData.published
+					? new Date(formData.published).toISOString()
+					: null
+			};
 
-			// Simulate API call
-			await new Promise(resolve => setTimeout(resolve, 1000));
+			const courseIdStr = typeof courseId === 'number' ? courseId.toString() : courseId;
+			await courseStore.update(courseIdStr, apiData);
 
-			toastService.success('Success', 'Terminal updated successfully');
-
-			// Reset form to mark as saved - this clears dirty state
+			toastService.success('Success', 'Course updated successfully');
 			courseFormRef?.reset(formData);
-
-			// Explicitly set hasFormChanges to false after successful save
 			hasFormChanges = false;
-			console.log('[PAGE] Form saved, hasFormChanges set to false');
 		} catch (error) {
-			console.error('Error updating course:', error);
-			toastService.error('Error', 'Failed to update terminal');
+			toastService.error('Error', 'Failed to update course');
 		} finally {
 			isSaving = false;
 		}
 	}
+
 
 	async function handleSectionReorder(reorderedSections: SectionWithItems[]) {
 		// Extract section IDs in the new order
@@ -194,32 +211,24 @@
 	}
 
 	function handleFormDirtyChange(isDirty: boolean) {
-		console.log('[PAGE] 🔔 onDirtyChange callback - isDirty:', isDirty);
 		hasFormChanges = isDirty;
 
 		// Also check validation state when dirty state changes
 		if (courseFormRef) {
 			const valid = courseFormRef.isFormValid();
-			console.log('[PAGE] Validation check after dirty change - isValid:', valid);
 			isFormValid = valid;
 		}
-
-		console.log('[PAGE] State updated - hasFormChanges:', hasFormChanges, 'isFormValid:', isFormValid);
 	}
 
 	function handleSaveClick() {
-		console.log('[PAGE] 💾 Save clicked - hasChanges:', hasFormChanges, 'isValid:', isFormValid);
 
 		if (courseFormRef && hasFormChanges) {
 			// Check validation before submitting
 			const valid = courseFormRef.isFormValid();
-			console.log('[PAGE] Pre-submit validation check:', valid);
 
 			if (valid) {
-				console.log('[PAGE] ✅ Submitting form...');
 				courseFormRef.submit();
 			} else {
-				console.log('[PAGE] Validation failed, showing error toast');
 				toastService.error('Validation Error', 'Please fix the errors before saving');
 			}
 		} else {
@@ -228,12 +237,10 @@
 	}
 
 	function handleDiscardClick() {
-		console.log('[PAGE] Discard clicked');
 		if (courseFormRef && hasFormChanges) {
 			if (confirm('Are you sure you want to discard all changes?')) {
 				courseFormRef.discard();
 				hasFormChanges = false;
-				console.log('[PAGE] Changes discarded');
 			}
 		}
 	}
@@ -244,16 +251,11 @@
 	}
 
 	async function handleRemoveSection(section: Section, index: number) {
-
-		console.log(section.id);
-
 		try {
 			await courseStore.deleteSection(section.id);
-
 		}	catch (error) {
 			console.error(error);
 		}
-
 	}
 
 	function handleAddLesson(section: Section, sectionIndex: number) {
@@ -268,14 +270,11 @@
 	};
 
 	async function handleValidCourseSectionSubmit(section: CourseSection) {
-		console.log("[PAGE] Form Submit:", section);
 		try {
 			const courseSection = await courseStore.createSection(courseId, section);
 			closeSectionModal();
 			toastService.success('Success', 'Section was created successfully');
-			console.log(courseSection);
 		} catch (error) {
-			console.error('Error creating Course Section:', error);
 			toastService.error('Error', 'Failed to create section');
 		}
 	}
@@ -340,7 +339,7 @@
 			<UniversalForm
 				bind:this={courseFormRef}
 				schema={courseFormSchema}
-				initialData={course}
+				initialData={formInitialData}
 				callbacks={courseFormCallbacks}
 				mode="embedded"
 				onDirtyChange={handleFormDirtyChange}
@@ -363,6 +362,10 @@
 			/>
 		{/if}
 	</div>
+
+	Users
+
+	Price history
 </div>
 
 <!-- Create Section Modal -->

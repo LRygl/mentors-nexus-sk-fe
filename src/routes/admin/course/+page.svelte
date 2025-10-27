@@ -24,6 +24,7 @@
 
 	onMount(async () => {
 		await courseStore.fetchAll()
+		console.log(courseStore.data);
 	})
 
 	const tableCallbacks: TableCallbacks<Course> = {
@@ -32,20 +33,23 @@
 		},
 
 		onAction: async (actionId, course) => {
+			if(!course.id) return;
+
 			switch (actionId) {
 				case 'view':
 					await goto(`${ROUTES.ADMIN.COURSE}/${course.id}`);
 					break;
 				case 'delete':
-					const confirmed = await confirmationModal.delete(`Delete Course?`,`Are you sure you want to delete this category?`)
+					const confirmed = await confirmationModal.delete(`Delete Course?`,`Are you sure you want to delete this course?`)
 					if (confirmed) {
 						try {
-							await courseStore.delete(course.id);
-							console.log(`[PAGE] Data table user row deleted successfully`);
+							await courseStore.delete(String(course.id));
+							toastService.success('Course deleted successfully',"");
 						} catch (error) {
-							toastService.error('Failed to delete category:',`Operation failed with error: ${error}`);
+							toastService.error('Failed to delete course:', `${error}`);
 						}
 					}
+					break;
 			}
 		},
 

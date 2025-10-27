@@ -35,6 +35,13 @@ export class CourseAdminApiService extends BaseApiService {
 		return await this.post<Course>(`${this.ENDPOINT}`, requestData);
 	}
 
+	async updateCourse(courseId: string, updateData: Partial<Course>) {
+		const requestData = {
+			...updateData
+		}
+		return await this.put<Course>(`${this.ENDPOINT}/${courseId}`, requestData);
+	}
+
 	async deleteCourse(id: string) {
 		await this.delete(`${this.ENDPOINT}/${id}`)
 	}
@@ -51,6 +58,8 @@ export class CourseAdminApiService extends BaseApiService {
 	async reorderSections(courseId: string, sectionIds: number[]) {
 		return await this.post<Course>(`${this.ENDPOINT}/section/reorder`, sectionIds);
 	}
+
+
 }
 
 export const courseAdminApiService = new CourseAdminApiService();

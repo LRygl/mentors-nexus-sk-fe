@@ -8,7 +8,7 @@ import type { CourseCategory } from '$lib/types/entities/CourseCategory';
 
 export function createCourseFields(courseCategories: CourseCategory[] = []): EntityFieldConfig[] {
 	const categoryOptions = courseCategories.map((c) => ({
-		value: c.id?.toString(),
+		value: c.id,
 		label: c.name
 	}));
 
@@ -69,7 +69,7 @@ export function createCourseFields(courseCategories: CourseCategory[] = []): Ent
 			colSpan: 2
 		},
 		{
-			name: 'categories',
+			name: 'categoryIds',
 			label: 'Categories',
 			type: 'multiselect',
 			group: 'metadata',

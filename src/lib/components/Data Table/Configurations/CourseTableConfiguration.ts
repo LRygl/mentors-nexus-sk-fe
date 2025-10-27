@@ -2,6 +2,7 @@ import { createTablePreset, defineTableConfig } from '$lib/components/Data Table
 import type { Course } from '$lib/types/entities/Course';
 import { Eye } from '@lucide/svelte';
 import { ActionType } from '$lib/types';
+import type { CourseCategory } from '$lib/types/entities/CourseCategory';
 
 const courseTableDefinition = defineTableConfig<Course>({
 	entity: 'Course',
@@ -27,6 +28,27 @@ const courseTableDefinition = defineTableConfig<Course>({
 			cellClassName: 'font-mono text-xs text-slate-500',
 		},
 		{
+			key: 'owner',
+			header: 'Owner',
+			type: 'text',
+			searchable: true,
+			sortable: true,
+			cellClassName: 'font-mono text-xs text-slate-500',
+			accessor: (course: Course) => {
+				const name = course.owner?.firstName + ' ' + course.owner?.lastName;
+				if (!name) return 'No Owner';
+				return `${name}`;
+			}
+		},
+		{
+			key: 'lessons',
+			header: 'Lessons',
+			type: 'text',
+			searchable: true,
+			sortable: true,
+			cellClassName: 'font-mono text-xs text-slate-500',
+		},
+		{
 			key: 'status',
 			header: 'Status',
 			type: 'text',
@@ -35,16 +57,16 @@ const courseTableDefinition = defineTableConfig<Course>({
 			cellClassName: 'font-mono text-xs text-slate-500',
 		},
 		{
-			key: 'created',
-			header: 'Created',
+			key: 'updated',
+			header: 'Updated',
 			type: 'datetime',
 			searchable: false,
 			sortable: true,
 			cellClassName: 'font-mono text-xs text-slate-500',
 		},
 		{
-			key: 'updated',
-			header: 'Updated',
+			key: 'published',
+			header: 'Published',
 			type: 'datetime',
 			searchable: false,
 			sortable: true,

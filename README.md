@@ -13,7 +13,20 @@
   - [ ] Sort/Filter courses
   - [ ] Allow users to preview free lessons in course
   - [ ] For protected lessons redirect to purchase page
-- 
+
+
+
+## Terminal
+
+- [ ] Add Cover image
+- [ ] Add dialog to link lessons
+- [ ] Add select to change course owner courseOwnerId
+- [ ] Display list of enrolled users
+- [ ] Display price history
+- [ ] The overview list should show propperly styled status
+- [ ] The list should display the owner
+- [ ] The list should display the published date
+
 - 
 ## Authentication
 - [ ] User without purchased course cannot view protected lessons

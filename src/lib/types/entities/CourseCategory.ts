@@ -1,8 +1,9 @@
 import type { BaseEntity } from '$lib/types';
+import type { Course } from '$lib/types/entities/Course';
 
 export interface CourseCategory extends BaseEntity {
 
-	id: string; // corresponds to Long/UUID in Java
+	id: string;
 	uuid?: string;
 	name?: string;
 	description?: string;
@@ -11,6 +12,6 @@ export interface CourseCategory extends BaseEntity {
 	color?: string;
 
 	// Relations
-	//courses: Set<Course>;
+	courses: Course[];
 
 }
