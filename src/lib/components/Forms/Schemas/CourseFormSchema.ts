@@ -5,12 +5,25 @@ import {
 	type EntityGroupConfig
 } from '$lib/components/Forms/Schemas/FormSchemaFactory';
 import type { CourseCategory } from '$lib/types/entities/CourseCategory';
+import type { User } from '$lib/types/entities/User';
 
-export function createCourseFields(courseCategories: CourseCategory[] = []): EntityFieldConfig[] {
+export function createCourseFields(
+	courseCategories: CourseCategory[] = [],
+	users: User[] = [],
+
+): EntityFieldConfig[] {
+
+	// Prepare course category data
 	const categoryOptions = courseCategories.map((c) => ({
 		value: c.id,
 		label: c.name
 	}));
+
+	// Prepare user data
+	const userOptions = users.map((user) => ({
+		value: user.id,
+		label: `${user.firstName} ${user.lastName} (${user.email})`
+	}))
 
 	return [
 		// Basic Information
@@ -34,9 +47,20 @@ export function createCourseFields(courseCategories: CourseCategory[] = []): Ent
 			group: 'basic',
 			variants: { quick: true, standard: true, detailed: true, edit: true, embedded: true },
 			required: true,
-			min: 0,
-			placeholder: '0.00',
 			helpText: 'Terminal price in CZK',
+			colSpan: 1
+		},
+		{
+			name: 'ownerId', // Store just the ID
+			label: 'Course Owner',
+			type: 'select',
+			group: 'basic',
+			variants: { standard: true, detailed: true, edit: true, embedded: true },
+			required: true,
+			searchable: true, // Makes it easy to find users
+			options: userOptions,
+			placeholder: 'Select course owner...',
+			helpText: 'The instructor who will own this course',
 			colSpan: 1
 		},
 		{
@@ -177,10 +201,13 @@ const courseGroups: EntityGroupConfig[] = [
 	}
 ];
 
-export function createCourseSchemaFactory(courseCategories: CourseCategory[] = []) {
+export function createCourseSchemaFactory(
+	courseCategories: CourseCategory[] = [],
+	users: User[] = []
+) {
 	return defineEntitySchema<Course>({
 		entity: 'Course',
-		fields: createCourseFields(courseCategories),
+		fields: createCourseFields(courseCategories, users),
 		groups: courseGroups,
 		variantConfig: {
 			standard: {
@@ -210,13 +237,13 @@ export function createCourseSchemaFactory(courseCategories: CourseCategory[] = [
 }
 
 export const CourseFormPresets = {
-	standard: (categories: CourseCategory[] = []) => {
-		return createCourseSchemaFactory(categories).create('standard');
+	standard: (categories: CourseCategory[] = [], users: User[] = []) => {
+		return createCourseSchemaFactory(categories, users).create('standard');
 	},
-	edit: (categories: CourseCategory[] = []) => {
-		return createCourseSchemaFactory(categories).create('edit');
+	edit: (categories: CourseCategory[] = [], users: User[] = []) => {
+		return createCourseSchemaFactory(categories, users).create('edit');
 	},
-	embedded: (categories: CourseCategory[] = []) => {
-		return createCourseSchemaFactory(categories).create('embedded');
+	embedded: (categories: CourseCategory[] = [], users: User[] = []) => {
+		return createCourseSchemaFactory(categories, users).create('embedded');
 	}
 };

@@ -27,6 +27,7 @@ export interface Course extends BaseEntity {
 
 	// Relations - ✅ ADDED MISSING FIELDS
 	owner?: User;
+	ownerId?: string;
 	labels?: string[];  // Array of label names
 	categoryIds?: string[];  // Array of category IDs (for form)
 	categories?: string[];  // Array of category names (for display)

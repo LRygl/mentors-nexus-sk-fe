@@ -17,6 +17,9 @@
 	import type { Lesson } from '$lib/types/entities/Lesson';
 	import type { Course } from '$lib/types/entities/Course';
 	import { courseCategoryStore } from '$lib/stores/defaults/CourseCategoryStore';
+	import { userStore } from '$lib/stores/defaults/UserStore';
+	import { CourseLinkFormPresets } from '$lib/components/Forms/Schemas/CourseLinkLessonSchema';
+	import { lessonStore } from '$lib/stores/defaults/LessonStore';
 
 	interface SectionWithItems extends BaseSectionItem {
 		id?: string;
@@ -37,9 +40,13 @@
 	let isSaving = $state(false);
 	let formRef: UniversalForm; // Section form ref
 	let courseFormRef: UniversalForm; // Course form ref
+	let linkFormRef: UniversalForm;
 	let isCreateSectionModalOpen = $state<boolean>(false);
+	let isLinkLessonModalOpen = $state<boolean>(false);
 
 	let courseCategories = $derived(courseCategoryStore.data);
+	let users = $derived(userStore.data);
+	let lessons = $derived(lessonStore.data);
 
 	// Form state for embedded course form
 	let hasFormChanges = $state(false);
@@ -53,13 +60,15 @@
 
 		return {
 			...course,
-			categoryIds: course.categoryIds?.map(id => String(id))
+			categoryIds: course.categoryIds?.map(id => String(id)),
+			ownerId: course.owner?.id
 		};
 	});
 
 	// Schemas
-	const courseFormSchema = $derived(CourseFormPresets.embedded(courseCategories));
+	const courseFormSchema = $derived(CourseFormPresets.embedded(courseCategories, users));
 	const createSectionFormSchema = $derived(CourseSectionFormPresets.standard());
+	const linkLessonFormSchema = $derived(CourseLinkFormPresets.link(lessons));
 
 	// Map course sections to component format
 	let componentSections = $derived.by((): SectionWithItems[] => {
@@ -116,7 +125,9 @@
 	onMount(async () => {
 		await Promise.all([
 			loadCourse(),
-			loadCategories()
+			loadCategories(),
+			loadUsers(),
+			loadLessons(),
 		]);
 	});
 
@@ -141,6 +152,25 @@
 		}
 	}
 
+	// TODO Return only elegible users for this select
+	async function loadUsers() {
+		try {
+			await userStore.fetchAll();
+			console.log(users);
+		} catch (err) {
+			console.error('Error loading users:', err);
+		}
+	}
+
+	async function loadLessons() {
+		try {
+			await lessonStore.fetchAll();
+			console.log(lessons);
+		} catch (err) {
+			console.error('Error loading lessons:', err);
+		}
+	}
+
 	// Course form callbacks
 	const courseFormCallbacks = {
 		onSubmit: handleCourseSubmit,
@@ -153,6 +183,15 @@
 		}
 	};
 
+	const formLinkLessonCallbacks = {
+		onSubmit: handleLinkSubmit,
+		onChange: (field: string, value: any) => {}
+	}
+
+	async function handleLinkSubmit(formData: FormData) {
+		console.log("FORM SUBMITTED: ", formData);
+
+	}
 
 	async function handleCourseSubmit(formData: Partial<Course>) {
 
@@ -171,7 +210,8 @@
 				),
 				published: formData.published
 					? new Date(formData.published).toISOString()
-					: null
+					: null,
+				courseOwnerId: formData.ownerId,
 			};
 
 			const courseIdStr = typeof courseId === 'number' ? courseId.toString() : courseId;
@@ -245,23 +285,23 @@
 		}
 	}
 
-	// Section management
-	function handleAddSection() {
-		isCreateSectionModalOpen = true;
-	}
 
-	async function handleRemoveSection(section: Section, index: number) {
-		try {
-			await courseStore.deleteSection(section.id);
-		}	catch (error) {
-			console.error(error);
-		}
-	}
+
 
 	function handleAddLesson(section: Section, sectionIndex: number) {
 		console.log('[PAGE] Add lesson for section:', section.id);
+		isLinkLessonModalOpen = true;
+
 	}
 
+
+
+
+	/**
+	 *
+	 * HANDLE COURSE SECTION FORM
+	 *
+	 * **/
 	const formCreateSectionCallbacks = {
 		onSubmit: handleValidCourseSectionSubmit,
 		onChange: (field: string, value: any) => {
@@ -279,6 +319,18 @@
 		}
 	}
 
+	async function handleRemoveSection(section: Section, index: number) {
+		try {
+			await courseStore.deleteSection(section.id);
+		}	catch (error) {
+			console.error(error);
+		}
+	}
+
+	function handleAddSection() {
+		isCreateSectionModalOpen = true;
+	}
+
 	function closeSectionModal() {
 		isCreateSectionModalOpen = false;
 		formRef?.reset();
@@ -287,6 +339,22 @@
 	function handleCourseSectionSubmit(event: Event) {
 		event.preventDefault();
 		formRef?.submit();
+
+
+
+
+
+	function closeLinkModal() {
+		isLinkLessonModalOpen = false;
+		linkFormRef?.reset();
+	}
+
+
+	}
+
+	function handleLinkLessonSubmit(event: Event) {
+		event.preventDefault();
+		linkFormRef?.submit();
 	}
 </script>
 
@@ -386,6 +454,29 @@
 			bind:this={formRef}
 			schema={createSectionFormSchema}
 			callbacks={formCreateSectionCallbacks}
+			className="space-y-6"
+		/>
+	{/snippet}
+</UniversalCreateModal>
+
+<!-- link modal -->
+<UniversalCreateModal
+	isOpen={isLinkLessonModalOpen}
+	title="Link entity"
+	subtitle="Add a new section to organize lessons"
+	icon={Link2}
+	iconBgColor="from-blue-500 to-indigo-600"
+	loading={lessonStore.loading}
+	error={lessonStore.error}
+	submitLabel="Create Section"
+	onclose={closeLinkModal}
+	onsubmit={handleLinkLessonSubmit}
+>
+	{#snippet children()}
+		<UniversalForm
+			bind:this={linkFormRef}
+			schema={linkLessonFormSchema}
+			callbacks={formLinkLessonCallbacks}
 			className="space-y-6"
 		/>
 	{/snippet}

@@ -20,6 +20,7 @@
 
 - [ ] Add Cover image
 - [ ] Add dialog to link lessons
+  - [ ] Finish lesson linking
 - [ ] Add select to change course owner courseOwnerId
 - [ ] Display list of enrolled users
 - [ ] Display price history
