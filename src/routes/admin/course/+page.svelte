@@ -50,6 +50,12 @@
 						}
 					}
 					break;
+					case 'feature':
+						console.log("FEATURED!")
+						break;
+					case 'unfeature':
+						console.log("UNFEATURED!")
+						break;
 			}
 		},
 
@@ -135,7 +141,7 @@
 	isOpen={isCreateModalOpen}
 	title="Create Course"
 	subtitle="Add a new course"
-	icon={FileText}
+	icon=FileText
 	iconBgColor="from-indigo-500 to-purple-600"
 	loading={courseStore.creating}
 	error={courseStore.createError}

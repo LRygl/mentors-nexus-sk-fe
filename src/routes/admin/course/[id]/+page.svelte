@@ -340,7 +340,7 @@
 		event.preventDefault();
 		formRef?.submit();
 
-
+	}
 
 
 
@@ -350,7 +350,7 @@
 	}
 
 
-	}
+
 
 	function handleLinkLessonSubmit(event: Event) {
 		event.preventDefault();

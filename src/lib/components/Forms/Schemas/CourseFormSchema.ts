@@ -41,6 +41,19 @@ export function createCourseFields(
 			colSpan: 2
 		},
 		{
+			name: 'imageUrl',
+			label: 'Course Image',
+			type: 'image',
+			group: 'basic',
+			variants: { standard: true, detailed: true, edit: true, embedded: true },
+			required: false,
+			placeholder: 'Upload a course thumbnail...',
+			helpText: 'A featured image for your course (JPEG, PNG, WebP, or GIF)',
+			maxFileSize: 5 * 1024 * 1024, // 5MB
+			acceptedFileTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+			colSpan: 2
+		},
+		{
 			name: 'price',
 			label: 'Price',
 			type: 'number',
@@ -127,7 +140,7 @@ export function createCourseFields(
 			]
 		},
 		{
-			name: 'featured',
+			name: 'isFeatured',
 			label: 'Featured Terminal',
 			type: 'checkbox',
 			group: 'publishing',

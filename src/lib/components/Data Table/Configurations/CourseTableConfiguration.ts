@@ -1,8 +1,7 @@
 import { createTablePreset, defineTableConfig } from '$lib/components/Data Table/Configurations/DataTableConfigurationFactory';
 import type { Course } from '$lib/types/entities/Course';
-import { Eye } from '@lucide/svelte';
+import { Eye, Star, StarOff } from '@lucide/svelte';
 import { ActionType } from '$lib/types';
-import type { CourseCategory } from '$lib/types/entities/CourseCategory';
 
 const courseTableDefinition = defineTableConfig<Course>({
 	entity: 'Course',
@@ -49,6 +48,14 @@ const courseTableDefinition = defineTableConfig<Course>({
 			cellClassName: 'font-mono text-xs text-slate-500',
 		},
 		{
+			key: 'isFeatured',
+			header: 'Featured',
+			type: 'text',
+			searchable: true,
+			sortable: true,
+			cellClassName: 'font-mono text-xs text-slate-500',
+		},
+		{
 			key: 'status',
 			header: 'Status',
 			type: 'text',
@@ -85,15 +92,51 @@ const courseTableDefinition = defineTableConfig<Course>({
 		{
 			id: 'view',
 			label: 'View Details',
-			description: 'See full FAQ details',
+			description: 'See full course details',
 			icon: Eye,
 			variant: ActionType.DEFAULT,
 			group: 'Actions'
 		},
 		{
+			id: 'publish',
+			label: 'Set as Published',
+			description: 'Publish now',
+			icon: Star,
+			variant: ActionType.WARNING,
+			group: 'State',
+			condition: (course: Course) => !!course.published
+		},
+		{
+			id: 'unpublish',
+			label: 'Remove Published',
+			description: 'Remove course as featured',
+			icon: StarOff,
+			variant: ActionType.WARNING,
+			group: 'State',
+			condition: (course: Course) => !course.published
+		},
+		{
+			id: 'feature',
+			label: 'Set as Featured',
+			description: 'Set course as featured',
+			icon: Star,
+			variant: ActionType.WARNING,
+			group: 'State',
+			condition: (course: Course) => !!course.featured
+		},
+		{
+			id: 'unfeature',
+			label: 'Remove Featured',
+			description: 'Remove course as featured',
+			icon: StarOff,
+			variant: ActionType.WARNING,
+			group: 'State',
+			condition: (course: Course) => !course.featured
+		},
+		{
 			id: 'delete',
 			label: 'Delete',
-			description: 'Delete course record',
+			description: 'Delete the course record',
 			icon: Eye,
 			variant: ActionType.DANGER,
 			group: 'Management'

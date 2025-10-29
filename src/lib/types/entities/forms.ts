@@ -151,6 +151,9 @@ export interface FormField {
 	minItems?: number;
 	maxItems?: number;
 
+	// File upload
+	maxFileSize?: number;
+	acceptedFileTypes?: string[];
 
 	// Options for select, radio, etc.
 	options?: FieldOption[];

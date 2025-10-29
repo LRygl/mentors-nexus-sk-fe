@@ -13,7 +13,7 @@ export type FormVariant = 'quick' | 'standard' | 'detailed' | 'edit' | 'link' | 
 export interface EntityFieldConfig {
 	name: string;
 	label: string;
-	type: 'text' | 'textarea' | 'number' | 'checkbox' | 'select' | 'date' | 'tags' | 'multiselect';
+	type: 'text' | 'textarea' | 'number' | 'checkbox' | 'select' | 'date' | 'image' | 'tags' | 'multiselect';
 
 	// Visibility in different form variants
 	variants: {
@@ -45,6 +45,10 @@ export interface EntityFieldConfig {
 	// MultiSelect specific
 	maxItems?: number;
 	minItems?: number;
+
+	// Image upload
+	maxFileSize?: number;
+	acceptedFileTypes?: string[];
 
 	// Dependencies and conditional validation
 	dependencies?: FormFieldDependency[];

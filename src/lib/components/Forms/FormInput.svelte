@@ -14,6 +14,7 @@
 	import DateTimeInput from '$lib/components/Forms/Fields/DateTImeInput.svelte';
 	import TagInput from '$lib/components/Forms/Fields/TagInput.svelte';
 	import MultiSelect from '$lib/components/Forms/Fields/MultiSelect.svelte';
+	import ImageUpload from '$lib/components/Forms/Fields/ImageUpload.svelte';
 
 	interface Props {
 		field: FormField;
@@ -50,7 +51,8 @@
 		'icon-selector': IconSelectInput as any,
 		color: ColorInput as any,
 		tags: TagInput as any,
-		multiselect: MultiSelect as any
+		multiselect: MultiSelect as any,
+		image: ImageUpload as any,
 	};
 
 	/**

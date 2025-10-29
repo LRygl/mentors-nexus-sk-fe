@@ -174,6 +174,8 @@
 				return [];
 			case 'multiselect':
 				return [];
+			case 'image':
+				return '';
 			default:
 				return '';
 		}
