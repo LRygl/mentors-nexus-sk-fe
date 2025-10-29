@@ -10,6 +10,7 @@
 	} from '$lib/types/entities/forms';
 	import { onMount } from 'svelte';
 	import IconSelector from '$lib/components/UI/IconSelector.svelte';
+	import ImageUpload from '$lib/components/ui/ImageUpload.svelte';
 	import DynamicIcon from '$lib/components/UI/DynamicIcon.svelte';
 	import { FormDependencyHandler } from '$lib/components/Forms/FormDependencyHandler';
 
@@ -85,6 +86,7 @@
 			case 'textarea':
 			case 'color':
 			case 'icon-selector':
+			case 'image-upload':
 				return '';
 			case 'number':
 				return field.min ?? 0;
@@ -454,6 +456,16 @@
 			placeholder={field.placeholder}
 			previewColor={field.previewColor}
 			required={field.required}
+		/>
+
+	{:else if field.type === 'image-upload'}
+		<ImageUpload
+			field={field}
+			value={formState.data[field.name]}
+			error={formState.errors[field.name]}
+			showError={!!formState.errors[field.name] && formState.touched[field.name]}
+			disabled={disabled}
+			onChange={handleFieldChange}
 		/>
 
 	{:else if field.type === 'custom' && field.component}
