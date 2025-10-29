@@ -68,12 +68,6 @@
 		const currentData = JSON.stringify(formState.data);
 		const original = JSON.stringify(originalData);
 		const isDifferent = currentData !== original;
-		console.log('[FORM] hasChanges check:', {
-			isDifferent,
-			mode,
-			currentKeys: Object.keys(formState.data),
-			originalKeys: Object.keys(originalData)
-		});
 		return isDifferent;
 	});
 
@@ -81,10 +75,8 @@
 	$effect(() => {
 		if (mode === 'embedded') {
 			const dirty = hasChanges();
-			console.log('[FORM] Dirty effect triggered - dirty:', dirty, 'formState.isDirty:', formState.isDirty);
 			if (formState.isDirty !== dirty) {
 				formState.isDirty = dirty;
-				console.log('[FORM] 🔔 Calling onDirtyChange with:', dirty);
 				onDirtyChange?.(dirty);
 			}
 		}
@@ -94,7 +86,6 @@
 	$effect(() => {
 		const isValid = formState.isValid;
 		const errors = formState.errors;
-		console.log('[FORM] Validation state effect:', { isValid, errorCount: Object.keys(errors).length });
 
 		// Trigger validation callback whenever validation state changes
 		callbacks.onValidate?.({ isValid, errors });
@@ -128,8 +119,6 @@
 		// Validation will happen when user interacts with fields
 		formState.isValid = true;
 		formState.errors = {};
-
-		console.log('[FORM] Initialized - no validation on mount');
 	});
 
 	// Helper to check if field should be rendered
@@ -183,7 +172,6 @@
 
 	// Validation
 	function validateForm(): FormValidationResult {
-		console.log('[FORM] validateForm() called');
 		const fields = allFields();
 		const errors: Record<string, string> = {};
 
@@ -209,12 +197,6 @@
 		formState.errors = errors;
 		formState.isValid = Object.keys(errors).length === 0;
 
-		console.log('[FORM] Validation complete:', {
-			isValid: formState.isValid,
-			errorCount: Object.keys(errors).length,
-			errors
-		});
-
 		const result = { isValid: formState.isValid, errors };
 
 		// Note: Don't call callback here, let the $effect handle it to avoid double-calling
@@ -222,7 +204,6 @@
 	}
 
 	function validateField(fieldName: string) {
-		console.log('[FORM] validateField():', fieldName);
 		const fields = allFields();
 		const field = fields.find(f => f.name === fieldName);
 		if (!field) return;
@@ -250,16 +231,9 @@
 
 		formState.isValid = Object.keys(formState.errors).length === 0;
 
-		console.log('[FORM] Field validation complete:', {
-			field: fieldName,
-			hasError: !!error,
-			isValid: formState.isValid
-		});
 	}
 
 	function handleFieldChange(fieldName: string, value: any) {
-		console.log('[FORM] handleFieldChange:', fieldName, value);
-
 		// Defensive parameter check
 		let actualFieldName: string;
 		let actualValue: any;
@@ -298,12 +272,10 @@
 	 * Public API - These methods can be called from parent components
 	 */
 	export function submit() {
-		console.log('[FORM] submit() called externally');
 		formElement?.requestSubmit();
 	}
 
 	export function reset(newData?: Partial<any>) {
-		console.log('[FORM] reset() called:', newData);
 		if (newData) {
 			formState.data = { ...formState.data, ...newData };
 			if (mode === 'embedded') {
@@ -319,7 +291,6 @@
 
 	// EMBEDDED MODE: Discard changes and revert to original
 	export function discard() {
-		console.log('[FORM] discard() called');
 		if (mode === 'embedded') {
 			formState.data = JSON.parse(JSON.stringify(originalData));
 			formState.errors = {};
@@ -349,7 +320,6 @@
 
 	// EMBEDDED MODE: Check if form is valid
 	export function isFormValid(): boolean {
-		console.log('[FORM] isFormValid() called, returning:', formState.isValid);
 		return formState.isValid;
 	}
 
@@ -361,10 +331,8 @@
 	// Handle form submission
 	async function handleSubmit(event: Event) {
 		event.preventDefault();
-		console.log('[FORM] handleSubmit() triggered');
 
 		if (formState.isSubmitting) {
-			console.log('[FORM] Already submitting, ignoring');
 			return;
 		}
 
@@ -380,18 +348,15 @@
 
 		// Validate before submitting
 		const validationResult = validateForm();
-		console.log('[FORM] Pre-submit validation:', validationResult);
 
 		if (validationResult.isValid) {
 			formState.isSubmitting = true;
 			try {
-				console.log('[FORM] Calling onSubmit callback with data:', formState.data);
 				await callbacks.onSubmit?.(formState.data);
 				// Update original data after successful submit (embedded mode)
 				if (mode === 'embedded') {
 					originalData = JSON.parse(JSON.stringify(formState.data));
 					formState.submitCount = 0;
-					console.log('[FORM] Submit successful, updated original data');
 				}
 			} catch (error) {
 				console.error('[FORM] Submit error:', error);

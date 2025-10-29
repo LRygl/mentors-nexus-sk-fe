@@ -49,7 +49,6 @@
 			// If dropdown is closed, this is likely a programmatic change (discard/reset)
 			if (!showDropdown) {
 				originalValue = value;  // Update original value on external change
-				console.log('[SelectInput] 🔄 Reset detected for:', field.name, { newOriginal: value });
 			}
 			previousValue = value;
 		}

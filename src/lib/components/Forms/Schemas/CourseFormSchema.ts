@@ -41,10 +41,10 @@ export function createCourseFields(
 			colSpan: 2
 		},
 		{
-			name: 'imageUrl',
+			name: 'image',
 			label: 'Course Image',
 			type: 'image',
-			group: 'basic',
+			group: 'basic', // ✅ This must match the group id exactly
 			variants: { standard: true, detailed: true, edit: true, embedded: true },
 			required: false,
 			placeholder: 'Upload a course thumbnail...',
@@ -162,7 +162,9 @@ const courseGroups: EntityGroupConfig[] = [
 		icon: '📝',
 		variant: 'default',
 		collapsible: false,
-		variants: { embedded: true }
+		variants: {       embedded: true,    // ✅ Support both!
+			standard: true,
+			edit: true }
 	},
 	{
 		id: 'metadata',
@@ -171,7 +173,9 @@ const courseGroups: EntityGroupConfig[] = [
 		icon: '🗂️',
 		variant: 'default',
 		collapsible: true,
-		variants: { embedded: true }
+		variants: {       embedded: true,    // ✅ Support both!
+			standard: true,
+			edit: true }
 	},
 	{
 		id: 'publishing',

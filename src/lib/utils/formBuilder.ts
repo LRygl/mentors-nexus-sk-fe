@@ -397,6 +397,77 @@ export class FormBuilder<T = Record<string, any>> {
 	}
 
 	/**
+	 * Add an image upload field
+	 */
+	image(
+		name: string,
+		label: string,
+		options: {
+			placeholder?: string;
+			required?: boolean;
+			colSpan?: 1 | 2 | 3 | 4;
+			helpText?: string;
+			defaultValue?: string;
+			maxFileSize?: number;
+			acceptedFileTypes?: string[];
+			dependencies?: FormFieldDependency[];
+			conditionalValidation?: ConditionalValidation[];
+		} = {}
+	): FormBuilder<T> {
+		const validationRules = [];
+
+		if (options.required) {
+			validationRules.push(FormValidator.rules.required());
+		}
+
+		// Add file size validation if specified
+		if (options.maxFileSize) {
+			validationRules.push({
+				type: 'custom' as const,
+				validator: (value: any) => {
+					if (value instanceof File && value.size > options.maxFileSize!) {
+						const maxSizeMB = (options.maxFileSize! / (1024 * 1024)).toFixed(1);
+						return `File size exceeds ${maxSizeMB}MB limit`;
+					}
+					return null;
+				}
+			});
+		}
+
+		// Add file type validation if specified
+		if (options.acceptedFileTypes && options.acceptedFileTypes.length > 0) {
+			validationRules.push({
+				type: 'custom' as const,
+				validator: (value: any) => {
+					if (value instanceof File && !options.acceptedFileTypes!.includes(value.type)) {
+						const types = options.acceptedFileTypes!.map(t => t.split('/')[1].toUpperCase()).join(', ');
+						return `Invalid file type. Accepted: ${types}`;
+					}
+					return null;
+				}
+			});
+		}
+
+		return this.addField({
+			name,
+			label,
+			type: 'image',
+			placeholder: options.placeholder || 'Upload an image...',
+			required: options.required,
+			colSpan: options.colSpan || 2,
+			helpText: options.helpText,
+			defaultValue: options.defaultValue || '',
+			maxFileSize: options.maxFileSize || 5 * 1024 * 1024, // Default 5MB
+			acceptedFileTypes: options.acceptedFileTypes || ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+			dependencies: options.dependencies,
+			conditionalValidation: options.conditionalValidation,
+			validationRules
+		});
+	}
+
+
+
+	/**
 	 * Add new field types
 	 */
 	email(

@@ -20,6 +20,7 @@
 	import { userStore } from '$lib/stores/defaults/UserStore';
 	import { CourseLinkFormPresets } from '$lib/components/Forms/Schemas/CourseLinkLessonSchema';
 	import { lessonStore } from '$lib/stores/defaults/LessonStore';
+	import ImageUpload from '$lib/components/Forms/Fields/ImageUpload.svelte';
 
 	interface SectionWithItems extends BaseSectionItem {
 		id?: string;
@@ -342,20 +343,16 @@
 
 	}
 
-
-
 	function closeLinkModal() {
 		isLinkLessonModalOpen = false;
 		linkFormRef?.reset();
 	}
 
-
-
-
 	function handleLinkLessonSubmit(event: Event) {
 		event.preventDefault();
 		linkFormRef?.submit();
 	}
+
 </script>
 
 <div class="min-h-screen py-8">
@@ -481,3 +478,5 @@
 		/>
 	{/snippet}
 </UniversalCreateModal>
+
+

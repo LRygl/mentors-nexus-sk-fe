@@ -52,7 +52,7 @@
 		color: ColorInput as any,
 		tags: TagInput as any,
 		multiselect: MultiSelect as any,
-		image: ImageUpload as any,
+		image: ImageUpload as any
 	};
 
 	/**
@@ -99,7 +99,9 @@
 			/>
 		</svg>
 		<div>
-			<p class="font-medium">Unknown field type</p>
+			<p class="font-medium">❌ Unknown field type: "{field.type}"</p>
+			<p class="text-xs mt-1">Field name: {field.name}</p>
+			<p class="text-xs mt-1">Available types: {Object.keys(FIELD_COMPONENT_MAP).join(', ')}</p>
 			<p class="text-xs mt-1">Field type "{field.type}" is not supported. Please check your form schema.</p>
 		</div>
 	</div>

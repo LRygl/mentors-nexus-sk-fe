@@ -192,6 +192,7 @@ export class FormSchemaFactory<T = any> {
 
 			// Add fields in this group
 			const groupFields = fields.filter(f => f.group === group.id);
+
 			for (const field of groupFields) {
 				this.addField(builder, field);
 			}
@@ -290,6 +291,13 @@ export class FormSchemaFactory<T = any> {
 					maxItems: field.maxItems,
 					minItems: field.minItems,
 					searchable: field.searchable
+				});
+				break;
+			case 'image':
+				builder.image(field.name, field.label, {
+					...baseOptions,
+					maxFileSize: field.maxFileSize,
+					acceptedFileTypes: field.acceptedFileTypes
 				});
 				break;
 		}
