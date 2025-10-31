@@ -149,9 +149,9 @@ const courseTableDefinition = defineTableConfig<Course>({
 	exportable: true,
 	sortable: true,
 
-	emptyTitle: 'No Courses',
+	emptyTitle: 'No Terminals',
 	emptyDescription: 'Get started by defining questions which might be interesting to your users and provide simple answers.',
-	emptyActionLabel: 'Create your first Course',
+	emptyActionLabel: 'Create your first Terminal',
 	loadingTitle: 'Loading Courses',
 	loadingDescription: 'Please wait while we fetch your Courses...',
 	searchPlaceholder: 'Search Courses...'

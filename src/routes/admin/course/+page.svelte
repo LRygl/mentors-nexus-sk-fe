@@ -6,7 +6,6 @@
 	import AdminHeaderSection from '$lib/components/Sections/Admin/AdminHeaderSection.svelte';
 	import { courseStore } from '$lib/stores/defaults/CourseStore';
 	import type { Course } from '$lib/types/entities/Course';
-	import { FileText } from 'lucide-svelte';
 	import { courseCategoryStore } from '$lib/stores/defaults/CourseCategoryStore';
 	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
@@ -15,16 +14,22 @@
 	import { ROUTES } from '$lib/Config/routes.config';
 	import { goto } from '$app/navigation';
 	import { confirmationModal } from '$lib/components/Modals/ConfirmationModalService.svelte';
+	import { userStore } from '$lib/stores/defaults/UserStore';
+	import { prepareEntityDataForSubmit } from '$lib/utils/ImageUtils';
 
 	let selectedItems = $state<Set<string>>(new Set);
 	let isCreateModalOpen = $state<boolean>(false);
 	let formRef: any;
+	let courseCategories = $derived(courseCategoryStore.data);
+	let users = $derived(userStore.data);
+
+	const courseFormSchema = $derived(CourseFormPresets.standard(courseCategories, users))
 
 	const tableConfig = CourseTablePreset.all();
 
 	onMount(async () => {
-		await courseStore.fetchAll()
-		console.log(courseStore.data);
+		await courseStore.fetchAll();
+		await userStore.fetchAll();
 	})
 
 	const tableCallbacks: TableCallbacks<Course> = {
@@ -81,16 +86,26 @@
 	}
 
 	// Called when form validation passes
-	async function handleValidFormSubmit(data: Partial<Course>) {
+	async function handleValidFormSubmit(formData: Partial<Course>, imageFile?: File) {
+		console.log('=== handleValidFormSubmit ===');
+		console.log('[snapshot] formData:', $state.snapshot(formData));
+
 		try {
-			const newCourseCategory = await courseStore.create(data);
-			if (newCourseCategory && newCourseCategory?.id) {
+			// ✅ Use the same utility function as the update form
+			const { data: cleanData, imageFile: extractedImageFile } = prepareEntityDataForSubmit(formData);
+
+			console.log('cleanData:', cleanData);
+			console.log('extractedImageFile:', extractedImageFile);
+
+			const newCourse = await courseStore.create(cleanData, extractedImageFile);
+
+			if (newCourse?.id) {
 				closeCreateModal();
-				toastService.success(`Course Created`,`Lipsum`)
-				// TODO: Add notifications notification
+				toastService.success(`Course Created`, `Successfully created ${newCourse.name}`);
 			}
 		} catch (error) {
 			console.error('Failed to create Course:', error);
+			toastService.error('Failed to create course', error instanceof Error ? error.message : 'Unknown error');
 		}
 	}
 
@@ -139,8 +154,8 @@
 <!-- Create Category Modal -->
 <UniversalCreateModal
 	isOpen={isCreateModalOpen}
-	title="Create Course"
-	subtitle="Add a new course"
+	title="Create Terminal"
+	subtitle="Add a new Terminal"
 	icon=FileText
 	iconBgColor="from-indigo-500 to-purple-600"
 	loading={courseStore.creating}
@@ -152,7 +167,7 @@
 	{#snippet children()}
 		<UniversalForm
 			bind:this={formRef}
-			schema={CourseFormPresets.standard(courseCategoryStore.data)}
+			schema={courseFormSchema}
 			callbacks={formCallbacks}
 			className="space-y-6"
 		/>

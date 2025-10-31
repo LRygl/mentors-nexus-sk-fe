@@ -82,9 +82,39 @@ export abstract class BaseApiService {
 	}
 
 	/*
+	* Base HTTP POST method for multipart/form-data (file uploads with JSON)
+	* This method does NOT set Content-Type header - browser sets it automatically with boundary
+	*/
+	protected async postMultipart<T>(
+		endpoint: string,
+		formData: FormData,
+		config?: RequestConfig
+	): Promise<T> {
+		const url = this.buildUrl(endpoint);
+		const headers = await this.getHeadersForMultipart(config);
+
+		const response = await this.executeRequest(
+			() =>
+				fetch(url, {
+					method: 'POST',
+					body: formData, // Send FormData directly
+					headers: headers,
+					credentials: 'include',
+					signal: this.createAbortSignal(config?.timeout)
+				}),
+			config
+		);
+
+		const data = await this.parseResponse<T>(response);
+
+		// Invalidate related cache entries
+		this.invalidateCache('GET');
+		return data;
+	}
+
+	/*
 	* Base HTTP PUT method for partial updates
 	*/
-
 	protected async put<T>(
 		endpoint: string,
 		body?: any,
@@ -113,9 +143,41 @@ export abstract class BaseApiService {
 	}
 
 	/*
+	* Base HTTP PUT method for multipart/form-data (file uploads with JSON)
+	*/
+	protected async putMultipart<T>(
+		endpoint: string,
+		formData: FormData,
+		config?: RequestConfig
+	): Promise<T> {
+		const url = this.buildUrl(endpoint);
+
+		// Get all headers except Content-Type
+		const headers = await this.getHeadersForMultipart(config);
+
+		const response = await this.executeRequest(
+			() =>
+				fetch(url, {
+					method: 'PUT',
+					headers: headers,
+					body: formData,
+					credentials: 'include',
+					signal: this.createAbortSignal(config?.timeout)
+				}),
+			config
+		);
+
+		const data = await this.parseResponse<T>(response);
+
+		//Invalidate related cache entries
+		this.invalidateCache('GET');
+
+		return data;
+	}
+
+	/*
 	* Base HTTP PATCH method for partial updates
 	*/
-
 	protected async patch<T>(
 		endpoint: string,
 		params?: Record<string, any>,
@@ -178,33 +240,32 @@ export abstract class BaseApiService {
 	/// UTILITY METHODS
 	///////////////////////////////////////////////
 
+
 	private async getHeaders(config?: RequestConfig): Promise<HeadersInit> {
 		const headers: HeadersInit = {
 			'Content-Type': 'application/json',
 			'Accept': 'application/json',
 		};
 
-/*
-		// Add authentication header if not skipped
-		if (!Config?.skipAuth) {
-			const token = await this.getAuthToken();
-			if (token) {
-				headers['Authorization'] = `Bearer ${token}`;
-			}
-		}
-
-		// Add CSRF token if available (similar to Spring Security)
-		const csrfToken = this.getCsrfToken();
-		if (csrfToken) {
-			headers['X-CSRF-Token'] = csrfToken;
-		}
-	*/
-
 		// Add correlation ID for distributed tracing
 		headers['X-Correlation-ID'] = this.generateCorrelationId();
 
+		// TODO Add X-User-UUID header to trakc created/updated by actions
+
 		return headers;
 
+	}
+
+	/**
+	 * Get headers for multipart requests (excludes Content-Type)
+	 */
+	private async getHeadersForMultipart(config?: RequestConfig): Promise<HeadersInit> {
+		const headers = await this.getHeaders(config);
+
+		// Remove Content-Type - browser will set it with boundary
+		delete (headers as Record<string, string>)['Content-Type'];
+
+		return headers;
 	}
 
 	private buildUrl(endpoint: string, params?: Record<string, any>): string {
@@ -369,7 +430,7 @@ export abstract class BaseApiService {
 	}
 
 	private generateCorrelationId(): string {
-		return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+		return crypto.randomUUID()
 	}
 
 	// Cache management

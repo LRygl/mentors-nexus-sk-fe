@@ -23,6 +23,7 @@
 		// EMBEDDED MODE PROPS
 		mode?: 'standard' | 'embedded'; // embedded = inline editing with change tracking
 		onDirtyChange?: (isDirty: boolean) => void; // Callback when dirty state changes
+		imageBaseUrl?: string;
 	}
 
 	let {
@@ -33,7 +34,8 @@
 		disabled = false,
 		showValidationSummary = true,
 		mode = 'standard',
-		onDirtyChange
+		onDirtyChange,
+		imageBaseUrl,
 	}: Props = $props();
 
 	// Form element reference for external access
@@ -109,6 +111,10 @@
 		});
 
 		formState.data = defaultData;
+
+		// ✅ Add this debug log
+		console.log('[UniversalForm] Initial data received:', initialData);
+		console.log('[UniversalForm] Form state data after init:', formState.data);
 
 		// Store original data for embedded mode
 		if (mode === 'embedded') {
@@ -424,6 +430,7 @@
 							{disabled}
 							onChange={handleFieldChange}
 							{shouldShowError}
+							{imageBaseUrl}
 						/>
 					</div>
 				{/if}

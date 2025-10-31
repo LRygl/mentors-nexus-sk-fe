@@ -11,6 +11,7 @@
 		onChange: (fieldName: string, value: any) => void;
 		visibleFields: string[];
 		shouldShowError: (fieldName: string) => boolean;
+		imageBaseUrl?: string;
 	}
 
 	let {
@@ -20,7 +21,8 @@
 		disabled = false,
 		onChange,
 		visibleFields,
-		shouldShowError
+		shouldShowError,
+		imageBaseUrl,
 	}: Props = $props();
 
 	let isCollapsed = $state(group.collapsed ?? false);
@@ -245,6 +247,7 @@
 												{disabled}
 												{onChange}
 												{shouldShowError}
+												{imageBaseUrl}
 											/>
 										</div>
 									{/if}
@@ -311,6 +314,7 @@
 												{disabled}
 												{onChange}
 												{shouldShowError}
+												{imageBaseUrl}
 											/>
 										</div>
 									{/if}

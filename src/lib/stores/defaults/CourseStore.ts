@@ -18,7 +18,6 @@ export class CourseStore extends BaseStoreSvelte<
 	CourseAdminApiService
 > {
 
-
 constructor() {
 		super(courseAdminApiService);
 	}
@@ -57,17 +56,95 @@ constructor() {
 	/*
 	* BASIC CRUD ACTIONS
 	*/
-	async createItem(createData: Partial<Course>): Promise<Course> {
-		return await this.apiService.createCourse(createData);
+	async createItem(createData: Partial<Course>, imageFile?: File): Promise<Course> {
+		return await this.apiService.createCourse(createData, imageFile);
 	}
 
-	async updateItem(id: string, updateData: Partial<Course>): Promise<Course> {
-		return await this.apiService.updateCourse(id, updateData);
+	/**
+	 * Update course with optional image
+	 * @param id - Course ID
+	 * @param updateData - Course data
+	 * @param imageFile - Optional image file
+	 */
+	async updateItem(id: string, updateData: Partial<Course>, imageFile?: File): Promise<Course> {
+		return await this.apiService.updateCourse(id, updateData, imageFile);
 	}
 
 	async deleteItem(id: string): Promise<void> {
 		return await this.apiService.deleteCourse(id);
 	}
+
+	/**
+	 * Wrapper for create that includes image handling and state management
+	 * This is what the page should call
+	 */
+	async create(createData: Partial<Course>, imageFile?: File): Promise<Course | null> {
+		// Prevent concurrent create operations
+		if (this._creating) return null;
+
+		this._creating = true;
+		this._createError = null;
+
+		try {
+			// Call the basic CRUD method
+			const newItem = await this.createItem(createData, imageFile);
+
+			// Add the new item to the beginning of the data array
+			this._data = [newItem, ...this._data]; // Trigger reactivity
+
+			// Optionally set as selected item (useful for navigation after creation)
+			this._selectedItem = newItem;
+
+			return newItem;
+		} catch (error) {
+			this._createError = error instanceof Error ? error.message : 'Failed to create item';
+			console.error('[STORE] Error creating course:', error);
+			throw error;
+		} finally {
+			this._creating = false;
+		}
+	}
+	/**
+	 * Wrapper for update that includes image handling
+	 * This is what the page should call
+	 */
+	async update(id: string, updateData: Partial<Course>, imageFile?: File): Promise<Course | null> {
+		if (this._updating) return null;
+
+		this._updating = true;
+		this._updateError = null;
+
+		try {
+			const updatedItem = await this.updateItem(id, updateData, imageFile);
+
+			// Update the item in the data array
+			const index = this._data.findIndex(item => item.id === id);
+			if (index !== -1) {
+				this._data[index] = updatedItem;
+				this._data = [...this._data]; // Trigger reactivity
+			}
+
+			// Update selected item if it's the same
+			if (this._selectedItem?.id === id) {
+				this._selectedItem = updatedItem;
+			}
+
+			return updatedItem;
+		} catch (error) {
+			this._updateError = error instanceof Error ? error.message : 'Failed to update item';
+			console.error('[STORE] Error updating course:', error);
+			throw error;
+		} finally {
+			this._updating = false;
+		}
+	}
+
+
+
+
+
+
+
 
 	async deleteSection(sectionId: string): Promise<void> {
 		if (!this._selectedItem) {

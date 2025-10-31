@@ -16,6 +16,7 @@ export interface Course extends BaseEntity {
 	name: string;
 	price: number;
 	status: CourseStatus | string;
+	imageUrl: string;
 
 	// Timestamps
 	created?: string;  // ✅ Changed from Date to string (API returns ISO string)
@@ -27,7 +28,7 @@ export interface Course extends BaseEntity {
 
 	// Relations - ✅ ADDED MISSING FIELDS
 	owner?: User;
-	ownerId?: string;
+	courseOwnerId?: string;
 	labels?: string[];  // Array of label names
 	categoryIds?: string[];  // Array of category IDs (for form)
 	categories?: string[];  // Array of category names (for display)

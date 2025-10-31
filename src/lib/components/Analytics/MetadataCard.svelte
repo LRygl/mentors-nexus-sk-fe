@@ -1,5 +1,5 @@
 <script lang="ts">
-
+	import type { Component } from 'svelte';
 	import MetadataItem from '$lib/components/Analytics/MetadataItem.svelte';
 
 	export interface MetadataItemConfig {
@@ -22,10 +22,10 @@
 	export interface MetadataCardProps {
 		title: string;
 		subtitle?: string;
-		icon?: string;
+		icon?: string | Component;  // ✅ Support both string and Component
 		badge?: {
 			text: string;
-			icon?: string;
+			icon?: string | Component;  // ✅ Support both string and Component
 		};
 		items: MetadataItemConfig[];
 		collapsible?: boolean;
@@ -55,6 +55,11 @@
 	}: MetadataCardProps = $props();
 
 	let isCollapsed = $state(collapsed);
+
+	// ✅ Helper to determine if icon is a Svelte component
+	function isComponent(value: unknown): value is Component {
+		return typeof value === 'function';
+	}
 
 	function toggleCollapse() {
 		if (collapsible) {
@@ -99,7 +104,13 @@
 			>
 				{#if icon}
 					<div class="w-10 h-10 rounded-lg bg-white/20 backdrop-blur-sm flex items-center justify-center flex-shrink-0">
-						{@html icon}
+						<!-- ✅ Handle both component and string icons -->
+						{#if isComponent(icon)}
+							{@const IconComponent = icon}
+							<IconComponent class="w-5 h-5 text-white" />
+						{:else if typeof icon === 'string'}
+							{@html icon}
+						{/if}
 					</div>
 				{/if}
 
@@ -124,8 +135,13 @@
 
 			{#if badge}
 				<div class="flex items-center gap-2 px-4 py-2 bg-white/20 border border-white/30 rounded-full backdrop-blur-sm flex-shrink-0">
+					<!-- ✅ Handle both component and string badge icons -->
 					{#if badge.icon}
-						{@html badge.icon}
+						{#if isComponent(badge.icon)}
+							<svelte:component this={badge.icon} class="w-4 h-4 text-white" />
+						{:else if typeof badge.icon === 'string'}
+							{@html badge.icon}
+						{/if}
 					{/if}
 					<span class="text-sm font-medium text-white">{badge.text}</span>
 				</div>

@@ -25,6 +25,8 @@ export function createCourseFields(
 		label: `${user.firstName} ${user.lastName} (${user.email})`
 	}))
 
+	console.log("User Options",userOptions);
+
 	return [
 		// Basic Information
 		{
@@ -41,7 +43,7 @@ export function createCourseFields(
 			colSpan: 2
 		},
 		{
-			name: 'image',
+			name: 'imageUrl',
 			label: 'Course Image',
 			type: 'image',
 			group: 'basic', // ✅ This must match the group id exactly
@@ -64,7 +66,7 @@ export function createCourseFields(
 			colSpan: 1
 		},
 		{
-			name: 'ownerId', // Store just the ID
+			name: 'courseOwnerId', // Store just the ID
 			label: 'Course Owner',
 			type: 'select',
 			group: 'basic',
@@ -162,9 +164,9 @@ const courseGroups: EntityGroupConfig[] = [
 		icon: '📝',
 		variant: 'default',
 		collapsible: false,
-		variants: {       embedded: true,    // ✅ Support both!
-			standard: true,
-			edit: true }
+		variants: {
+			embedded: true,
+		}
 	},
 	{
 		id: 'metadata',
@@ -173,9 +175,9 @@ const courseGroups: EntityGroupConfig[] = [
 		icon: '🗂️',
 		variant: 'default',
 		collapsible: true,
-		variants: {       embedded: true,    // ✅ Support both!
-			standard: true,
-			edit: true }
+		variants: {
+			embedded: true,
+		}
 	},
 	{
 		id: 'publishing',

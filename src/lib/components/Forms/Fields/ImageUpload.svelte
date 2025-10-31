@@ -1,11 +1,12 @@
-<!-- src/lib/components/Forms/Fields/ImageUpload.svelte -->
 <script lang="ts">
 	import { Upload, X, Image as ImageIcon, AlertCircle, Check, FileImage } from 'lucide-svelte';
 	import type { FormField } from '$lib/types/entities/forms';
 
+	// TODO fix display of placeholder - no placeholder is used the default upload icon should be shown if there is no imageUrl
+
 	interface Props {
 		field: FormField;
-		value: any;
+		value: any; // Can be a File object or a URL string
 		error?: string;
 		showError?: boolean;
 		disabled?: boolean;
@@ -30,20 +31,25 @@
 
 	// Map field props
 	let placeholder = $derived(field.placeholder || 'Upload an image...');
-	let maxSize = $derived(field.maxFileSize || 5 * 1024 * 1024); // Default 5MB
+	let maxSize = $derived(field.maxFileSize || 5 * 1024 * 1024);
 	let acceptedTypes = $derived(field.acceptedFileTypes || ['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 
-	// Initialize preview from existing value
 	$effect(() => {
 		if (value) {
 			if (typeof value === 'string') {
+				// String value = URL (either full URL or data URL)
 				previewUrl = value;
 				uploadError = null;
 			} else if (value instanceof File) {
+				// File object = create preview from File
 				const reader = new FileReader();
 				reader.onload = (e) => {
 					previewUrl = e.target?.result as string;
 					uploadError = null;
+				};
+				reader.onerror = () => {
+					uploadError = 'Failed to read file';
+					previewUrl = null;
 				};
 				reader.readAsDataURL(value);
 			}
@@ -52,13 +58,20 @@
 		}
 	});
 
+
+	$effect(() => {
+		return () => {
+			if (previewUrl && previewUrl.startsWith('blob:')) {
+				URL.revokeObjectURL(previewUrl);
+			}
+		};
+	});
+
 	function validateFile(file: File): string | null {
-		// Check file type
 		if (!acceptedTypes.includes(file.type)) {
 			return `Invalid file type. Accepted: ${acceptedTypes.map(t => t.split('/')[1].toUpperCase()).join(', ')}`;
 		}
 
-		// Check file size
 		if (file.size > maxSize) {
 			const maxSizeMB = (maxSize / (1024 * 1024)).toFixed(1);
 			return `File too large. Maximum size: ${maxSizeMB}MB`;
@@ -110,6 +123,11 @@
 	}
 
 	function clearImage() {
+		// Cleanup object URL if it exists
+		if (previewUrl && previewUrl.startsWith('blob:')) {
+			URL.revokeObjectURL(previewUrl);
+		}
+
 		previewUrl = null;
 		uploadError = null;
 		onChange(field.name, '');
@@ -143,6 +161,25 @@
 	function getFileExtension(filename: string): string {
 		return filename.split('.').pop()?.toUpperCase() || '';
 	}
+
+	function getFileName(): string {
+		if (value instanceof File) {
+			return value.name;
+		} else if (typeof value === 'string') {
+			// Extract filename from URL
+			try {
+				const url = new URL(value, window.location.origin);
+				const pathname = url.pathname;
+				const parts = pathname.split('/');
+				return decodeURIComponent(parts[parts.length - 1]) || 'Uploaded image';
+			} catch {
+				// If URL parsing fails, just use the last part after splitting by '/'
+				const parts = value.split('/');
+				return parts[parts.length - 1] || 'Uploaded image';
+			}
+		}
+		return 'Uploaded image';
+	}
 </script>
 
 <div class="space-y-2">
@@ -170,6 +207,11 @@
 					src={previewUrl}
 					alt="Preview"
 					class="w-full h-full object-contain"
+					onerror={(e) => {
+						// Handle image load errors
+						uploadError = 'Failed to load image';
+						console.error('[ImageUpload] Failed to load image:', previewUrl);
+					}}
 				/>
 
 				<!-- Hover Overlay with Actions -->
@@ -228,11 +270,7 @@
 						</div>
 						<div class="min-w-0 flex-1">
 							<p class="text-xs font-medium text-slate-900 truncate">
-								{#if value instanceof File}
-									{value.name}
-								{:else}
-									Uploaded image
-								{/if}
+								{getFileName()}
 							</p>
 							<p class="text-xs text-slate-500">
 								{#if value instanceof File}

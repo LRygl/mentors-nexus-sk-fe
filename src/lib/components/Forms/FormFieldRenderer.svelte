@@ -11,6 +11,7 @@
 		disabled?: boolean;
 		onChange: (fieldName: string, value: any) => void;
 		shouldShowError: (fieldName: string) => boolean;
+		imageBaseUrl: string;
 	}
 
 	let {
@@ -18,7 +19,8 @@
 		formState,
 		disabled = false,
 		onChange,
-		shouldShowError
+		shouldShowError,
+		imageBaseUrl,
 	}: Props = $props();
 
 	/**
@@ -72,6 +74,7 @@
 		checked={formState.data[field.name]}
 		{disabled}
 		{onChange}
+		{imageBaseUrl}
 	/>
 
 	<!-- Field Error/Help Text -->

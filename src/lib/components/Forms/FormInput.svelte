@@ -24,6 +24,7 @@
 		checked?: boolean;
 		disabled?: boolean;
 		onChange: (fieldName: string, value: any) => void;
+		imageBaseUrl?: string;
 	}
 
 	let {
@@ -33,7 +34,8 @@
 		checked = false,
 		showError = false,
 		disabled = false,
-		onChange
+		onChange,
+		imageBaseUrl,
 	}: Props = $props();
 
 	/**
@@ -71,6 +73,8 @@
 		showError,
 		disabled,
 		onChange,
+		// Only pass imageBaseUrl for image fields
+		...(field.type === 'image' && { imageBaseUrl }),
 		// Only pass checked for checkbox fields
 		...(field.type === 'checkbox' && { checked })
 	});
