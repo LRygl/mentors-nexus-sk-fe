@@ -11,6 +11,7 @@
 	import { FormDependencyHandler } from '$lib/components/Forms/FormDependencyHandler';
 	import FormGroupRenderer from '$lib/components/Forms/FormGroupRenderer.svelte';
 	import FormFieldRenderer from '$lib/components/Forms/FormFieldRenderer.svelte';
+	import { prepareEntityDataForSubmit } from '$lib/utils/ImageUtils';
 
 	// Props
 	interface Props<T extends Record<string, any> = Record<string, any>> {
@@ -20,10 +21,10 @@
 		className?: string;
 		disabled?: boolean;
 		showValidationSummary?: boolean;
-		// EMBEDDED MODE PROPS
 		mode?: 'standard' | 'embedded'; // embedded = inline editing with change tracking
 		onDirtyChange?: (isDirty: boolean) => void; // Callback when dirty state changes
 		imageBaseUrl?: string;
+		extractImageFile?: boolean;
 	}
 
 	let {
@@ -36,6 +37,7 @@
 		mode = 'standard',
 		onDirtyChange,
 		imageBaseUrl,
+		extractImageFile = true,
 	}: Props = $props();
 
 	// Form element reference for external access
@@ -111,10 +113,6 @@
 		});
 
 		formState.data = defaultData;
-
-		// ✅ Add this debug log
-		console.log('[UniversalForm] Initial data received:', initialData);
-		console.log('[UniversalForm] Form state data after init:', formState.data);
 
 		// Store original data for embedded mode
 		if (mode === 'embedded') {
@@ -358,10 +356,24 @@
 		if (validationResult.isValid) {
 			formState.isSubmitting = true;
 			try {
-				await callbacks.onSubmit?.(formState.data);
+				// Extract image file if enabled
+				let submitData = formState.data;
+				let imageFile: File | undefined;
+
+				if (extractImageFile) {
+					const prepared = prepareEntityDataForSubmit(formState.data);
+					submitData = prepared.data;
+					imageFile = prepared.imageFile;
+
+				}
+
+				// Call onSubmit with both data and imageFile
+				await callbacks.onSubmit?.(submitData, imageFile);
+
 				// Update original data after successful submit (embedded mode)
 				if (mode === 'embedded') {
-					originalData = JSON.parse(JSON.stringify(formState.data));
+					// Store the clean data (without File objects) as original
+					originalData = JSON.parse(JSON.stringify(submitData));
 					formState.submitCount = 0;
 				}
 			} catch (error) {

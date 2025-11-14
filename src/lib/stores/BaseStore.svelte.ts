@@ -296,24 +296,20 @@ export abstract class BaseStoreSvelte<
 	 * Update a specific item in the store by ID or UUID
 	 * Maintains reactivity by creating new array reference
 	 */
-	updateItemInStore(itemId: string, updatedItem: TEntity): void {
-		const index = this._data.findIndex(item => {
-			const id = item.id;
-			const uuid = (item as any).uuid;
-			return id === itemId || uuid === itemId;
-		});
+	protected updateItemInStore(id: string | number, updatedItem: TEntity): void {
+		const idStr = id.toString();
 
-		console.log('🔍 Updating item in store:', itemId, 'Found at index:', index);
+		// Update in data array
+		const index = this._data.findIndex(
+			(item) => item.id.toString() === idStr
+		);
 
 		if (index !== -1) {
-			console.log('📊 Old item:', this._data[index]);
-			console.log('📊 New item:', updatedItem);
 			this._data[index] = updatedItem;
-			this._data = [...this._data];
-			console.log('✅ Store data updated, triggering reactivity');
 		}
 
-		if (this._selectedItem?.id === itemId || (this._selectedItem as any)?.uuid === itemId) {
+		// ALSO update selectedItem if it matches
+		if (this._selectedItem && this._selectedItem.id.toString() === idStr) {
 			this._selectedItem = updatedItem;
 		}
 	}
@@ -345,7 +341,7 @@ export abstract class BaseStoreSvelte<
 		optimisticUpdate: (currentItem: TEntity) => TEntity,
 		apiCall: () => Promise<TResult>
 	): Promise<TResult> {
-		// Find the current item
+		// Find the current item (now checks both array and selectedItem)
 		const currentItem = this.getItemById(itemId) || this.getItemByUuid(itemId);
 
 		if (!currentItem) {
@@ -355,17 +351,19 @@ export abstract class BaseStoreSvelte<
 		// Store original state for rollback
 		const originalItem = JSON.parse(JSON.stringify(currentItem));
 
-		// Apply optimistic update
-		const updatedItem = optimisticUpdate(currentItem);
-		this.updateItemInStore(itemId, updatedItem);
-
 		try {
+			// Apply optimistic update
+			const updatedItem = optimisticUpdate(currentItem);
+			this.updateItemInStore(itemId, updatedItem);
+
 			// Perform API call
 			const result = await apiCall();
+
+			console.log('[BaseStore] Optimistic update succeeded');
 			return result;
 		} catch (error) {
 			// Rollback on error
-			console.error('Optimistic update failed, rolling back:', error);
+			console.error('[BaseStore] Optimistic update failed, rolling back:', error);
 			this.updateItemInStore(itemId, originalItem);
 			throw error;
 		}
@@ -435,12 +433,36 @@ export abstract class BaseStoreSvelte<
 	}
 
 	//Utility methods
-	getItemById(id: string): TEntity | undefined {
-		return this._data.find((item: TEntity) => item.id === id);
+	protected getItemById(id: string | number): TEntity | undefined {
+		const idStr = id.toString();
+
+		// First check the data array
+		const itemInArray = this._data.find((item) => item.id.toString() === idStr);
+		if (itemInArray) {
+			return itemInArray;
+		}
+
+		// Also check selectedItem
+		if (this._selectedItem && this._selectedItem.id.toString() === idStr) {
+			return this._selectedItem;
+		}
+
+		return undefined;
 	}
 
-	getItemByUuid(uuid: string): TEntity | undefined {
-		return this._data.find((item: TEntity) => (item as any).uuid === uuid);
+	protected getItemByUuid(uuid: string): TEntity | undefined {
+		// First check the data array
+		const itemInArray = this._data.find((item) => item.uuid === uuid);
+		if (itemInArray) {
+			return itemInArray;
+		}
+
+		// Also check selectedItem
+		if (this._selectedItem && this._selectedItem.uuid === uuid) {
+			return this._selectedItem;
+		}
+
+		return undefined;
 	}
 
 	async refresh(): Promise<void> {

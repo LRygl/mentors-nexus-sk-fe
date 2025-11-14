@@ -10,6 +10,10 @@ export class CourseAdminApiService extends BaseApiService {
 		super(API_CONFIG.BASE_URL);
 	}
 
+	// ============================================================================
+	// BASIC DATA FETCHING
+	// ============================================================================
+
 	async getAllCourses(): Promise<Course[]> {
 		try {
 			return await this.get<Course[]>(`${this.ENDPOINT}/all`);
@@ -26,52 +30,27 @@ export class CourseAdminApiService extends BaseApiService {
 		}
 	}
 
+	//
+	// BASIC CRUD
+	//
+
 	async createCourse(
 		createData: Partial<Course>,
 		imageFile?: File
 	): Promise<Course> {
-		console.log('=== createCourse called ===');
-		console.log('imageFile:', imageFile);
-		console.log('imageFile type:', typeof imageFile);
-		console.log('imageFile instanceof File:', imageFile instanceof File);
-		console.log('createData:', createData);
-
 		if (imageFile && imageFile instanceof File && imageFile.size > 0) {
-			console.log('✅ Using multipart/form-data');
-			console.log('File details:', {
-				name: imageFile.name,
-				size: imageFile.size,
-				type: imageFile.type
-			});
 
 			const formData = this.buildCourseFormData(createData, imageFile);
-
-			// Log FormData contents
-			console.log('=== FormData contents ===');
-			for (let [key, value] of formData.entries()) {
-				if (value instanceof File) {
-					console.log(`${key}:`, {
-						name: value.name,
-						size: value.size,
-						type: value.type
-					});
-				} else if (value instanceof Blob) {
-					console.log(`${key}: Blob (size: ${value.size}, type: ${value.type})`);
-				} else {
-					console.log(`${key}:`, value);
-				}
-			}
-
 			return await this.postMultipart<Course>(`${this.ENDPOINT}`, formData);
 		} else {
-			console.log('✅ Using application/json (no valid image file)');
 			return await this.post<Course>(`${this.ENDPOINT}`, createData);
 		}
 	}
+
 	async updateCourse(
 		courseId: string,
 		updateData: Partial<Course>,
-		imageFile?: File
+		imageFile?: File | undefined
 	): Promise<Course> {
 
 		if (imageFile) {
@@ -87,9 +66,10 @@ export class CourseAdminApiService extends BaseApiService {
 		await this.delete(`${this.ENDPOINT}/${id}`)
 	}
 
-	async deleteSection(sectionId: string) {
-		await this.delete(`${this.ENDPOINT}/section/${sectionId}`);
-	}
+
+	// ============================================================================
+	// SECTION MANAGEMENT
+	// ============================================================================
 
 	async createSection(courseId: string, sectionData: CreateSectionRequest): Promise<Course> {
 		return await this.post<Course>(`${this.ENDPOINT}/${courseId}/section`, sectionData);
@@ -99,6 +79,26 @@ export class CourseAdminApiService extends BaseApiService {
 		return await this.post<Course>(`${this.ENDPOINT}/section/reorder`, sectionIds);
 	}
 
+	async deleteSection(sectionId: string) {
+		await this.delete(`${this.ENDPOINT}/section/${sectionId}`);
+	}
+
+	//
+	// LESSON MANAGEMENT
+	//
+
+	async linkLesson(sectionId: string, lessonId: string) {
+		return await this.post<Course>(`${this.ENDPOINT}/section/${sectionId}/lesson/${lessonId}`);
+	}
+
+	async unlinkLesson(sectionId: string, lessonId: string) {
+		return await this.delete<Course>(`${this.ENDPOINT}/section/${sectionId}/lesson/${lessonId}`);
+	}
+
+
+	//
+	// UTILITY
+	//
 
 	private buildCourseFormData(courseData: Partial<Course>, imageFile: File): FormData {
 		const formData = new FormData();
@@ -119,6 +119,9 @@ export class CourseAdminApiService extends BaseApiService {
 
 		return formData;
 	}
+
+
+
 }
 
 export const courseAdminApiService = new CourseAdminApiService();

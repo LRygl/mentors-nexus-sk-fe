@@ -6,6 +6,7 @@ import type { Lesson } from '$lib/types/entities/Lesson';
 import { Eye, Trash2Icon } from '@lucide/svelte';
 import { ActionType } from '$lib/types';
 import type { User } from '$lib/types/entities/User';
+import { formatDuration } from '$lib/utils/DurationUtils';
 
 const lessonTableDefinition = defineTableConfig<Lesson>({
 	entity: 'Lesson',
@@ -40,7 +41,7 @@ const lessonTableDefinition = defineTableConfig<Lesson>({
 			cellClassName: 'font-mono text-xs text-slate-500',
 		},
 		{
-			key: 'createdDate',
+			key: 'createdAt',
 			header: 'Created',
 			type: 'datetime',
 			searchable: false,
@@ -48,7 +49,7 @@ const lessonTableDefinition = defineTableConfig<Lesson>({
 			cellClassName: 'font-mono text-xs text-slate-500',
 		},
 		{
-			key: 'updatedDate',
+			key: 'updatedAt',
 			header: 'Updated',
 			type: 'datetime',
 			searchable: false,

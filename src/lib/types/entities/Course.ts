@@ -18,9 +18,7 @@ export interface Course extends BaseEntity {
 	status: CourseStatus | string;
 	imageUrl: string;
 
-	// Timestamps
-	created?: string;  // ✅ Changed from Date to string (API returns ISO string)
-	updated?: string;  // ✅ Changed from Date to string
+
 	published?: string | null;  // ✅ Changed from Date to string
 
 	// Feature flag

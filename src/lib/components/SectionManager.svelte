@@ -1,11 +1,10 @@
 <script lang="ts" generics="TSection extends BaseSectionItem, TItem extends BaseItem">
-
-	// Base types that your data must extend
-	import ConfirmModal from '$lib/components/Modals/ConfirmModal.svelte';
-	import { courseStore } from '$lib/stores/defaults/CourseStore';
+	import { confirmationModal } from '$lib/components/Modals/ConfirmationModalService.svelte';
+	import { messages } from '$lib/i18n/messages';
 
 	export interface BaseItem {
 		id?: number | string;
+		uuid?: string;
 		orderIndex: number;
 	}
 
@@ -27,7 +26,7 @@
 		onAddSection?: () => void;
 		onDeleteSection?: (section: TSection & { items: TItem[] }, index: number) => void;
 		onAddItem?: (section: TSection & { items: TItem[] }, sectionIndex: number) => void;
-		onDeleteItem?: (sectionIndex: number, item: TItem, itemIndex: number) => void;
+		onDeleteItem?: (item: TItem, itemIndex: number,	section: TSection & { items: TItem[] },	sectionIndex: number) => void;
 		onSectionUpdate?: (sectionIndex: number, field: keyof TSection, value: any) => void;
 		onItemUpdate?: (sectionIndex: number, itemIndex: number, field: keyof TItem, value: any) => void;
 	}
@@ -82,12 +81,14 @@
 
 		if (draggedSection === null || draggedSection === index) return;
 
-		const newSections = [...sections];
+		// Create completely new array to trigger reactivity properly
+		const newSections = sections.map(s => ({ ...s, items: [...s.items] }));
 		const draggedItem = newSections[draggedSection];
 
 		newSections.splice(draggedSection, 1);
 		newSections.splice(index, 0, draggedItem);
 
+		// Update sections immutably
 		sections = newSections;
 		draggedSection = index;
 
@@ -109,15 +110,21 @@
 		if (!draggedItem || draggedItem.sectionIndex !== sectionIndex) return;
 		if (draggedItem.itemIndex === itemIndex) return;
 
-		const section = sections[sectionIndex];
-		const newItems = [...section.items];
-		const draggedElement = newItems[draggedItem.itemIndex];
+		// Create new sections array with new items array for the affected section
+		const newSections = sections.map((section, idx) => {
+			if (idx === sectionIndex) {
+				const newItems = [...section.items];
+				const draggedElement = newItems[draggedItem.itemIndex];
 
-		newItems.splice(draggedItem.itemIndex, 1);
-		newItems.splice(itemIndex, 0, draggedElement);
+				newItems.splice(draggedItem.itemIndex, 1);
+				newItems.splice(itemIndex, 0, draggedElement);
 
-		section.items = newItems;
-		sections = [...sections];
+				return { ...section, items: newItems };
+			}
+			return section;
+		});
+
+		sections = newSections;
 		draggedItem.itemIndex = itemIndex;
 
 		reorderItems(sectionIndex);
@@ -153,8 +160,14 @@
 		onAddSection?.();
 	}
 
-	function handleDeleteSection(section: TSection & { items: TItem[] }, index: number) {
+	async function handleDeleteSection(section: TSection & { items: TItem[] }, index: number) {
+		const modalConfirmed = await confirmationModal.delete(
+			messages.confirmation.deleteSection.title,
+			messages.confirmation.deleteSection.description
+		);
+		if (modalConfirmed) {
 			onDeleteSection?.(section, index);
+		}
 	}
 
 	function handleAddItem(sectionIndex: number) {
@@ -162,9 +175,14 @@
 		onAddItem?.(section, sectionIndex);
 	}
 
-	function handleDeleteItem(sectionIndex: number, item: TItem, itemIndex: number) {
-		if (confirm(`Are you sure you want to delete this ${itemTitle.toLowerCase()}?`)) {
-			onDeleteItem?.(sectionIndex, item, itemIndex);
+	async function handleDeleteItem(sectionIndex: number, item: TItem, itemIndex: number) {
+		const modalConfirmed = await confirmationModal.warning(
+			messages.confirmation.unlinkLesson.title,
+			messages.confirmation.unlinkLesson.description
+		)
+		if (modalConfirmed) {
+			const section = sections[sectionIndex];
+			onDeleteItem?.(item, itemIndex, section, sectionIndex);
 		}
 	}
 
@@ -209,7 +227,7 @@
 
 	{:else}
 		<div class="space-y-3">
-			{#each sections as section, sectionIndex (section.id || sectionIndex)}
+			{#each sections as section, sectionIndex (section.uuid || section.id || `section-${sectionIndex}`)}
 				<div
 					draggable="true"
 					ondragstart={() => handleSectionDragStart(sectionIndex)}
@@ -315,8 +333,7 @@
 										</div>
 									</slot>
 								{:else}
-									{#each section.items as item, itemIndex (item.id || itemIndex)}
-										<div
+									{#each section.items as item, itemIndex (item.uuid || item.id || `item-${sectionIndex}-${itemIndex}`)}										<div
 											draggable="true"
 											ondragstart={() => handleItemDragStart(sectionIndex, itemIndex)}
 											ondragover={(e) => handleItemDragOver(e, sectionIndex, itemIndex)}

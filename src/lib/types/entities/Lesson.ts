@@ -5,10 +5,10 @@ export interface Lesson extends BaseEntity {
 	uuid?: string;
 	title?: string;
 	description?: string;
+	imageUrl?: string;
 	videoUrl?: string;
 	length?: number; // Duration in seconds
-	createdDate?: Date;
-	updatedDate?: Date;
+	duration?: number;
 	orderIndex: number;
 
 	// Relations

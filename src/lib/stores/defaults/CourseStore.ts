@@ -2,6 +2,7 @@ import { BaseStoreSvelte } from '$lib/stores/BaseStore.svelte';
 import type { Course } from '$lib/types/entities/Course';
 import { courseAdminApiService, type CourseAdminApiService } from '$lib/API/Admin/CourseAdminAPI';
 import type { CourseSection } from '$lib/types/entities/CourseSection';
+import { lessonStore } from '$lib/stores/defaults/LessonStore';
 
 // TODO Move to separate file
 // Define the section creation request type
@@ -21,6 +22,10 @@ export class CourseStore extends BaseStoreSvelte<
 constructor() {
 		super(courseAdminApiService);
 	}
+
+	// ============================================================================
+	// BASIC DATA FETCHING
+	// ============================================================================
 
 	async fetchAll(): Promise<Course[]> {
 		this._loading = true;
@@ -53,19 +58,14 @@ constructor() {
 		}
 	}
 
-	/*
-	* BASIC CRUD ACTIONS
-	*/
+	// ============================================================================
+	// BASIC CRUD - These are the low-level API calls
+	// ============================================================================
+
 	async createItem(createData: Partial<Course>, imageFile?: File): Promise<Course> {
 		return await this.apiService.createCourse(createData, imageFile);
 	}
 
-	/**
-	 * Update course with optional image
-	 * @param id - Course ID
-	 * @param updateData - Course data
-	 * @param imageFile - Optional image file
-	 */
 	async updateItem(id: string, updateData: Partial<Course>, imageFile?: File): Promise<Course> {
 		return await this.apiService.updateCourse(id, updateData, imageFile);
 	}
@@ -73,6 +73,10 @@ constructor() {
 	async deleteItem(id: string): Promise<void> {
 		return await this.apiService.deleteCourse(id);
 	}
+
+	// ============================================================================
+	// ENHANCED CRUD - These wrap the basic CRUD with state management
+	// ============================================================================
 
 	/**
 	 * Wrapper for create that includes image handling and state management
@@ -104,12 +108,16 @@ constructor() {
 			this._creating = false;
 		}
 	}
+
 	/**
 	 * Wrapper for update that includes image handling
 	 * This is what the page should call
 	 */
 	async update(id: string, updateData: Partial<Course>, imageFile?: File): Promise<Course | null> {
-		if (this._updating) return null;
+		if (this._updating) {
+			console.warn('[CourseStore] Update already in progress');
+			return null;
+		}
 
 		this._updating = true;
 		this._updateError = null;
@@ -117,35 +125,49 @@ constructor() {
 		try {
 			const updatedItem = await this.updateItem(id, updateData, imageFile);
 
-			// Update the item in the data array
-			const index = this._data.findIndex(item => item.id === id);
-			if (index !== -1) {
-				this._data[index] = updatedItem;
-				this._data = [...this._data]; // Trigger reactivity
-			}
-
-			// Update selected item if it's the same
-			if (this._selectedItem?.id === id) {
-				this._selectedItem = updatedItem;
-			}
+			// Update in data array using the base store utility
+			this.updateItemInStore(id, updatedItem);
 
 			return updatedItem;
 		} catch (error) {
-			this._updateError = error instanceof Error ? error.message : 'Failed to update item';
-			console.error('[STORE] Error updating course:', error);
+			this._updateError = error instanceof Error ? error.message : 'Failed to update course';
+			console.error('[CourseStore] Error updating course:', error);
 			throw error;
 		} finally {
 			this._updating = false;
 		}
 	}
 
+	// ============================================================================
+	// SECTION MANAGEMENT
+	// ============================================================================
 
+	/**
+	 * Create a new section for a course
+	 * The API returns the updated Course object with the new section
+	 */
+	async createSection(courseId: string, sectionData: CreateSectionRequest): Promise<Course> {
+		if (!this._selectedItem) {
+			throw new Error('No course selected');
+		}
 
+		try {
+			const updatedCourse = await this.apiService.createSection(courseId, sectionData);
 
+			this._selectedItem = updatedCourse;
+			this.updateItemInStore(courseId, updatedCourse);
 
+			return updatedCourse;
+		} catch (error) {
+			console.error('[STORE] ❌ Error creating section:', error);
+			throw error;
+		}
+	}
 
-
-
+	/**
+	 * Delete a section from the current course
+	 * Uses optimistic update for instant UI feedback with automatic rollback
+	 */
 	async deleteSection(sectionId: string): Promise<void> {
 		if (!this._selectedItem) {
 			throw new Error('No course selected');
@@ -173,101 +195,31 @@ constructor() {
 				await this.apiService.deleteSection(sectionId);
 			}
 		);
-
-		console.log('✅ Section deleted with optimistic update');
 	}
-
-	/**
-	 * Create a new section for a course
-	 * The API returns the updated Course object, which we use to update the store
-	 * This maintains reactivity automatically
-	 */
-	async createSection(courseId: string, sectionData: CreateSectionRequest): Promise<Course> {
-		console.log('[STORE] createSection called');
-		console.log('[STORE] courseId:', courseId);
-		console.log('[STORE] sectionData:', sectionData);
-
-		if (!this._selectedItem) {
-			throw new Error('No course selected');
-		}
-
-		console.log('[STORE] Current sections before create:', this._selectedItem.sections.length);
-
-		try {
-			// Call the API to create the section - it returns the full updated course
-			console.log('[STORE] Calling API to create section...');
-			const updatedCourse = await this.apiService.createSection(courseId, sectionData);
-
-			console.log('[STORE] API returned updated course with sections:', updatedCourse.sections.length);
-
-			// ✅ DIRECTLY update selectedItem since we're on a detail page
-			this._selectedItem = updatedCourse;
-
-			// Also update in _data array IF it exists there (for list page consistency)
-			const index = this._data.findIndex(item => {
-				const id = item.id?.toString() || item.uuid;
-				return id === courseId;
-			});
-
-			if (index !== -1) {
-				console.log('[STORE] Also updating course in _data array at index:', index);
-				this._data[index] = updatedCourse;
-				this._data = [...this._data]; // Trigger reactivity
-			}
-
-			console.log('[STORE] ✅ Section created successfully');
-			console.log('[STORE] New section count:', this._selectedItem.sections.length);
-
-			return updatedCourse;
-
-		} catch (error) {
-			console.error('[STORE] ❌ Error creating section:', error);
-			throw error;
-		}
-	}
-
-
-
-
 
 	/**
 	 * Reorder course sections
-	 * @param courseId - The course ID
-	 * @param sectionIds - Array of section IDs in the new order
+	 * Uses optimistic update for instant UI feedback
 	 */
 	async reorderSections(courseId: string, sectionIds: number[]): Promise<Course> {
-		console.log('[STORE] Reordering sections for course:', courseId);
-		console.log('[STORE] New section order:', sectionIds);
-
 		if (!this._selectedItem) {
 			throw new Error('No course selected');
 		}
 
-		// Use optimistic update for instant UI feedback
 		await this.optimisticUpdate(
 			courseId,
 			// Optimistic update: reorder sections in memory
 			(currentCourse) => {
-				// Create a map of sections by ID for quick lookup
 				const sectionMap = new Map(
-					currentCourse.sections.map(s => [
-						parseInt(s.id, 10),
-						s
-					])
+					currentCourse.sections.map(s => [parseInt(s.id, 10), s])
 				);
 
-				// Reorder sections based on the new order
 				const reorderedSections = sectionIds
 					.map((id, index) => {
 						const section = sectionMap.get(id);
-						if (section) {
-							return { ...section, orderIndex: index + 1 };
-						}
-						return null;
+						return section ? { ...section, orderIndex: index + 1 } : null;
 					})
 					.filter((s): s is CourseSection => s !== null);
-
-				console.log('[STORE] Optimistically reordered sections:', reorderedSections.length);
 
 				return {
 					...currentCourse,
@@ -276,20 +228,139 @@ constructor() {
 			},
 			// API call
 			async () => {
-				console.log('[STORE] Calling API to reorder sections...');
 				const updatedCourse = await this.apiService.reorderSections(courseId, sectionIds);
 
 				// Update with server response
 				this.updateItemInStore(courseId, updatedCourse);
 				this._selectedItem = updatedCourse;
 
-				console.log('[STORE] ✅ Sections reordered successfully');
 				return updatedCourse;
 			}
 		);
 
 		return this._selectedItem as Course;
 	}
+
+	// ============================================================================
+	// LESSON MANAGEMENT
+	// ============================================================================
+
+	/**
+	 * Link a lesson to a course section
+	 * Uses optimistic update for instant UI feedback
+	 */
+	async linkLesson(courseId: string, sectionId: string, lessonId: string): Promise<void> {
+		console.log('[CourseStore] Linking lesson:', { courseId, sectionId, lessonId });
+
+		return this.optimisticUpdate(
+			courseId,
+			(currentCourse) => {
+				// Find the lesson to add from lessonStore
+				const lessonToAdd = lessonStore.data.find(l => l.id.toString() === lessonId.toString());
+
+				if (!lessonToAdd) {
+					throw new Error(`Lesson with id ${lessonId} not found in lesson store`);
+				}
+
+				// Deep clone to avoid reference issues
+				const updatedCourse = JSON.parse(JSON.stringify(currentCourse));
+
+				// Find and update the target section
+				const targetSectionIndex = updatedCourse.sections?.findIndex(
+					s => s.id.toString() === sectionId.toString()
+				);
+
+				if (targetSectionIndex === -1 || targetSectionIndex === undefined) {
+					throw new Error(`Section with id ${sectionId} not found`);
+				}
+
+				// Check if lesson is already in this section
+				const alreadyExists = updatedCourse.sections[targetSectionIndex].lessons?.some(
+					l => l.id.toString() === lessonId.toString()
+				);
+
+				if (alreadyExists) {
+					console.warn('[CourseStore] Lesson already exists in this section');
+					return currentCourse;
+				}
+
+				// Add lesson to section
+				if (!updatedCourse.sections[targetSectionIndex].lessons) {
+					updatedCourse.sections[targetSectionIndex].lessons = [];
+				}
+
+				updatedCourse.sections[targetSectionIndex].lessons.push(lessonToAdd);
+
+				console.log('[CourseStore] Optimistically added lesson to section');
+				return updatedCourse;
+			},
+			// API call
+			() => this.apiService.linkLesson(sectionId, lessonId)
+		);
+	}
+
+	/**
+	 * Unlink a lesson from a course section
+	 * Uses optimistic update for instant UI feedback
+	 */
+	async unlinkLesson(sectionId: string, lessonId: string): Promise<Course> {
+		if (!this._selectedItem) {
+			throw new Error('No course selected');
+		}
+
+		const courseId = this._selectedItem.id?.toString() || this._selectedItem.uuid;
+		if (!courseId) {
+			throw new Error('Course ID not found');
+		}
+
+		console.log('[CourseStore] Unlinking lesson:', lessonId, 'from section:', sectionId);
+
+		await this.optimisticUpdate(
+			courseId,
+			// Optimistic update: remove lesson from section immediately
+			(currentCourse) => {
+				const sectionIndex = currentCourse.sections.findIndex(s => {
+					const sId = s.id?.toString() || s.uuid;
+					return sId === sectionId;
+				});
+
+				if (sectionIndex === -1) {
+					console.warn('[CourseStore] Section not found for optimistic update');
+					return currentCourse;
+				}
+
+				const updatedSections = [...currentCourse.sections];
+				const targetSection = { ...updatedSections[sectionIndex] };
+
+				// Remove the lesson
+				targetSection.lessons = (targetSection.lessons || []).filter(lesson => {
+					const lId = lesson.id?.toString() || lesson.uuid;
+					return lId !== lessonId;
+				});
+
+				updatedSections[sectionIndex] = targetSection;
+
+				return {
+					...currentCourse,
+					sections: updatedSections
+				};
+			},
+			// API call
+			async () => {
+				const response = await this.apiService.unlinkLesson(sectionId, lessonId);
+
+				// Update with server response
+				this.updateItemInStore(courseId, response);
+				this._selectedItem = response;
+
+				console.log('[CourseStore] Lesson unlinked successfully');
+				return response;
+			}
+		);
+
+		return this._selectedItem as Course;
+	}
+
 
 }
 

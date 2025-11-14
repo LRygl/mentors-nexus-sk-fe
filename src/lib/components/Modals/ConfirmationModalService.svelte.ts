@@ -1,6 +1,8 @@
 // $lib/services/ConfirmationModalService.svelte.ts
 // This is a Svelte 5 runes-based service (similar to a Spring @Service)
 
+import { messages } from '$lib/i18n/messages';
+
 export type ConfirmVariant = 'confirm' | 'success' | 'warning' | 'error' | 'info' | `delete` ;
 
 export interface ConfirmConfig {
@@ -24,8 +26,8 @@ let state = $state<ConfirmState>({
 	variant: 'confirm',
 	title: '',
 	message: '',
-	confirmLabel: 'Confirm',
-	cancelLabel: 'Cancel',
+	confirmLabel: messages.buttons.default.confirm.confirm,
+	cancelLabel: messages.buttons.default.confirm.cancel,
 	showCancel: true
 });
 
@@ -46,7 +48,7 @@ class ConfirmationModalService {
 				...config,
 				isOpen: true,
 				confirmLabel: config.confirmLabel || this.getDefaultConfirmLabel(config.variant || 'confirm'),
-				cancelLabel: config.cancelLabel || 'Cancel',
+				cancelLabel: config.cancelLabel || messages.buttons.default.confirm.cancel,
 				showCancel: config.showCancel ?? true,
 				resolve
 			};
@@ -102,8 +104,8 @@ class ConfirmationModalService {
 			variant: 'error',
 			title,
 			message,
-			confirmLabel: 'Delete',
-			cancelLabel: 'Cancel',
+			confirmLabel: messages.buttons.default.confirm.confirm,
+			cancelLabel: messages.buttons.default.confirm.cancel,
 			showCancel: true
 		});
 	}
@@ -144,12 +146,12 @@ class ConfirmationModalService {
 	 */
 	private getDefaultConfirmLabel(variant: ConfirmVariant): string {
 		const labels: Record<ConfirmVariant, string> = {
-			confirm: 'Confirm',
-			success: 'OK',
-			error: 'OK',
-			warning: 'Proceed',
-			info: 'OK',
-			delete: 'Delete'
+			confirm: messages.buttons.default.confirm.confirm,
+			success: messages.buttons.default.confirm.success,
+			error: messages.buttons.default.confirm.error,
+			warning: messages.buttons.default.confirm.warning,
+			info: messages.buttons.default.confirm.info,
+			delete: messages.buttons.default.confirm.delete
 		};
 		return labels[variant];
 	}

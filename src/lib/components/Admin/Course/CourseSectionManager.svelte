@@ -136,15 +136,14 @@
 	 * Handle lesson unlinking (deletion from section)
 	 */
 	async function handleLessonDelete(
-		item: Lesson,
-		itemIndex: number,
-		section: SectionWithItems,
-		sectionIndex: number
+		item: Lesson,              // ← 1st parameter from SectionManager
+		_itemIndex: number,         // ← 2nd parameter from SectionManager
+		section: SectionWithItems, // ← 3rd parameter from SectionManager
+		_sectionIndex: number       // ← 4th parameter from SectionManager
 	) {
-		const confirmed = confirm(
-			`Are you sure you want to remove "${item.title}" from this section?`
-		);
-		if (!confirmed) return;
+		console.log('[CourseSectionsManager] Section ID:', section.id || section.uuid,
+			'Deleting Lesson ID:', item.id);
+
 
 		const sectionId = section.id || section.uuid;
 		const lessonId = item.id;
@@ -183,8 +182,6 @@
 		showSectionDescription={true}
 		collapsible={true}
 		defaultExpanded={false}
-		allowSectionReorder={true}
-		allowItemReorder={true}
 		onSectionsReorder={handleSectionsReorder}
 		onItemsReorder={handleLessonReorder}
 		onAddSection={onAddSection}

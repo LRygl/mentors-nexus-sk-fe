@@ -1,8 +1,8 @@
 <script lang="ts">
-
 	import { page } from '$app/state';
+	import CourseCategoryEditPage from '$lib/components/Admin/Course Category/CourseCategoryEditPage.svelte';
 
-	const pageId = page.params.id;
-
+	let courseCategoryId = $derived(page.params.id);
 </script>
-Station Category ID {pageId}
+
+<CourseCategoryEditPage courseCategoryId={courseCategoryId} />

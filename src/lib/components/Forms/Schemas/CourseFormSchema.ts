@@ -25,8 +25,6 @@ export function createCourseFields(
 		label: `${user.firstName} ${user.lastName} (${user.email})`
 	}))
 
-	console.log("User Options",userOptions);
-
 	return [
 		// Basic Information
 		{

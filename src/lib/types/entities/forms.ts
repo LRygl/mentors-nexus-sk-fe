@@ -249,9 +249,9 @@ export interface FormSchema<T = Record<string, any>> {
 	confirmOnLeave?: boolean;
 
 	// Lifecycle callbacks
-	onBeforeSubmit?: (data: T) => Promise<boolean> | boolean;
-	onAfterSubmit?: (data: T, result: any) => void;
-	onFieldChange?: (field: string, value: any, formData: T) => void;
+	onBeforeSubmit?: (data: Partial<T>) => Promise<boolean> | boolean;
+	onAfterSubmit?: (data: Partial<T>, result: any) => void;
+	onFieldChange?: (field: string, value: any, formData: Partial<T>) => void;
 }
 
 // ============================================================================
@@ -278,7 +278,7 @@ export interface FormState<T = Record<string, any>> {
 export interface FormCallbacks<T = Record<string, any>> {
 	onValidate?: (result: FormValidationResult) => void;
 	onChange?: (field: string, value: any, formState: FormState<T>) => void;
-	onSubmit?: (data: T) => Promise<void> | void;
+	onSubmit?: (data: T, imageFile?: File) => Promise<void> | void;
 	onReset?: () => void;
 	onCancel?: () => void;
 	onFieldFocus?: (field: string) => void;

@@ -36,7 +36,6 @@
 			// If not focused, this is likely a programmatic change (discard/reset)
 			if (!isFocused) {
 				originalValue = value;  // Update original value on external change
-				console.log('[TextInput] 🔄 Reset detected for:', field.name, { from: previousValue, to: value });
 			}
 			previousValue = value;
 		}

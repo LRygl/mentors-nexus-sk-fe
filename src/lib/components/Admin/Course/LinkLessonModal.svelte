@@ -39,7 +39,7 @@
 	let isFormValid = $state(false);
 
 	// Form schema - dynamically updated with available lessons
-	let schema = $derived(CourseLinkFormPresets.link(availableLessons));
+	let formSchema = $derived(CourseLinkFormPresets.link(availableLessons));
 
 	/**
 	 * Form callbacks
@@ -99,7 +99,6 @@
 		event.preventDefault();
 
 		if (!isFormValid || !sectionId) {
-			console.warn('[LinkLessonModal] Form is not valid or section ID is missing');
 			return;
 		}
 
@@ -139,7 +138,7 @@
 		{:else}
 			<UniversalForm
 				bind:this={formRef}
-				schema={schema}
+				schema={formSchema}
 				callbacks={formCallbacks}
 				className="space-y-6"
 				onDirtyChange={handleFormDirtyChange}

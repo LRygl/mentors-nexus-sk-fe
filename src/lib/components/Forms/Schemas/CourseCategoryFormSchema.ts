@@ -4,6 +4,7 @@ import {
 	type EntityGroupConfig
 } from '$lib/components/Forms/Schemas/FormSchemaFactory';
 import type { CourseCategory } from '$lib/types/entities/CourseCategory';
+import { createCourseSchemaFactory } from '$lib/components/Forms/Schemas/CourseFormSchema';
 
 export const QUICK_COLORS = [
 	{ name: 'Blue', value: '#3B82F6' },
@@ -25,33 +26,33 @@ export function createCourseCategoryFields(courseCategory: CourseCategory[] = []
 			label: 'Category name',
 			type: 'text',
 			group: 'content',
-			variants: { quick: true, standard: true, detailed: true, edit: true },
+			variants: { quick: true, standard: true, embedded: true },
 			required: true,
 			minLength: 3,
 			maxLength: 20,
 			placeholder: 'Name of the new category?',
 			helpText: 'Keep it clear and concise',
-			colSpan: 2
+			colSpan: 1
 		},
 		{
 			name: 'description',
 			label: 'Description',
 			type: 'text',
 			group: 'content',
-			variants: { standard: true, edit: true },
+			variants: { standard: true, edit: true, embedded: true },
 			required: true,
 			minLength: 3,
 			maxLength: 20,
 			placeholder: 'Name of the new category?',
 			helpText: 'Keep it clear and concise',
-			colSpan: 2
+			colSpan: 1
 		},
 		{
 			name: 'colorCode',
 			label: 'Color',
 			type: 'color',
 			group: 'content',
-			variants: { standard: true, edit: true },
+			variants: { standard: true, edit: true, embedded: true },
 			options: QUICK_COLORS.map(color => ({
 				label: color.name,
 				value: color.value,
@@ -62,7 +63,6 @@ export function createCourseCategoryFields(courseCategory: CourseCategory[] = []
 			colSpan: 1
 		},
 	];
-
 }
 
 const courseCategoryGroup: EntityGroupConfig[] = [
@@ -72,7 +72,7 @@ const courseCategoryGroup: EntityGroupConfig[] = [
 		description: 'Question and answer content',
 		icon: '📝',
 		variant: 'default',
-		variants: { standard: true, edit: true }
+		variants: { standard: true, edit: true, embedded: true },
 	}
 ]
 
@@ -87,6 +87,12 @@ export function createCourseCategorySchemaFactory() {
 				submitLabel: 'Create Course Category',
 				showReset: true,
 				showCancel: true,
+			},
+			embedded: {
+				title: 'Create Course Category',
+				submitLabel: 'Create Course Category',
+				showReset: true,
+				showCancel: true,
 			}
 		}
 	});
@@ -94,5 +100,6 @@ export function createCourseCategorySchemaFactory() {
 
 export const CourseCategoryFormPresets = {
 	standard: () => createCourseCategorySchemaFactory().create('standard'),
+	embedded: () => { return createCourseCategorySchemaFactory().create('embedded'); },
 };
 

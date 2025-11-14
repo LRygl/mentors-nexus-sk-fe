@@ -12,6 +12,12 @@ export class CourseCategoryStore extends BaseStoreSvelte<
 		super(courseCategoryAdminApiService);
 	};
 
+
+	// ============================================================================
+	// BASIC DATA FETCHING
+	// ============================================================================
+
+
 	async fetchAll(): Promise<CourseCategory[]> {
 		this._loading = true;
 
@@ -26,11 +32,32 @@ export class CourseCategoryStore extends BaseStoreSvelte<
 		}
 	};
 
-	/*
-	* BASIC CRUD ACTIONS
- 	*/
+	async fetchItem(courseCategoryId: string): Promise<CourseCategory> {
+		this._loadingItem = true;
+		this._itemError = null;
+
+		try {
+			const courseCategory = await this.apiService.getCourseCategoryById(courseCategoryId);
+			this._selectedItem = courseCategory;
+			return courseCategory;
+		} catch (error) {
+			this._itemError = error instanceof Error ? error.message : 'Failed to load course category';
+			throw error;
+		} finally {
+			this._loadingItem = false;
+		}
+	}
+
+	// ============================================================================
+	// BASIC CRUD - These are the low-level API calls
+	// ============================================================================
+
 	async createItem(createData: Partial<CourseCategory>): Promise<CourseCategory> {
 		return await this.apiService.createCourseCategory(createData);
+	}
+
+	async updateItem(id: string, updateData: Partial<CourseCategory>): Promise<CourseCategory> {
+		return await this.apiService.updateCourseCategory(id, updateData);
 	}
 
 	async deleteItem(id: string): Promise<void> {

@@ -7,11 +7,13 @@
 	import { userStore } from '$lib/stores/defaults/UserStore';
 	import type { Course } from '$lib/types/entities/Course';
 	import { ROUTES } from '$lib/Config/routes.config';
-	import { getEntityImageUrl, prepareEntityDataForSubmit } from '$lib/utils/ImageUtils';
+	import { getEntityImageUrl } from '$lib/utils/ImageUtils';
 	import type { CourseStatus } from '$lib/types/enums/CourseStatus';
 	import { getCourseStatusColors } from '$lib/Config/UIConstants';
 	import { BookIcon, User } from '@lucide/svelte';
 	import { API_CONFIG } from '$lib/API/APIConfiguration';
+	import EntityDetailsSection from '$lib/components/EntityDetailsSection.svelte';
+	import type { MetadataConfig } from '$lib/types/Components/MetadataConfig';
 
 	interface Props {
 		course: Course;
@@ -24,8 +26,13 @@
 	let formRef: UniversalForm;
 	let hasFormChanges = $state(false);
 	let isFormValid = $state(true);
-	let isSaving = $state(false);
-	let formErrors = $state<Record<string, string>>({});
+	let metadata = $derived.by((): MetadataConfig => ({
+		title: 'Lesson Metadata',
+		subtitle: 'System information and statistics',
+		icon: BookIcon,
+		columns: 4,
+		items: buildMetadataItems()
+	}));
 
 	// Use centralized status colors
 	let status = $derived(course?.status as CourseStatus ?? CourseStatus.DRAFT);
@@ -53,54 +60,13 @@
 
 	}));
 
-	const courseFormCallbacks = {
-		onSubmit: handleSubmit,
-		onChange: (field: string, value: any) => {},
-		onValidate: (result: any) => {
-			isFormValid = result.isValid;
-			formErrors = result.errors || {};
-		}
-	};
-
-	async function handleSubmit(formData: Partial<Course>) {
-		isSaving = true;
-		try {
-			// Data preparation logic
-			const { data: cleanData, imageFile } = prepareEntityDataForSubmit(formData);
-
-			// Call parent handler
-			await onUpdate(cleanData, imageFile);
-
-			// Reset form state
-			formRef?.reset(formData);
-			hasFormChanges = false;
-		} finally {
-			isSaving = false;
-		}
-	}
-
-	function handleSaveClick() {
-		if (formRef && hasFormChanges && isFormValid) {
-			formRef.submit();
-		}
-	}
-
-	function handleDiscardClick() {
-		if (formRef && hasFormChanges) {
-			if (confirm('Are you sure you want to discard all changes?')) {
-				formRef.discard();
-				hasFormChanges = false;
-			}
-		}
-	}
 
 
-
-	/**
-	 * METADATA CONFIGURATION
-	 * This is view logic - it defines HOW to display the course data
-	 */
-	let metadataItems = $derived.by((): MetadataItemConfig[] => {
+	// ============================================================
+	// METADATA BUILDER
+	// Converts entity data into displayable metadata items
+	// ============================================================
+	function buildMetadataItems(): MetadataItemConfig[] {
 		if (!course) return [];
 
 		return [
@@ -124,21 +90,35 @@
 			},
 			{
 				label: 'Created',
-				value: course.created || '',
-				type: 'datetime'
+				value: course.createdAt || 'Never',
+				type: course.createdAt ? 'datetime' : 'text'
+			},
+			{
+				label: 'Created By',
+				value: course.createdBy || 'Not Available',
+				type: 'text',
+				canCopy: true
 			},
 			{
 				label: 'Last Updated',
-				value: course.updated || 'Never',
-				type: course.updated ? 'datetime' : 'text'
+				value: course.updatedAt || 'Never',
+				type: course.updatedAt ? 'datetime' : 'text'
 			},
 			{
-				label: 'Published',
-				value: course.published || 'Not published',
-				type: course.published ? 'datetime' : 'text'
+				label: 'Created By',
+				value: course.createdBy || 'Not Available',
+				type: 'text',
+				canCopy: true
+			},
+
+			{
+				label: 'Owner',
+				value: course.owner?.firstName + " " +  course.owner?.lastName || 'Not published',
+				subtitle: course.owner?.email,
+				type: 'text'
 			},
 		];
-	});
+	}
 
 	/**
 	 * Helper function for status descriptions
@@ -155,38 +135,15 @@
 
 </script>
 
-<StickyFormHeader
-	title="Edit Terminal"
-	subtitle={course.name}
+<EntityDetailsSection
+	entity={course}
+	entityName="Terminal"
+	formSchema={courseFormSchema}
+	{formInitialData}
 	backUrl={ROUTES.ADMIN.COURSE}
-	hasChanges={hasFormChanges}
-	isSaving={isSaving}
-	isValid={isFormValid}
-	errors={formErrors}
-	onSave={handleSaveClick}
-	onDiscard={handleDiscardClick}
-/>
-
-<MetadataCard
-	title="Terminal Metadata"
-	subtitle="System information and statistics"
-	icon={BookIcon}
-	badge={{
-      text: `${course.students || 0} Students`,
-      icon: User
-    }}
-	items={metadataItems}
-	columns={4}
+	{metadata}
 	gradientFrom={statusColors.from}
 	gradientTo={statusColors.to}
-/>
-
-<UniversalForm
-	bind:this={formRef}
-	schema={courseFormSchema}
-	initialData={formInitialData}
-	callbacks={courseFormCallbacks}
-	mode="embedded"
-	onDirtyChange={(isDirty) => hasFormChanges = isDirty}
+	{onUpdate}
 	imageBaseUrl={API_CONFIG.FULL_BASE_URL+API_CONFIG.ENDPOINTS.ADMIN.COURSES}
 />

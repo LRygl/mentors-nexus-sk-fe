@@ -2,6 +2,7 @@ import type { RequestConfig } from '$lib/types/common';
 import { API_CONFIG } from '$lib/API/APIConfiguration';
 import { toastService } from '$lib/Services/ToastService.svelte';
 import type { APIErrorResponse } from '$lib/types/entities/APIErrorResponse';
+import { authStore } from '$lib/stores/Auth.svelte';
 
 export abstract class BaseApiService {
 	protected readonly baseUrl: string;
@@ -249,6 +250,8 @@ export abstract class BaseApiService {
 
 		// Add correlation ID for distributed tracing
 		headers['X-Correlation-ID'] = this.generateCorrelationId();
+		// Add User UUID identification for each operation
+		headers['X-USER-UUID'] = authStore.user?.uuid || '';
 
 		// TODO Add X-User-UUID header to trakc created/updated by actions
 

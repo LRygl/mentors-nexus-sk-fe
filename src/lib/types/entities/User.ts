@@ -10,7 +10,7 @@ import type { BaseEntity } from '$lib/types';
 export interface User extends BaseEntity {
 	// Primary fields
 	id: string;
-	UUID: string;
+	uuid: string;
 	firstName: string;
 	lastName: string;
 	email: string;

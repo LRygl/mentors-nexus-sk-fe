@@ -19,14 +19,18 @@
 ## Terminal
 
 - [ ] Add Cover image
+- [ ] Enroll user modal
 - [ ] Add dialog to link lessons
   - [ ] Finish lesson linking
-- [ ] Add select to change course owner courseOwnerId
+- [x] Add select to change course owner courseOwnerId
 - [ ] Display list of enrolled users
 - [ ] Display price history
 - [ ] The overview list should show propperly styled status
-- [ ] The list should display the owner
-- [ ] The list should display the published date
+- [ ] The overview should display the featured status
+- [x] The list should display the owner
+- [x] The list should display the published date
+- [ ] Propper metadata section including the Updated By and Created By
+- [ ] User list filtered to eligible users only
 
 - 
 ## Authentication

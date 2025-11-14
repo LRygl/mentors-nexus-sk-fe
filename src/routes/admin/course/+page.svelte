@@ -15,7 +15,6 @@
 	import { goto } from '$app/navigation';
 	import { confirmationModal } from '$lib/components/Modals/ConfirmationModalService.svelte';
 	import { userStore } from '$lib/stores/defaults/UserStore';
-	import { prepareEntityDataForSubmit } from '$lib/utils/ImageUtils';
 
 	let selectedItems = $state<Set<string>>(new Set);
 	let isCreateModalOpen = $state<boolean>(false);
@@ -65,7 +64,6 @@
 		},
 
 		onCreate: () => {
-			console.log('[PAGE] Creating new course');
 			createModal();
 		}
 	}
@@ -87,17 +85,8 @@
 
 	// Called when form validation passes
 	async function handleValidFormSubmit(formData: Partial<Course>, imageFile?: File) {
-		console.log('=== handleValidFormSubmit ===');
-		console.log('[snapshot] formData:', $state.snapshot(formData));
-
 		try {
-			// ✅ Use the same utility function as the update form
-			const { data: cleanData, imageFile: extractedImageFile } = prepareEntityDataForSubmit(formData);
-
-			console.log('cleanData:', cleanData);
-			console.log('extractedImageFile:', extractedImageFile);
-
-			const newCourse = await courseStore.create(cleanData, extractedImageFile);
+			const newCourse = await courseStore.create(formData, imageFile);
 
 			if (newCourse?.id) {
 				closeCreateModal();

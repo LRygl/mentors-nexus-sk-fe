@@ -18,6 +18,7 @@ export const load: LayoutLoad = async ({ url }) => {
 		isInitialized: authStore.isInitialized
 	});
 
+
 	// Ensure auth is initialized
 	if (!authStore.isInitialized) {
 		console.log('[ADMIN GUARD] ⏳ Initializing auth...');
@@ -33,6 +34,7 @@ export const load: LayoutLoad = async ({ url }) => {
 	// Check admin role
 	const userRole = authStore.user.role?.toUpperCase();
 	const isAdmin = userRole === 'ROLE_ADMIN' || userRole === 'ADMIN';
+	const userUuid = authStore.user.UUID;
 
 	console.log('[ADMIN GUARD] 🔒 User role:', userRole, 'Is Admin:', isAdmin);
 
@@ -42,6 +44,8 @@ export const load: LayoutLoad = async ({ url }) => {
 	}
 
 	console.log('[ADMIN GUARD] ✅ Admin access granted');
+	console.log("[X-USER-UUID] Header value set to:", userUuid)
+
 
 	// Return user data (fresh from authStore)
 	return {

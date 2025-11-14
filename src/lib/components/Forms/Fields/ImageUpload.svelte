@@ -122,7 +122,7 @@
 		isDragging = false;
 	}
 
-	function clearImage() {
+	function clear() {
 		// Cleanup object URL if it exists
 		if (previewUrl && previewUrl.startsWith('blob:')) {
 			URL.revokeObjectURL(previewUrl);

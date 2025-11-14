@@ -10,14 +10,14 @@ import { createFAQLinkFields } from '$lib/components/Forms/Schemas/FAQLinkFormSc
 export function createLessonLinkFields(lessons: Lesson[] = []): EntityFieldConfig[] {
 
 	const lessonOptions = lessons.map((lesson) => ({
-		label: lesson.id,
-		value: lesson.title,
+		label: lesson.title,
+		value: lesson.id,
 		subtitle: lesson.description
 	}));
 
 	return [
 		{
-			name: 'lessons',
+			name: 'lessonId',
 			label: 'Select Lesson',
 			type: 'select',
 			variants: { link: true },

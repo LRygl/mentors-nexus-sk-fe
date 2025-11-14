@@ -24,7 +24,7 @@ export interface PreparedFormData<T> {
 
 export function getEntityImageUrl(
 	entityType: 'course' | 'lesson' | 'user',
-	imageUrl: string | null
+	imageUrl: string | null | undefined,
 ): string {
 	if (!imageUrl) {
 		return `/placeholder-${entityType}.png`;

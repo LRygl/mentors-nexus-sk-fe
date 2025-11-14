@@ -32,8 +32,15 @@ export class CourseCategoryAdminApiService extends BaseApiService {
 
 
 	async deleteCourseCategory(id: string): Promise<void> {
-		console.log('[API Calling DELETE on Course Category Endpoint for ID: ]',id)
-		await this.delete(`${this.ENDPOINT}/${id}`)
+		return await this.delete(`${this.ENDPOINT}/${id}`)
+	}
+
+	async getCourseCategoryById(courseCategoryId: string): Promise<CourseCategory> {
+			return await this.get<CourseCategory>(`${this.ENDPOINT}/${courseCategoryId}`);
+	}
+
+	async updateCourseCategory(id: string, updateData: Partial<CourseCategory>) {
+		return await this.put<CourseCategory>(`${this.ENDPOINT}/${id}`, updateData);
 	}
 }
 
