@@ -32,7 +32,7 @@ export interface ActionGroup {
 export interface EntityColumnConfig<T = any> {
 	key: keyof T | string;
 	header: string;
-	type?: 'text' | 'number' | 'date' | 'datetime' | 'badge' | 'count' | 'boolean' | 'custom' | 'icon';
+	type?: 'text' | 'number' | 'date' | 'datetime' | 'badge' | 'count' | 'boolean' | 'custom' | 'icon' | 'duration';
 
 	// Display options
 	searchable?: boolean;
@@ -49,6 +49,7 @@ export interface EntityColumnConfig<T = any> {
 	color?: string; // For badges/counts
 	trueLabel?: string; // For booleans
 	falseLabel?: string; // For booleans
+	durationUnit?: 'seconds' | 'minutes';
 
 	// Add accessor function for nested values
 	accessor?: (item: T) => any;
@@ -172,6 +173,17 @@ export class TableConfigFactory<T = any> {
 					renderType: 'date',
 					renderOptions: {
 						dateFormat: 'datetime',
+						format: config.format || 'short'
+					}
+				};
+
+
+			case 'duration':
+				return {
+					...baseColumn,
+					renderType: 'duration',
+					renderOptions: {
+						durationUnit: config.durationUnit || 'minutes',
 						format: config.format || 'short'
 					}
 				};

@@ -2,6 +2,7 @@ import { BaseStoreSvelte } from '$lib/stores/BaseStore.svelte';
 import type { Lesson } from '$lib/types/entities/Lesson';
 import { lessonAdminApiService, type LessonAdminApiService } from '$lib/API/Admin/LessonAdminAPI';
 import type { Course } from '$lib/types/entities/Course';
+import { courseAdminApiService } from '$lib/API/Admin/CourseAdminAPI';
 
 
 export class LessonStoreSvelte extends BaseStoreSvelte<
@@ -72,7 +73,7 @@ export class LessonStoreSvelte extends BaseStoreSvelte<
 	 */
 	async update(id: string, updateData: Partial<Lesson>, imageFile?: File): Promise<Lesson | null> {
 		if (this._updating) {
-			console.warn('[CourseStore] Update already in progress');
+			console.warn('[CourseStoreSvelte] Update already in progress');
 			return null;
 		}
 
@@ -88,10 +89,55 @@ export class LessonStoreSvelte extends BaseStoreSvelte<
 			return updatedItem;
 		} catch (error) {
 			this._updateError = error instanceof Error ? error.message : 'Failed to update course';
-			console.error('[CourseStore] Error updating course:', error);
+			console.error('[CourseStoreSvelte] Error updating course:', error);
 			throw error;
 		} finally {
 			this._updating = false;
+		}
+	}
+
+	// ============================================================================
+	// External entity lesson link/unlink
+	// ============================================================================
+
+	/**
+	 * Unlink a lesson from its section
+	 * Used when unlinking from Lessons page (no course context)
+	 * Updates the lesson list after successful unlink
+	 */
+	async unlinkFromCourseSection(lessonId: string, sectionId: string): Promise<void> {
+		console.log('[LessonStore] Unlinking lesson:', lessonId, 'from section:', sectionId);
+
+		// Find the lesson in the store
+		const lesson = this.getItemById(lessonId);
+
+		if (!lesson) {
+			throw new Error(`Lesson with id ${lessonId} not found`);
+		}
+
+		// Store original for potential rollback
+		const originalLesson = { ...lesson };
+
+		try {
+			// Optimistic update: clear section reference
+			this.updateItemInStore(lessonId, {
+				...lesson,
+				sectionId: undefined,
+				section: undefined
+			} as Lesson);
+
+			// Make API call using course API service
+			await courseAdminApiService.unlinkLesson(sectionId, lessonId);
+
+			// Refresh the lesson to get updated state from server
+			await this.refreshItem(lessonId);
+
+			console.log('[LessonStore] Lesson unlinked and refreshed successfully');
+		} catch (error) {
+			// Rollback on error
+			console.error('[LessonStore] Error unlinking lesson, rolling back:', error);
+			this.updateItemInStore(lessonId, originalLesson);
+			throw error;
 		}
 	}
 

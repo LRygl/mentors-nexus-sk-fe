@@ -103,7 +103,7 @@ export const userMenuConfigs: Record<string, UserMenuConfig> = {
 				id: 'courses',
 				label: 'My Courses',
 				icon: 'GraduationCap',
-				href: '/courses',
+				href: '/course',
 				roles: [Role.USER]
 			},
 			{

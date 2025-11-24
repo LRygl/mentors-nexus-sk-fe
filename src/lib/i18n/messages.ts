@@ -4,7 +4,7 @@ export const messages = {
 
 		deleteSection: {
 			title: 'Are you sure you want to delete this section??',
-			description: 'All lessons contained in this section will be automatically unlinked and available for other courses.?',
+			description: 'All lessons contained in this section will be automatically unlinked and available for other course.?',
 		},
 		unlinkLesson: {
 			title: 'Are you sure you want to unlink this lesson?',
@@ -16,7 +16,22 @@ export const messages = {
 		loading: 'Loading...',
 	},
 
+	course: {
+		viewCourseDetail: 'Check Site',
+		courseStudentCout: 'users',
+		courseAuthor: 'Author',
+		courseFeatured: 'Featured',
+		courseReviews: 'Reviews',
 
+		featured: {
+			pill: 'Featured Stations',
+			heading: 'Start Your ',
+			headingHighlight: 'Travels',
+			description: 'Explore our most popular course designed by industry experts to accelerate your career growth',
+			showAllCourses: 'View All stations',
+		}
+
+	},
 
 	buttons: {
 		default: {
@@ -32,6 +47,11 @@ export const messages = {
 		},
 
 
+	},
+
+	store: {
+		clearFilters: 'Clear Filters',
+		noCoursesFound: 'No stations found.',
 	}
 
 } as const

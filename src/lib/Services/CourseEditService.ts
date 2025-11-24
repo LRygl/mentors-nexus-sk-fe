@@ -1,4 +1,4 @@
-import { courseStore } from '$lib/stores/defaults/CourseStore';
+import { courseStore } from '$lib/stores/defaults/CourseStore.svelte';
 import { toastService } from '$lib/Services/ToastService.svelte';
 import type { CourseSection } from '$lib/types/entities/CourseSection';
 import type { Course } from '$lib/types/entities/Course';

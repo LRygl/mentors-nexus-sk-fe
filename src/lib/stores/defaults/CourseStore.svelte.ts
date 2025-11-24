@@ -12,14 +12,37 @@ export interface CreateSectionRequest {
 	orderIndex: number;
 }
 
-export class CourseStore extends BaseStoreSvelte<
+export class CourseStoreSvelte extends BaseStoreSvelte<
 	Course,
 	Partial<Course>,
 	Partial<Course>,
 	CourseAdminApiService
 > {
 
-constructor() {
+	protected _featured = $state<Course[]>([])
+	protected _loadingFeatured = $state(false)
+	protected _featuredError = $state<string | null>(null);
+
+// Featured course getters
+	get featured(): Course[] {
+		return this._featured;
+	}
+
+	get loadingFeatured(): boolean {
+		return this._loadingFeatured;
+	}
+
+	get featuredError(): string | null {
+		return this._featuredError;
+	}
+
+	get hasFeatured(): boolean {
+		return this._featured.length > 0;
+	}
+
+
+
+	constructor() {
 		super(courseAdminApiService);
 	}
 
@@ -42,7 +65,7 @@ constructor() {
 	}
 
 	async fetchItem(courseId: string): Promise<Course> {
-		this._loadingItem = true;  // Use item loading state
+		this._loadingItem = true;
 		this._itemError = null;
 
 		try {
@@ -52,6 +75,23 @@ constructor() {
 		} catch (error) {
 			this._itemError = error instanceof Error ? error.message : 'Failed to load course';
 			console.error('[STORE] Error fetching course:', error);
+			throw error;
+		} finally {
+			this._loadingItem = false;
+		}
+	}
+
+
+	async fetchFeatured(): Promise<Course[]> {
+		this._loadingItem = true;
+		this._itemError = null;
+
+		try {
+			this._featured = await this.apiService.getFeaturedCourses();
+			return this._featured;
+
+		} catch (error) {
+			console.error('[STORE] Error fetching featured featured:', error);
 			throw error;
 		} finally {
 			this._loadingItem = false;
@@ -115,7 +155,7 @@ constructor() {
 	 */
 	async update(id: string, updateData: Partial<Course>, imageFile?: File): Promise<Course | null> {
 		if (this._updating) {
-			console.warn('[CourseStore] Update already in progress');
+			console.warn('[CourseStoreSvelte] Update already in progress');
 			return null;
 		}
 
@@ -131,7 +171,7 @@ constructor() {
 			return updatedItem;
 		} catch (error) {
 			this._updateError = error instanceof Error ? error.message : 'Failed to update course';
-			console.error('[CourseStore] Error updating course:', error);
+			console.error('[CourseStoreSvelte] Error updating course:', error);
 			throw error;
 		} finally {
 			this._updating = false;
@@ -197,6 +237,37 @@ constructor() {
 		);
 	}
 
+	// ============================================================================
+	// FEATURED STATUS MANAGEMENT
+	// ============================================================================
+
+	async featureCourse(courseId: string): Promise<Course> {
+		return this.optimisticUpdate(
+			courseId,
+			(currentCourse) => ({ ...currentCourse, isFeatured: true }),
+
+			async () => {
+				const updatedCourse = await this.apiService.featureCourse(courseId);
+				this.updateItemInStore(courseId, updatedCourse);
+				return updatedCourse;
+			}
+		);
+	}
+
+	async unfeatureCourse(courseId: string): Promise<Course> {
+		return this.optimisticUpdate(
+			courseId,
+			(currentCourse) => ({ ...currentCourse, isFeatured: false }),
+
+			async () => {
+				const updatedCourse = await this.apiService.unfeatureCourse(courseId);
+				this.updateItemInStore(courseId, updatedCourse);
+				return updatedCourse;
+			}
+
+		);
+	}
+
 	/**
 	 * Reorder course sections
 	 * Uses optimistic update for instant UI feedback
@@ -249,8 +320,8 @@ constructor() {
 	 * Link a lesson to a course section
 	 * Uses optimistic update for instant UI feedback
 	 */
-	async linkLesson(courseId: string, sectionId: string, lessonId: string): Promise<void> {
-		console.log('[CourseStore] Linking lesson:', { courseId, sectionId, lessonId });
+	async linkLesson(courseId: string, sectionId: string, lessonId: string): Promise<Course> {
+		console.log('[CourseStoreSvelte] Linking lesson:', { courseId, sectionId, lessonId });
 
 		return this.optimisticUpdate(
 			courseId,
@@ -280,7 +351,7 @@ constructor() {
 				);
 
 				if (alreadyExists) {
-					console.warn('[CourseStore] Lesson already exists in this section');
+					console.warn('[CourseStoreSvelte] Lesson already exists in this section');
 					return currentCourse;
 				}
 
@@ -291,7 +362,7 @@ constructor() {
 
 				updatedCourse.sections[targetSectionIndex].lessons.push(lessonToAdd);
 
-				console.log('[CourseStore] Optimistically added lesson to section');
+				console.log('[CourseStoreSvelte] Optimistically added lesson to section');
 				return updatedCourse;
 			},
 			// API call
@@ -313,7 +384,7 @@ constructor() {
 			throw new Error('Course ID not found');
 		}
 
-		console.log('[CourseStore] Unlinking lesson:', lessonId, 'from section:', sectionId);
+		console.log('[CourseStoreSvelte] Unlinking lesson:', lessonId, 'from section:', sectionId);
 
 		await this.optimisticUpdate(
 			courseId,
@@ -325,7 +396,7 @@ constructor() {
 				});
 
 				if (sectionIndex === -1) {
-					console.warn('[CourseStore] Section not found for optimistic update');
+					console.warn('[CourseStoreSvelte] Section not found for optimistic update');
 					return currentCourse;
 				}
 
@@ -353,7 +424,7 @@ constructor() {
 				this.updateItemInStore(courseId, response);
 				this._selectedItem = response;
 
-				console.log('[CourseStore] Lesson unlinked successfully');
+				console.log('[CourseStoreSvelte] Lesson unlinked successfully');
 				return response;
 			}
 		);
@@ -361,7 +432,6 @@ constructor() {
 		return this._selectedItem as Course;
 	}
 
-
 }
 
-export const courseStore = new CourseStore();
+export const courseStore = new CourseStoreSvelte();

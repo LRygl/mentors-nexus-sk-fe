@@ -36,7 +36,7 @@ export interface TableColumn<T = any> {
 	cellClassName?: string;
 
 	// Rendering types
-	renderType?: 'text' | 'badge' | 'user' | 'image' | 'color' | 'count' | 'date' | 'custom';
+	renderType?: 'text' | 'badge' | 'user' | 'image' | 'color' | 'count' | 'date' | 'custom' | 'duration';
 	renderOptions?: Record<string, any>;
 	renderCustom?: (item: T) => any;
 }
@@ -230,6 +230,31 @@ export class TableColumnBuilder {
 		};
 	}
 
+	static duration<T>(key: keyof T, header: string, options: {
+		durationUnit?: 'seconds' | 'minutes';
+		format?: 'short' | 'long';
+		searchable?: boolean;
+		sortable?: boolean;
+		width?: string;
+		headerClassName?: string;
+		cellClassName?: string;
+	} = {}): TableColumn<T> {
+		return {
+			key,
+			header,
+			renderType: 'duration',
+			renderOptions: {
+				durationUnit: options.durationUnit || 'minutes',
+				format: options.format || 'short'
+			},
+			searchable: options.searchable ?? false,
+			sortable: options.sortable ?? true,
+			width: options.width,
+			headerClassName: options.headerClassName,
+			cellClassName: options.cellClassName
+		};
+	}
+
 	/**
 	 * Create a custom rendered column
 	 */
@@ -320,7 +345,14 @@ export const CommonColumns = {
 		TableColumnBuilder.date(key, 'Updated', { format: 'relative' }),
 
 	status: <T>(key: keyof T = 'status' as keyof T) =>
-		TableColumnBuilder.badge(key, 'Status')
+		TableColumnBuilder.badge(key, 'Status'),
+
+	duration: <T>(key: keyof T = 'duration' as keyof T) =>
+		TableColumnBuilder.duration(key, 'Duration', {
+			durationUnit: 'minutes',
+			format: 'short',
+			cellClassName: 'font-mono text-xs text-slate-500'
+		})
 };
 
 export default TableColumnBuilder;

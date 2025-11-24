@@ -192,6 +192,23 @@
 		}
 
 		switch (column.renderType) {
+
+
+			case 'duration':
+				try {
+					const durationUnit = column.renderOptions?.durationUnit || 'minutes';
+					const durationFormat = column.renderOptions?.format || 'short';
+
+					const formattedDuration = durationUnit === 'seconds'
+						? DateFormatter.formatDurationFromSeconds(value, durationFormat as 'short' | 'long')
+						: DateFormatter.formatDuration(value, durationFormat as 'short' | 'long');
+
+					return `<span class="text-slate-700">${formattedDuration}</span>`;
+				} catch (error) {
+					console.error('Error formatting duration:', error);
+					return '<span class="text-red-500 text-xs">Invalid duration</span>';
+				}
+
 			case 'badge':
 				const colorMap = column.renderOptions?.colorMap || {};
 				const status = String(value).toLowerCase();

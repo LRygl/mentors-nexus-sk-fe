@@ -41,6 +41,19 @@ export function createCourseFields(
 			colSpan: 2
 		},
 		{
+			name: 'description',
+			label: 'Terminal Description',
+			type: 'text',
+			group: 'basic',
+			variants: { quick: true, embedded: true },
+			required: true,
+			minLength: 1,
+			maxLength: 250,
+			placeholder: 'Enter terminal description',
+			helpText: 'A clear, descriptive information about your terminal',
+			colSpan: 2
+		},
+		{
 			name: 'imageUrl',
 			label: 'Course Image',
 			type: 'image',

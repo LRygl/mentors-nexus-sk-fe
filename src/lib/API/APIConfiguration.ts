@@ -39,6 +39,7 @@ export const API_CONFIG = {
 			COURSE_CATEGORY: '/category',
 			LESSONS: '/lesson',
 			REPORTS: '/admin/reports',
+			LEGAL_TOPIC: '/admin/legal/topic',
 		}
 	},
 	get FULL_BASE_URL() {

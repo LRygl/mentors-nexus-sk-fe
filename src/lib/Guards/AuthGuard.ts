@@ -168,7 +168,7 @@ export const GUARDS = {
 	/** Requires course owner or admin */
 	courseOwner: {
 		level: ProtectionLevel.COURSE_OWNER,
-		redirectOnFail: '/courses?error=owner_required'
+		redirectOnFail: '/course?error=owner_required'
 	},
 
 	/** Public route (no protection) */

@@ -2,13 +2,13 @@
 
 ## TODO
 - [ ] Create course management view
-  - [ ] CRUD
-  - [ ] Assign lesson to course
-  - [ ] Manage course sections
+  - [x] CRUD
+  - [x] Assign lesson to course
+  - [x] Manage course sections
   - [ ] Reorder lessons within course and its sections
-- [ ] Create lesson management view
-  - [ ] CRUD
-  - [ ] Specify lesson type to be displayed on course screen
+- [x] Create lesson management view
+  - [x] CRUD
+  - [x] Specify lesson type to be displayed on course screen
 - [ ] Create public courses view 
   - [ ] Sort/Filter courses
   - [ ] Allow users to preview free lessons in course
@@ -18,10 +18,10 @@
 
 ## Terminal
 
-- [ ] Add Cover image
+- [x] Add Cover image
 - [ ] Enroll user modal
-- [ ] Add dialog to link lessons
-  - [ ] Finish lesson linking
+- [x] Add dialog to link lessons
+  - [x] Finish lesson linking
 - [x] Add select to change course owner courseOwnerId
 - [ ] Display list of enrolled users
 - [ ] Display price history
@@ -29,7 +29,7 @@
 - [ ] The overview should display the featured status
 - [x] The list should display the owner
 - [x] The list should display the published date
-- [ ] Propper metadata section including the Updated By and Created By
+- [x] Propper metadata section including the Updated By and Created By
 - [ ] User list filtered to eligible users only
 
 - 
@@ -67,7 +67,7 @@
   - [x] Only users with specific right can access the dashboard
   - [x] Handle cookies and data storing 
 - [ ] Correct icon display on in the UniversalDataTable
-- [ ] Fix date format in the Data table
+- [x] Fix date format in the Data table
 - [ ] FAQ Data table elipsis for extra long answers
   - [ ] FAQ Publish and schedule publish - if scheduled show calendar icon / different color in datetime
   - [ ] Reuse link FAQ Category from the action

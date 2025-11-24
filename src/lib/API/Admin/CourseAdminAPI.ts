@@ -1,7 +1,7 @@
 import { BaseApiService } from '$lib/API/APIBase';
 import { API_CONFIG } from '$lib/API/APIConfiguration';
 import type { Course } from '$lib/types/entities/Course';
-import type { CreateSectionRequest } from '$lib/stores/defaults/CourseStore';
+import type { CreateSectionRequest } from '$lib/stores/defaults/CourseStore.svelte';
 
 export class CourseAdminApiService extends BaseApiService {
 	private readonly ENDPOINT = API_CONFIG.ENDPOINTS.ADMIN.COURSES;
@@ -25,6 +25,14 @@ export class CourseAdminApiService extends BaseApiService {
 	async getCourseById(courseId: string): Promise<Course> {
 		try {
 			return await this.get<Course>(`${this.ENDPOINT}/${courseId}`);
+		} catch (error) {
+			throw error;
+		}
+	}
+
+	async getFeaturedCourses() {
+		try {
+			return await this.get<Course[]>(`${this.ENDPOINT}/featured`);
 		} catch (error) {
 			throw error;
 		}
@@ -93,6 +101,15 @@ export class CourseAdminApiService extends BaseApiService {
 
 	async unlinkLesson(sectionId: string, lessonId: string) {
 		return await this.delete<Course>(`${this.ENDPOINT}/section/${sectionId}/lesson/${lessonId}`);
+	}
+
+
+	async featureCourse(courseId: string) {
+		return await this.patch<Course>(`${this.ENDPOINT}/${courseId}/feature`, {})
+	}
+
+	async unfeatureCourse(courseId: string) {
+		return await this.patch<Course>(`${this.ENDPOINT}/${courseId}/unfeature`, {})
 	}
 
 

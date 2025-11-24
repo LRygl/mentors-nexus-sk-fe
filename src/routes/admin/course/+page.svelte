@@ -4,7 +4,7 @@
 	import type { TableCallbacks } from '$lib/types/ui/table';
 	import UniversalDataTable from '$lib/components/Data Table/UniversalDataTable.svelte';
 	import AdminHeaderSection from '$lib/components/Sections/Admin/AdminHeaderSection.svelte';
-	import { courseStore } from '$lib/stores/defaults/CourseStore';
+	import { courseStore } from '$lib/stores/defaults/CourseStore.svelte';
 	import type { Course } from '$lib/types/entities/Course';
 	import { courseCategoryStore } from '$lib/stores/defaults/CourseCategoryStore';
 	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
@@ -55,10 +55,10 @@
 					}
 					break;
 					case 'feature':
-						console.log("FEATURED!")
+						await courseStore.featureCourse(String(course.id));
 						break;
 					case 'unfeature':
-						console.log("UNFEATURED!")
+						await courseStore.unfeatureCourse(String(course.id));
 						break;
 			}
 		},
@@ -136,7 +136,6 @@
 		getActions={tableConfig.getActions}
 		{...tableConfig.props}
 	/>
-
 
 </section>
 

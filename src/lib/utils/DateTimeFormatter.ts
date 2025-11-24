@@ -107,6 +107,54 @@ export class DateFormatter {
 		});
 	}
 
+
+	/**
+	 * Format duration from minutes to human-readable format
+	 * @param minutes - Duration in minutes
+	 * @param format - 'short' (1h30min) or 'long' (1 hour 30 minutes)
+	 */
+	static formatDuration(
+		minutes: number,
+		format: 'short' | 'long' = 'short'
+	): string {
+		if (!minutes || minutes === 0) {
+			return format === 'long' ? '0 minutes' : '0min';
+		}
+
+		const hours = Math.floor(minutes / 60);
+		const mins = minutes % 60;
+
+		if (format === 'long') {
+			if (hours > 0) {
+				const hourText = `${hours} ${hours === 1 ? 'hour' : 'hours'}`;
+				const minText = mins > 0 ? ` ${mins} ${mins === 1 ? 'minute' : 'minutes'}` : '';
+				return hourText + minText;
+			}
+			return `${mins} ${mins === 1 ? 'minute' : 'minutes'}`;
+		}
+
+		// Short format (default)
+		if (hours > 0) {
+			return mins > 0 ? `${hours}h${mins}min` : `${hours}h`;
+		}
+		return `${mins}min`;
+	}
+
+	/**
+	 * Format duration from seconds to human-readable format
+	 * @param seconds - Duration in seconds
+	 * @param format - 'short' (1h30min) or 'long' (1 hour 30 minutes)
+	 */
+	static formatDurationFromSeconds(
+		seconds: number,
+		format: 'short' | 'long' = 'short'
+	): string {
+		const minutes = Math.floor(seconds / 60);
+		return this.formatDuration(minutes, format);
+	}
+
+
+
 	/**
 	 * Format as relative time (e.g., "2 hours ago", "3 days ago")
 	 */
@@ -178,6 +226,12 @@ export const formatDateTime = (date: string | Date, format?: 'short' | 'long') =
 
 export const formatTime = (date: string | Date, format?: 'short' | 'long') =>
 	DateFormatter.formatTime(date, format);
+
+export const formatDuration = (minutes: number, format?: 'short' | 'long') =>
+	DateFormatter.formatDuration(minutes, format);
+
+export const formatDurationFromSeconds = (seconds: number, format?: 'short' | 'long') =>
+	DateFormatter.formatDurationFromSeconds(seconds, format);
 
 export const formatRelative = (date: string | Date) =>
 	DateFormatter.formatRelative(date);

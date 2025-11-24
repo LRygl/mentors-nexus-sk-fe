@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { userStore } from '$lib/stores/defaults/UserStore.js';
 	import UniversalDataTable from '$lib/components/Data Table/UniversalDataTable.svelte';
 	import AdminHeaderSection from '$lib/components/Sections/Admin/AdminHeaderSection.svelte';
 	import { onMount } from 'svelte';
@@ -10,15 +9,12 @@
 	import { ROUTES } from '$lib/Config/routes.config';
 	import type { Lesson } from '$lib/types/entities/Lesson';
 	import { FileText } from 'lucide-svelte';
-	import { courseStore } from '$lib/stores/defaults/CourseStore';
-	import { CourseFormPresets } from '$lib/components/Forms/Schemas/CourseFormSchema';
-	import { courseCategoryStore } from '$lib/stores/defaults/CourseCategoryStore';
 	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
-	import type { Course } from '$lib/types/entities/Course';
 	import { confirmationModal } from '$lib/components/Modals/ConfirmationModalService.svelte';
 	import { toastService } from '$lib/Services/ToastService.svelte';
 	import { LessonFormPresets } from '$lib/components/Forms/Schemas/LessonFormSchema';
+	import { courseStore } from '$lib/stores/defaults/CourseStore.svelte';
 
 	let selectedItems = $state<Set<string>>(new Set());
 	let isCreateModalOpen = $state<boolean>(false);
@@ -39,6 +35,10 @@
 			switch (actionId) {
 				case 'view':
 					await goto(`${ROUTES.ADMIN.LESSON}/${lesson.id}`);
+					break;
+				case 'unlink':
+					console.log("unlink Lesson ", lesson.id," from course section id: " ,lesson.section?.id );
+					await lessonStore.unlinkFromCourseSection(lesson.id,lesson.section.id);
 					break;
 				case 'delete':
 					const confirmed = await confirmationModal.delete(`Delete Course?`,`Are you sure you want to delete this category?`)

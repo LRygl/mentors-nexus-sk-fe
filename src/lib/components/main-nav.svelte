@@ -23,6 +23,7 @@
 	import { goto } from '$app/navigation';
 	import { getMenuConfigForRole, userMenuConfigs } from '$lib/Config/UserMenuConfig';
 	import UserMenu from '$lib/components/UI/UserMenu.svelte';
+	import { ROUTES } from '$lib/Config/routes.config';
 
 	let currentMode = mode.current;
 
@@ -126,7 +127,7 @@
 			<div class="hidden md:flex items-center gap-1">
 				<!-- Home -->
 				<button
-					onclick={() => navigate('/')}
+					onclick={() => navigate(ROUTES.PUBLIC.HOME)}
 					class="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-accent rounded-md transition-colors"
 				>
 					Home
@@ -138,7 +139,7 @@
 						onclick={() => { courseMenuOpen = !courseMenuOpen; aboutMenuOpen = false; }}
 						class="flex items-center gap-1 px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-accent rounded-md transition-colors"
 					>
-						Course
+						Station
 						<ChevronDown class={`h-4 w-4 transition-transform ${courseMenuOpen ? 'rotate-180' : ''}`} />
 					</button>
 
@@ -233,7 +234,7 @@
 
 				<!-- Support -->
 				<button
-					onclick={() => navigate('/support')}
+					onclick={() => navigate(ROUTES.PUBLIC.SUPPORT)}
 					class="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-accent rounded-md transition-colors"
 				>
 					Support
@@ -242,7 +243,7 @@
 				<!-- Admin (only for admins) -->
 				{#if isAuthenticated && (user?.role === 'ROLE_ADMIN' || user?.role === 'ADMIN')}
 					<button
-						onclick={() => navigate('/admin/users')}
+						onclick={() => navigate(ROUTES.ADMIN.DASHBOARD)}
 						class="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-accent rounded-md transition-colors"
 					>
 						Admin

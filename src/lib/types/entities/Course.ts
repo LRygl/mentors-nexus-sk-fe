@@ -8,30 +8,34 @@ import type { User } from '$lib/types/entities/User';
  * Represents a course with all its details, sections, and relationships
  */
 export interface Course extends BaseEntity {
-	// Core identifiers
-	id: string;
-	uuid?: string;
-
 	// Basic information
 	name: string;
+	description: string;
 	price: number;
 	status: CourseStatus | string;
 	imageUrl: string;
 
 
-	published?: string | null;  // ✅ Changed from Date to string
+	published?: string | null;
+	publishedAt?: Date;
 
 	// Feature flag
 	featured?: boolean;
 
-	// Relations - ✅ ADDED MISSING FIELDS
+	// Relations
 	owner?: User;
 	courseOwnerId?: string;
 	labels?: string[];  // Array of label names
 	categoryIds?: string[];  // Array of category IDs (for form)
 	categories?: string[];  // Array of category names (for display)
 
-	//owner?: Owner;  // Course owner/instructor
+	level?: string;
+
 	sections: CourseSection[];  // Course sections with lessons
+	duration?: number;
 	students?: number;  // Number of enrolled students
+	rating?: number;
+
+
 }
+

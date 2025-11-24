@@ -11,10 +11,15 @@ export const ROUTES = {
 		LOGIN: '/auth/login',
 		REGISTER: '/auth/register',
 		FORGOT_PASSWORD: '/auth/forgot-password',
-		ABOUT: '/about',
+		ABOUT: '/about-us',
 		CONTACT: '/contact',
 		TERMS: '/terms',
+		COOKIES: '/cookies',
 		PRIVACY: '/privacy',
+		STORE: '/store',
+		COURSE: '/store/course',
+		LESSON: 'store/course/lesson',
+		SUPPORT: '/support',
 	},
 
 	// ============================================
@@ -27,7 +32,7 @@ export const ROUTES = {
 		ORDERS: '/orders',
 		INVOICES: '/invoices',
 		SUBSCRIPTIONS: '/subscriptions',
-		COURSES: '/courses',
+		COURSES: '/course',
 	},
 
 	// ============================================
@@ -45,6 +50,7 @@ export const ROUTES = {
 		COURSE: '/admin/course',
 		COURSE_CATEGORIES: '/admin/course-category',
 		LESSON: '/admin/lesson',
+		LEGAL_TOPIC: '/admin/legal-topic',
 	},
 
 } as const;

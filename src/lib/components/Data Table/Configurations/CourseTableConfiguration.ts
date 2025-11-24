@@ -42,13 +42,28 @@ const courseTableDefinition = defineTableConfig<Course>({
 		{
 			key: 'lessons',
 			header: 'Lessons',
-			type: 'text',
+			type: 'badge',
+			searchable: true,
+			sortable: true,
+			cellClassName: 'font-mono text-xs text-slate-500',
+			accessor: (course: Course) => {
+				const lessonCount = course.sections?.reduce((total, section) => {
+					return total + (section.lessons?.length || 0);
+				}, 0) || 0;  // ← Don't forget the initial value 0
+
+				return `${lessonCount}`;
+			}
+		},
+		{
+			key: 'students',
+			header: 'Students',
+			type: 'badge',
 			searchable: true,
 			sortable: true,
 			cellClassName: 'font-mono text-xs text-slate-500',
 		},
 		{
-			key: 'isFeatured',
+			key: 'featured',
 			header: 'Featured',
 			type: 'text',
 			searchable: true,
@@ -60,22 +75,6 @@ const courseTableDefinition = defineTableConfig<Course>({
 			header: 'Status',
 			type: 'text',
 			searchable: true,
-			sortable: true,
-			cellClassName: 'font-mono text-xs text-slate-500',
-		},
-		{
-			key: 'updated',
-			header: 'Updated',
-			type: 'datetime',
-			searchable: false,
-			sortable: true,
-			cellClassName: 'font-mono text-xs text-slate-500',
-		},
-		{
-			key: 'published',
-			header: 'Published',
-			type: 'datetime',
-			searchable: false,
 			sortable: true,
 			cellClassName: 'font-mono text-xs text-slate-500',
 		},
@@ -104,7 +103,7 @@ const courseTableDefinition = defineTableConfig<Course>({
 			icon: Star,
 			variant: ActionType.WARNING,
 			group: 'State',
-			condition: (course: Course) => !!course.published
+			condition: (course: Course) => !course.published
 		},
 		{
 			id: 'unpublish',
@@ -113,7 +112,7 @@ const courseTableDefinition = defineTableConfig<Course>({
 			icon: StarOff,
 			variant: ActionType.WARNING,
 			group: 'State',
-			condition: (course: Course) => !course.published
+			condition: (course: Course) => course.published
 		},
 		{
 			id: 'feature',
@@ -122,7 +121,7 @@ const courseTableDefinition = defineTableConfig<Course>({
 			icon: Star,
 			variant: ActionType.WARNING,
 			group: 'State',
-			condition: (course: Course) => !!course.featured
+			condition: (course: Course) => !course.featured
 		},
 		{
 			id: 'unfeature',
@@ -131,7 +130,7 @@ const courseTableDefinition = defineTableConfig<Course>({
 			icon: StarOff,
 			variant: ActionType.WARNING,
 			group: 'State',
-			condition: (course: Course) => !course.featured
+			condition: (course: Course) => course.featured
 		},
 		{
 			id: 'delete',

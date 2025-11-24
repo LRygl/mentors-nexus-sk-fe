@@ -4,7 +4,6 @@
 	import CourseCategoryDetailsSection from '$lib/components/Admin/Course Category/CourseCategoryDetailsSection.svelte';
 	import type { CourseCategory } from '$lib/types/entities/CourseCategory';
 
-
 	let {
 	courseCategoryId
 	} = $props<{
@@ -15,7 +14,6 @@
 	let isLoading = $derived(courseCategoryStore.loadingItem);
 	let error = $derived(courseCategoryStore.itemError);
 
-
 	onMount(async () => {
 		await loadCourseCategory();
 	});
@@ -23,7 +21,6 @@
 	async function loadCourseCategory() {
 		await courseCategoryStore.fetchItem(courseCategoryId);
 	}
-
 
 	async function handleCourseCategoryUpdate(formData: Partial<CourseCategory>) {
 		await courseCategoryStore.update(courseCategoryId, formData);

@@ -29,22 +29,7 @@ export const sidebarConfig: SidebarConfig = {
 					id: "users",
 					label: "Users",
 					href: "/admin/users"
-				},
-				{
-					id: "members",
-					label: "Members",
-					href: "/admin/users"
-				},
-				{
-					id: "company",
-					label: "Company Customer",
-					href: "/admin/users"
-				},
-				{
-					id: "admins",
-					label: "Administrators",
-					href: "/admin/users"
-				},
+				}
 			]
 		},
 		{
@@ -91,24 +76,24 @@ export const sidebarConfig: SidebarConfig = {
 		{
 			id: "legal",
 			label: "Legal",
-			icon: "Scale",
+			icon: "MessageCircleQuestionMark",
 			href: "/admin/legal",
 			children: [
 				{
-					id: "terms-and-conditions",
-					label: "Terms and Conditions",
-					href: "/admin/faq-categories",
+					id: "legal-topic",
+					label: "Legal Topic",
+					href: "/admin/legal-topic",
 				},
 				{
-					id: "privacy-policy",
-					label: "Privacy Policy",
-					href: "/admin/faq",
+					id: "legal-section",
+					label: "Legal Section",
+					href: "/admin/legal-section",
 				},
 				{
-					id: "cookie-policy",
-					label: "Cookie Policy",
-					href: "/admin/faq",
-				}
+					id: "legal-item",
+					label: "Legal Item",
+					href: "/admin/legal-item",
+				},
 			]
 		},
 		{
@@ -136,33 +121,6 @@ export const sidebarConfig: SidebarConfig = {
 		}
 	],
 	userActions: [
-		{
-			id: "profile",
-			label: "My Profile",
-			icon: "User",
-			href: "/admin/profile"
-		},
-		{
-			id: "preferences",
-			label: "Preferences",
-			icon: "Settings",
-			href: "/admin/preferences"
-		},
-		{
-			id: "help",
-			label: "Help & Support",
-			icon: "HelpCircle",
-			href: "/admin/help"
-		},
-		{
-			id: "divider",
-			type: "divider"
-		},
-		{
-			id: "logout",
-			label: "Logout",
-			icon: "LogOut",
-			action: "logout"
-		}
+
 	]
 };

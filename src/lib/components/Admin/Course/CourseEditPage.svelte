@@ -1,5 +1,5 @@
 <script lang="ts">
-import { courseStore } from '$lib/stores/defaults/CourseStore';
+import { courseStore } from '$lib/stores/defaults/CourseStore.svelte';
 import { onMount } from 'svelte';
 import type { Course } from '$lib/types/entities/Course';
 import type { CourseSection } from '$lib/types/entities/CourseSection';
