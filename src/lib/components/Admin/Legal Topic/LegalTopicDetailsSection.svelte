@@ -1,7 +1,7 @@
 <script lang="ts">
 
 	import type { LegalTopic } from '$lib/types/entities/LegalTopic';
-	import { LegalTopicFormPresets } from '$lib/components/Forms/Schemas/LegalTopicFormSchema';
+	import { LegalTopicFormPresets } from '$lib/components/Forms/Schemas/Legal/LegalTopicFormSchema';
 	import { ROUTES } from '$lib/Config/routes.config';
 	import { API_CONFIG } from '$lib/API/APIConfiguration';
 	import EntityDetailsSection from '$lib/components/EntityDetailsSection.svelte';

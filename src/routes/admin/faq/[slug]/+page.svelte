@@ -3,7 +3,7 @@
 	import AdminHeaderSection from '$lib/components/Sections/Admin/AdminHeaderSection.svelte';
 	import { faqStore } from '$lib/stores/defaults/faqStore.svelte';
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
-	import { FAQFormPresets } from '$lib/components/Forms/Schemas/FAQFormSchema';
+	import { FAQFormPresets } from '$lib/components/Forms/Schemas/FAQ/FAQFormSchema';
 
 	// Data comes from +page.ts load function
 	let { data }: { data: PageData } = $props();

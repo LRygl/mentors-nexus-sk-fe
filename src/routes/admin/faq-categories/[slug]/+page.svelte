@@ -12,7 +12,7 @@
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
 	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
 	import { faqStore } from '$lib/stores/defaults/faqStore.svelte';
-	import { createFAQLinkFormSchema } from '$lib/components/Forms/Schemas/FAQLinkFormSchema';
+	import { createFAQLinkFormSchema } from '$lib/components/Forms/Schemas/FAQ/FAQLinkFormSchema';
 	import { toastService } from '$lib/Services/ToastService.svelte';
 	import { FAQListTablePreset } from '$lib/components/Data Table/Configurations/FAQCategoryFAQsConfiguration';
 	import { ROUTES } from '$lib/Config/routes.config';

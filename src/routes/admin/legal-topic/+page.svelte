@@ -11,7 +11,7 @@
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
 	import type { TableCallbacks } from '$lib/types/ui/table';
 	import { LegalTopicTableConfiguration } from '$lib/components/Data Table/Configurations/LegalTopicTableConfiguration';
-	import { LegalTopicFormPresets } from '$lib/components/Forms/Schemas/LegalTopicFormSchema';
+	import { LegalTopicFormPresets } from '$lib/components/Forms/Schemas/Legal/LegalTopicFormSchema';
 
 	let selectedItems = $state<Set<string>>(new Set);
 	let isCreateModalOpen = $state<boolean>(false);

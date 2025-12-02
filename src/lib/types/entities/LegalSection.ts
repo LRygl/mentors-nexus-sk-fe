@@ -6,4 +6,5 @@ export interface LegalSection extends BaseEntity {
 	icon: string;
 	orderIndex: number;
 	items: LegalItem[];
+	published?: Date; // Optional published timestamp
 }

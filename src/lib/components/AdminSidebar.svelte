@@ -15,7 +15,7 @@
 		LogOut,
 		Scale,
 		FolderClosed,
-		House
+		House, Section
 	} from 'lucide-svelte';
 	import { authStore } from '$lib/stores/Auth.svelte';
 	import { sidebarConfig } from '$lib/Config/AdminSidebarConfig';
@@ -37,7 +37,9 @@
 		LogOut,
 		Scale,
 		FolderClosed,
-		House
+		House,
+
+		Section
 	};
 
 	// Track which sections are expanded

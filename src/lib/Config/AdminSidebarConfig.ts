@@ -76,25 +76,8 @@ export const sidebarConfig: SidebarConfig = {
 		{
 			id: "legal",
 			label: "Legal",
-			icon: "MessageCircleQuestionMark",
-			href: "/admin/legal",
-			children: [
-				{
-					id: "legal-topic",
-					label: "Legal Topic",
-					href: "/admin/legal-topic",
-				},
-				{
-					id: "legal-section",
-					label: "Legal Section",
-					href: "/admin/legal-section",
-				},
-				{
-					id: "legal-item",
-					label: "Legal Item",
-					href: "/admin/legal-item",
-				},
-			]
+			icon: "Section",
+			href: "/admin/legal-topic"
 		},
 		{
 			id: "settings",

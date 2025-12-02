@@ -40,6 +40,8 @@ export const API_CONFIG = {
 			LESSONS: '/lesson',
 			REPORTS: '/admin/reports',
 			LEGAL_TOPIC: '/admin/legal/topic',
+			LEGAL_SECTION: '/admin/legal/section',
+			LEGAL_ITEM: '/admin/legal/item',
 		}
 	},
 	get FULL_BASE_URL() {

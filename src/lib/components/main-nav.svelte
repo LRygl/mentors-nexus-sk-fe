@@ -24,6 +24,7 @@
 	import { getMenuConfigForRole, userMenuConfigs } from '$lib/Config/UserMenuConfig';
 	import UserMenu from '$lib/components/UI/UserMenu.svelte';
 	import { ROUTES } from '$lib/Config/routes.config';
+	import { legalTopicStore } from '$lib/stores/defaults/LegalTopicStore';
 
 	let currentMode = mode.current;
 
@@ -40,6 +41,7 @@
 	let aboutMenuOpen = $state(false);
 	let userMenuOpen = $state(false);
 	let mobileMenuOpen = $state(false);
+	let publishedLegalTopics = $state([]);
 
 	// Debug logging
 	$effect(() => {
@@ -68,6 +70,12 @@
 
 		// Add click outside listener
 		document.addEventListener('click', handleClickOutside);
+		
+		// Fetch published legal topics for the menu
+		const allTopics = await legalTopicStore.fetchPublishedTopics();
+		if (allTopics) {
+			publishedLegalTopics = allTopics.filter(topic => topic.published);
+		}
 
 		return () => {
 			document.removeEventListener('click', handleClickOutside);
@@ -207,26 +215,15 @@
 									</div>
 								</button>
 
-								<button
-									onclick={() => navigate('/terms')}
-									class="flex items-start gap-3 w-full p-3 rounded-md hover:bg-accent transition-colors text-left"
-								>
-									<div class="text-sm font-medium">Terms & Conditions</div>
-								</button>
-
-								<button
-									onclick={() => navigate('/privacy')}
-									class="flex items-start gap-3 w-full p-3 rounded-md hover:bg-accent transition-colors text-left"
-								>
-									<div class="text-sm font-medium">Privacy Policy</div>
-								</button>
-
-								<button
-									onclick={() => navigate('/cookies')}
-									class="flex items-start gap-3 w-full p-3 rounded-md hover:bg-accent transition-colors text-left"
-								>
-									<div class="text-sm font-medium">Cookie Policy</div>
-								</button>
+								<!-- Dynamic Legal Topic Links -->
+								{#each publishedLegalTopics as topic (topic.id)}
+									<button
+										onclick={() => navigate(`/legal/${topic.id}`)}
+										class="flex items-start gap-3 w-full p-3 rounded-md hover:bg-accent transition-colors text-left"
+									>
+										<div class="text-sm font-medium">{topic.title}</div>
+									</button>
+								{/each}
 							</div>
 						</div>
 					{/if}

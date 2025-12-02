@@ -6,7 +6,7 @@ export {
 	FAQFormPresets,
 	createFAQFormSchema,
 	createFAQSchemaFactory
-} from './FAQFormSchema';
+} from './FAQ/FAQFormSchema';
 
 // ============================================================================
 // FAQ CATEGORY FORM SCHEMAS

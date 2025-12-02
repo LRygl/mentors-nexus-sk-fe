@@ -4,7 +4,7 @@ import  {
 	type EntityGroupConfig
 } from '$lib/components/Forms/Schemas/FormSchemaFactory';
 import type { Lesson } from '$lib/types/entities/Lesson';
-import { createFAQLinkFields } from '$lib/components/Forms/Schemas/FAQLinkFormSchema';
+import { createFAQLinkFields } from '$lib/components/Forms/Schemas/FAQ/FAQLinkFormSchema';
 
 
 export function createLessonLinkFields(lessons: Lesson[] = []): EntityFieldConfig[] {

@@ -4,7 +4,7 @@ import {
 	defineEntitySchema,
 	type EntityFieldConfig,
 	type EntityGroupConfig
-} from './FormSchemaFactory';
+} from '../FormSchemaFactory';
 import { FAQPriority, FAQStatus } from '$lib/types';
 import { FAQ_PRIORITY_LABELS, FAQ_PRIORITY_STYLE } from '$lib/types/enums/faqPriority';
 import { FAQ_STATUS_LABELS, FAQ_STATUS_STYLE } from '$lib/types/enums/faqStatus';
