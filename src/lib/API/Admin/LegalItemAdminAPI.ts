@@ -14,9 +14,8 @@ export class LegalItemAdminAPI extends BaseApiService {
 	// ============================================================================
 
 	async createItem(sectionId: string, createData: Partial<LegalItem>): Promise<LegalItem> {
-		return await this.post<LegalItem>(`${this.ENDPOINT}`, {
-			...createData,
-			sectionId
+		return await this.post<LegalItem>(`${this.ENDPOINT}/section/${sectionId}`, {
+			...createData
 		});
 	}
 
@@ -33,11 +32,7 @@ export class LegalItemAdminAPI extends BaseApiService {
 	// ============================================================================
 
 	async createSubItem(parentItemId: string, createData: Partial<LegalItem>): Promise<LegalItem> {
-		return await this.post<LegalItem>(`${this.ENDPOINT}/${parentItemId}/sub-items`, createData);
-	}
-
-	async unlinkSubItem(parentItemId: string, subItemId: string): Promise<void> {
-		await this.delete(`${this.ENDPOINT}/${parentItemId}/sub-items/${subItemId}`);
+		return await this.post<LegalItem>(`${this.ENDPOINT}/parent/${parentItemId}`, createData);
 	}
 
 	// ============================================================================

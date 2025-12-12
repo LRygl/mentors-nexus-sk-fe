@@ -118,11 +118,11 @@
 		if (mode === 'embedded') {
 			originalData = JSON.parse(JSON.stringify(defaultData));
 		}
-
+		validateForm();
 		// Don't validate on mount - form starts as valid
 		// Validation will happen when user interacts with fields
-		formState.isValid = true;
-		formState.errors = {};
+		//formState.isValid = true;
+		//formState.errors = {};
 	});
 
 	// Helper to check if field should be rendered

@@ -34,6 +34,10 @@
 		onSubItemReorder
 	}: Props = $props();
 
+	// Debounce state for section name updates
+	let sectionNameDebounceTimers = $state<Map<string, number>>(new Map());
+	let savingStates = $state<Map<string, 'idle' | 'saving' | 'saved'>>(new Map());
+
 	let draggedSection = $state<number | null>(null);
 	let draggedItem = $state<{ sectionIndex: number; itemIndex: number } | null>(null);
 	let draggedSubItem = $state<{ sectionIndex: number; itemIndex: number; subItemIndex: number } | null>(null);
@@ -44,15 +48,90 @@
 	// Initialize expanded sections - only expand those that have items
 	$effect(() => {
 		if (sections) {
-			// Only expand sections that contain items
 			const sectionsWithItems = sections
 				.map((section, index) => ({ hasItems: section.items && section.items.length > 0, index }))
 				.filter(item => item.hasItems)
 				.map(item => item.index);
-			
+
 			expandedSections = new Set(sectionsWithItems);
 		}
 	});
+
+	/**
+	 * Debounced section name update handler
+	 * Waits 1.5 seconds after the user stops typing before saving
+	 */
+	function handleSectionNameChange(sectionId: string, newName: string) {
+		// Clear existing timer for this section
+		const existingTimer = sectionNameDebounceTimers.get(sectionId);
+		if (existingTimer) {
+			clearTimeout(existingTimer);
+		}
+
+		// Update the section name immediately in the UI (optimistic update)
+		const section = sections.find(s => s.id?.toString() === sectionId);
+		if (section) {
+			section.name = newName;
+			sections = [...sections]; // Trigger reactivity
+		}
+
+		// Set saving state
+		savingStates.set(sectionId, 'idle');
+		savingStates = new Map(savingStates);
+
+		// Set new timer to save after 1.5 seconds of no typing
+		const timerId = setTimeout(async () => {
+			savingStates.set(sectionId, 'saving');
+			savingStates = new Map(savingStates);
+
+			try {
+				await onSectionUpdate(sectionId, { name: newName });
+
+				savingStates.set(sectionId, 'saved');
+				savingStates = new Map(savingStates);
+
+				// Clear "saved" indicator after 2 seconds
+				setTimeout(() => {
+					savingStates.set(sectionId, 'idle');
+					savingStates = new Map(savingStates);
+				}, 2000);
+			} catch (error) {
+				console.error('Failed to save section name:', error);
+				savingStates.set(sectionId, 'idle');
+				savingStates = new Map(savingStates);
+			}
+
+			sectionNameDebounceTimers.delete(sectionId);
+			sectionNameDebounceTimers = new Map(sectionNameDebounceTimers);
+		}, 1500);
+
+		sectionNameDebounceTimers.set(sectionId, timerId);
+		sectionNameDebounceTimers = new Map(sectionNameDebounceTimers);
+	}
+
+	/**
+	 * Get the save status icon for a section
+	 */
+	function getSaveStatusIcon(sectionId: string) {
+		const state = savingStates.get(sectionId) || 'idle';
+
+		switch (state) {
+			case 'saving':
+				return `
+					<svg class="w-4 h-4 text-yellow-400 animate-spin" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+					</svg>
+				`;
+			case 'saved':
+				return `
+					<svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+					</svg>
+				`;
+			default:
+				return '';
+		}
+	}
 
 	function toggleSection(index: number) {
 		if (expandedSections.has(index)) {
@@ -120,7 +199,9 @@
 	async function handleItemDragEnd(sectionIndex: number) {
 		if (draggedItem) {
 			const section = sections[sectionIndex];
-			const itemIds = section.items.map(item => item.id).filter((id): id is number => id !== undefined);
+			const itemIds = section.items
+				.map(item => item.id)
+				.filter((id): id is number => id !== undefined);
 			await onItemReorder(section.id!.toString(), itemIds);
 		}
 		draggedItem = null;
@@ -133,7 +214,7 @@
 
 	function handleSubItemDragOver(e: DragEvent, sectionIndex: number, itemIndex: number, subItemIndex: number) {
 		e.preventDefault();
-		if (!draggedSubItem || draggedSubItem.sectionIndex !== sectionIndex || 
+		if (!draggedSubItem || draggedSubItem.sectionIndex !== sectionIndex ||
 			draggedSubItem.itemIndex !== itemIndex || draggedSubItem.subItemIndex === subItemIndex) return;
 
 		const item = sections[sectionIndex].items[itemIndex];
@@ -152,7 +233,9 @@
 	async function handleSubItemDragEnd(sectionIndex: number, itemIndex: number) {
 		if (draggedSubItem) {
 			const item = sections[sectionIndex].items[itemIndex];
-			const subItemIds = (item.subItems || []).map(si => si.id).filter((id): id is number => id !== undefined);
+			const subItemIds = (item.subItems || [])
+				.map(si => si.id)
+				.filter((id): id is number => id !== undefined);
 			await onSubItemReorder(item.id!.toString(), subItemIds);
 		}
 		draggedSubItem = null;
@@ -194,13 +277,20 @@
 
 	async function saveContent() {
 		if (!editingContent) return;
-		
+
 		await onItemUpdate(editingContent.id, { content: editingContent.value });
 		editingContent = null;
 	}
 
 	function cancelEditing() {
 		editingContent = null;
+	}
+
+	function handleKeyDown(e: KeyboardEvent) {
+		if (e.key === 'Escape') {
+			e.stopPropagation();
+			cancelEditing();
+		}
 	}
 </script>
 
@@ -230,6 +320,7 @@
 		<div class="space-y-3">
 			{#each sections as section, sectionIndex (section.uuid || section.id || `section-${sectionIndex}`)}
 				<div
+					role="listitem"
 					draggable="true"
 					ondragstart={() => handleSectionDragStart(sectionIndex)}
 					ondragover={(e) => handleSectionDragOver(e, sectionIndex)}
@@ -239,7 +330,10 @@
 					<!-- Section Header -->
 					<div class="bg-gradient-to-r from-slate-700 to-slate-600 px-5 py-3">
 						<div class="flex items-center gap-3">
-							<button class="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded transition-colors">
+							<button
+								aria-label="Drag to reorder section"
+								class="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded transition-colors"
+							>
 								<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
 								</svg>
@@ -249,16 +343,24 @@
 								<span class="text-sm font-bold text-white">{section.orderIndex}</span>
 							</div>
 
-							<input
-								type="text"
-								value={section.name}
-								oninput={(e) => onSectionUpdate(section.id!.toString(), { name: e.currentTarget.value })}
-								placeholder="Section Name"
-								class="flex-1 px-3 py-1.5 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:bg-white/20 focus:ring-2 focus:ring-white/30 transition-all"
-							/>
+							<div class="flex-1 relative">
+								<input
+									type="text"
+									value={section.name}
+									oninput={(e) => handleSectionNameChange(section.id.toString(), e.currentTarget.value)}
+									placeholder="Section Name"
+									class="w-full px-3 py-1.5 pr-10 bg-white/10 border border-white/20 rounded-lg text-white placeholder-white/60 focus:bg-white/20 focus:ring-2 focus:ring-white/30 transition-all"
+								/>
+
+								<!-- Save Status Indicator -->
+								<div class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center" aria-live="polite">
+									{@html getSaveStatusIcon(section.id.toString())}
+								</div>
+							</div>
 
 							<button
 								onclick={() => toggleSection(sectionIndex)}
+								aria-label={expandedSections.has(sectionIndex) ? "Collapse section" : "Expand section"}
 								class="p-1.5 hover:bg-white/10 rounded-lg transition-colors"
 							>
 								<svg class="w-5 h-5 text-white transition-transform {expandedSections.has(sectionIndex) ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -267,9 +369,9 @@
 							</button>
 
 							<button
-								onclick={() => handleDeleteSection(section.id!.toString())}
+								onclick={() => handleDeleteSection(section.id.toString())}
 								class="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors"
-								title="Delete section"
+								aria-label="Delete section"
 							>
 								<svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -291,7 +393,7 @@
 									</h3>
 
 									<button
-										onclick={() => onItemCreate(section.id!.toString())}
+										onclick={() => onItemCreate(section.id.toString())}
 										class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
 									>
 										<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -311,6 +413,7 @@
 								{:else}
 									{#each section.items as item, itemIndex (item.uuid || item.id || `item-${sectionIndex}-${itemIndex}`)}
 										<div
+											role="listitem"
 											draggable="true"
 											ondragstart={() => handleItemDragStart(sectionIndex, itemIndex)}
 											ondragover={(e) => handleItemDragOver(e, sectionIndex, itemIndex)}
@@ -318,7 +421,10 @@
 											class="bg-white border border-slate-200 rounded-lg p-4 hover:border-blue-300 hover:shadow-sm transition-all {draggedItem?.sectionIndex === sectionIndex && draggedItem?.itemIndex === itemIndex ? 'opacity-50 scale-95' : ''}"
 										>
 											<div class="flex items-start gap-3">
-												<button class="cursor-grab active:cursor-grabbing p-1 hover:bg-slate-100 rounded transition-colors mt-1">
+												<button
+													aria-label="Drag to reorder item"
+													class="cursor-grab active:cursor-grabbing p-1 hover:bg-slate-100 rounded transition-colors mt-1"
+												>
 													<svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 														<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
 													</svg>
@@ -334,7 +440,7 @@
 															bind:value={editingContent.value}
 															class="w-full px-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
 															rows="3"
-															on:keydown|stopPropagation={(e) => e.key === 'Escape' && cancelEditing()}
+															onkeydown={handleKeyDown}
 														></textarea>
 														<div class="flex gap-2 mt-2">
 															<button
@@ -351,9 +457,9 @@
 															</button>
 														</div>
 													{:else}
-														<p 
+														<p
 															class="text-slate-900 cursor-pointer hover:bg-slate-50 p-2 rounded"
-															onclick={() => startEditingContent('item', item.id!.toString(), item.content || '')}
+															onclick={() => startEditingContent('item', item.id.toString(), item.content || '')}
 														>
 															{item.content || 'Click to add content'}
 														</p>
@@ -365,16 +471,18 @@
 															<button
 																onclick={() => toggleItem(item.id!.toString())}
 																class="text-xs font-semibold text-slate-600 flex items-center gap-1"
+																aria-label={expandedItems.has(item.id!.toString()) ? "Collapse sub-items" : "Expand sub-items"}
 															>
-																<svg class="w-3 h-3 transition-transform {expandedItems.has(item.id!.toString()) ? 'rotate-90' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+																<svg class="w-3 h-3 transition-transform {expandedItems.has(item.id.toString()) ? 'rotate-90' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 																	<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
 																</svg>
 																Sub-items ({item.subItems.length})
 															</button>
 
-															{#if expandedItems.has(item.id!.toString())}
+															{#if expandedItems.has(item.id.toString())}
 																{#each item.subItems as subItem, subItemIndex (subItem.uuid || subItem.id || `subitem-${itemIndex}-${subItemIndex}`)}
 																	<div
+																		role="listitem"
 																		draggable="true"
 																		ondragstart={() => handleSubItemDragStart(sectionIndex, itemIndex, subItemIndex)}
 																		ondragover={(e) => handleSubItemDragOver(e, sectionIndex, itemIndex, subItemIndex)}
@@ -382,7 +490,10 @@
 																		class="bg-slate-50 border border-slate-200 rounded-lg p-3 hover:border-blue-300 transition-all {draggedSubItem?.subItemIndex === subItemIndex ? 'opacity-50' : ''}"
 																	>
 																		<div class="flex items-start gap-2">
-																			<button class="cursor-grab active:cursor-grabbing p-1">
+																			<button
+																				aria-label="Drag to reorder sub-item"
+																				class="cursor-grab active:cursor-grabbing p-1"
+																			>
 																				<svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 																					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16"/>
 																				</svg>
@@ -394,7 +505,7 @@
 																						bind:value={editingContent.value}
 																						class="w-full px-2 py-1 text-sm border border-slate-300 rounded focus:ring-2 focus:ring-blue-500 resize-none"
 																						rows="2"
-																						on:keydown|stopPropagation={(e) => e.key === 'Escape' && cancelEditing()}
+																						onkeydown={handleKeyDown}
 																					></textarea>
 																					<div class="flex gap-2 mt-1">
 																						<button
@@ -411,9 +522,9 @@
 																						</button>
 																					</div>
 																				{:else}
-																					<p 
+																					<p
 																						class="text-sm text-slate-700 cursor-pointer hover:bg-white p-1 rounded"
-																						onclick={() => startEditingContent('subItem', subItem.id!.toString(), subItem.content || '')}
+																						onclick={() => startEditingContent('subItem', subItem.id.toString(), subItem.content || '')}
 																					>
 																						{subItem.content || 'Click to add content'}
 																					</p>
@@ -421,9 +532,9 @@
 																			</div>
 
 																			<button
-																				onclick={() => handleDeleteSubItem(item.id!.toString(), subItem.id!.toString())}
+																				onclick={() => handleDeleteSubItem(item.id.toString(), subItem.id.toString())}
 																				class="flex-shrink-0 p-1 text-red-600 hover:bg-red-50 rounded transition-colors"
-																				title="Delete sub-item"
+																				aria-label="Delete sub-item"
 																			>
 																				<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 																					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -437,7 +548,7 @@
 													{/if}
 
 													<button
-														onclick={() => onSubItemCreate(item.id!.toString())}
+														onclick={() => onSubItemCreate(item.id.toString())}
 														class="mt-2 ml-4 text-xs text-blue-600 hover:text-blue-700 flex items-center gap-1"
 													>
 														<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -449,19 +560,19 @@
 
 												<div class="flex flex-col gap-2">
 													<button
-														onclick={() => onItemUpdate(item.id!.toString(), { published: item.published ? null : new Date() })}
+														onclick={() => onItemUpdate(item.id.toString(), { published: item.published ? null : new Date() })}
 														class={`flex-shrink-0 p-2 ${item.published ? 'text-green-600 hover:bg-green-50' : 'text-gray-600 hover:bg-gray-50'} rounded-lg transition-colors mt-1`}
-														title={item.published ? "Unpublish item" : "Publish item"}
+														aria-label={item.published ? "Unpublish item" : "Publish item"}
 													>
 														<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 															<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
 														</svg>
 													</button>
-													
+
 													<button
-														onclick={() => handleDeleteItem(item.id!.toString())}
+														onclick={() => handleDeleteItem(item.id.toString())}
 														class="flex-shrink-0 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-														title="Delete item"
+														aria-label="Delete item"
 													>
 														<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 															<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
@@ -480,7 +591,3 @@
 		</div>
 	{/if}
 </div>
-
-<style>
-	/* Add any specific styling */
-</style>

@@ -29,6 +29,9 @@ export const API_CONFIG = {
 		FAQ_CATEGORY: '/faq-category',
 		USER: '/user',
 		EVENT: '/event',
+		LEGAL: {
+			TOPIC: '/legal/topic',
+		},
 
 		// Admin endpoints
 		ADMIN: {

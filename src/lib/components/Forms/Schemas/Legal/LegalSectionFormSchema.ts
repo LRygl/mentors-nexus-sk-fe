@@ -1,5 +1,4 @@
-import type { FormSchema } from '$lib/components/Forms/BaseFormType';
-import type { LegalSection } from '$lib/types/entities/LegalSection';
+import type { FormSchema } from '$lib/types/entities/forms';
 
 export const LegalSectionFormSchema: FormSchema = {
 	fields: [
@@ -9,24 +8,9 @@ export const LegalSectionFormSchema: FormSchema = {
 			type: 'text',
 			placeholder: 'Enter section name',
 			required: true,
-			validation: {
-				minLength: 3,
-				maxLength: 100
-			}
-		},
-		{
-			name: 'icon',
-			label: 'Icon',
-			type: 'icon-select',
-			placeholder: 'Select an icon (optional)',
-			required: false
-		},
-		{
-			name: 'published',
-			label: 'Published',
-			type: 'checkbox',
-			placeholder: 'Publish this section',
-			required: false
+			minLength: 3,
+			maxLength: 255,
+			colSpan: 2
 		}
 	]
 };

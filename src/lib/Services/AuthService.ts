@@ -1,3 +1,4 @@
+console.log('Loading AuthService');
 import { BaseApiService } from '$lib/API/APIBase';
 import { API_CONFIG } from '$lib/API/APIConfiguration';
 import type { User } from '$lib/types/entities/User';

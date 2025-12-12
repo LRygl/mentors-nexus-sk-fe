@@ -14,9 +14,8 @@ export class LegalSectionAdminAPI extends BaseApiService {
 	// ============================================================================
 
 	async createSection(topicId: string, createData: Partial<LegalSection>): Promise<LegalSection> {
-		return await this.post<LegalSection>(`${this.ENDPOINT}`, {
-			...createData,
-			topicId
+		return await this.post<LegalSection>(`${this.ENDPOINT}/topic/${topicId}`, {
+			...createData
 		});
 	}
 
@@ -33,10 +32,7 @@ export class LegalSectionAdminAPI extends BaseApiService {
 	// ============================================================================
 
 	async reorderSections(topicId: string, sectionIds: number[]): Promise<void> {
-		await this.put(`${this.ENDPOINT}/reorder`, {
-			topicId,
-			sectionIds
-		});
+		await this.post(`${this.ENDPOINT}/topic/${topicId}/reorder`,sectionIds	);
 	}
 }
 

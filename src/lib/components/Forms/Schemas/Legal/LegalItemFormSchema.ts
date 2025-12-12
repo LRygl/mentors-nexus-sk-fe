@@ -1,54 +1,40 @@
-import type { FormSchema } from '$lib/components/Forms/BaseFormType';
+import type { FormSchema } from '$lib/types/entities/forms';
+import {
+	defineEntitySchema,
+	type EntityFieldConfig
+} from '$lib/components/Forms/Schemas/FormSchemaFactory';
 import type { LegalItem } from '$lib/types/entities/LegalItem';
 
-export const LegalItemFormSchema: FormSchema = {
-	fields: [
+export function createLegalItemFields(): EntityFieldConfig[] {
+	return [
 		{
 			name: 'content',
 			label: 'Content',
 			type: 'textarea',
+			group: 'standard',
+			variants: { standard: true },
 			placeholder: 'Enter item content',
 			required: true,
-			validation: {
-				minLength: 1,
-				maxLength: 5000
-			}
-		},
-		{
-			name: 'published',
-			label: 'Published',
-			type: 'checkbox',
-			placeholder: 'Publish this item',
-			required: false
+			minLength: 1,
+			maxLength: 5000
 		}
-	]
-};
+	];
+}
 
-export const SubItemFormSchema: FormSchema = {
-	fields: [
-		{
-			name: 'content',
-			label: 'Content',
-			type: 'textarea',
-			placeholder: 'Enter sub-item content',
-			required: true,
-			validation: {
-				minLength: 1,
-				maxLength: 5000
+export function createLegalItemSchemaFactory() {
+	return defineEntitySchema<LegalItem>({
+		entity: 'LegalItem',
+		fields: createLegalItemFields(),
+		variantConfig: {
+			standard: {
+				title: 'Add Legal Item',
+				submitLabel: 'Add Item',
+				layout: 'single'
 			}
-		},
-		{
-			name: 'published',
-			label: 'Published',
-			type: 'checkbox',
-			placeholder: 'Publish this sub-item',
-			required: false
 		}
-	]
-};
+	});
+}
 
 export const LegalItemFormPresets = {
-	create: (): FormSchema => LegalItemFormSchema,
-	embedded: (): FormSchema => LegalItemFormSchema,
-	subItem: (): FormSchema => SubItemFormSchema
+	create: () => createLegalItemSchemaFactory().create('standard')
 };

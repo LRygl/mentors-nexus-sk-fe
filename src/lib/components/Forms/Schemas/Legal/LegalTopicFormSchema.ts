@@ -47,6 +47,19 @@ export function createLegalTopicFields(): EntityFieldConfig[] {
 			colSpan: 2
 		},
 		{
+			name: 'published',
+			label: 'Published',
+			type: 'checkbox',
+			group: 'topic',
+			variants: { quick: true, standard: true, detailed: true, embedded: true },
+			required: true,
+			minLength: 3,
+			maxLength: 20,
+			placeholder: 'Name of the new topic?',
+			helpText: 'Keep it clear and concise',
+			colSpan: 2
+		},
+		{
 			name: 'showCta',
 			label: 'Show Call to Action',
 			type: 'checkbox',

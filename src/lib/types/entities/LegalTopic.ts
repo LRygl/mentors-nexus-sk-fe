@@ -7,6 +7,9 @@ export interface LegalTopic extends BaseEntity {
 	effectiveAt: Date;
 	showCta: boolean;
 	footer: string;
+	published: boolean;
+	publishedAt: Date;
+	publishedBy: string;
 	sections: LegalSection[]
 
 }

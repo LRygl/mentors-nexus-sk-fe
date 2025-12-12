@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { legalTopicStore } from '$lib/stores/defaults/LegalTopicStore';
+	import { legalTopicStore } from '$lib/stores/defaults/LegalTopicStore.svelte';
 	import { ROUTES } from '$lib/Config/routes.config';
 	import { goto } from '$app/navigation';
 	import { toastService } from '$lib/Services/ToastService.svelte';

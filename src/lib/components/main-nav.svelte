@@ -24,11 +24,13 @@
 	import { getMenuConfigForRole, userMenuConfigs } from '$lib/Config/UserMenuConfig';
 	import UserMenu from '$lib/components/UI/UserMenu.svelte';
 	import { ROUTES } from '$lib/Config/routes.config';
-	import { legalTopicStore } from '$lib/stores/defaults/LegalTopicStore';
+	import { legalTopicStore } from '$lib/stores/defaults/LegalTopicStore.svelte';
 
 	let currentMode = mode.current;
 
 
+	let publishedLegalTopics = $derived(legalTopicStore.publishedTopics);
+	let loadingTopics = $derived(legalTopicStore.loadingSummaries);
 
 	// Reactive auth state using Svelte 5 runes
 	let isAuthenticated = $derived(authStore.isAuthenticated);
@@ -41,7 +43,7 @@
 	let aboutMenuOpen = $state(false);
 	let userMenuOpen = $state(false);
 	let mobileMenuOpen = $state(false);
-	let publishedLegalTopics = $state([]);
+
 
 	// Debug logging
 	$effect(() => {
@@ -62,21 +64,25 @@
 		}
 	}
 
-	onMount(async () => {
+	onMount(() => {
 		// Initialize auth
-		if (!authStore.isInitialized) {
-			await authStore.initialize();
-		}
+		const initializeAuth = async () => {
+			if (!authStore.isInitialized) {
+				await authStore.initialize();
+			}
+
+			// Fetch published legal topics for the menu
+			await legalTopicStore.fetchPublishedTopics();
+			console.log(legalTopicStore.fetchPublishedTopics())
+		};
+
+		// Start async operations
+		initializeAuth();
 
 		// Add click outside listener
 		document.addEventListener('click', handleClickOutside);
-		
-		// Fetch published legal topics for the menu
-		const allTopics = await legalTopicStore.fetchPublishedTopics();
-		if (allTopics) {
-			publishedLegalTopics = allTopics.filter(topic => topic.published);
-		}
 
+		// Return cleanup function (synchronous)
 		return () => {
 			document.removeEventListener('click', handleClickOutside);
 		};
@@ -216,14 +222,29 @@
 								</button>
 
 								<!-- Dynamic Legal Topic Links -->
-								{#each publishedLegalTopics as topic (topic.id)}
-									<button
-										onclick={() => navigate(`/legal/${topic.id}`)}
-										class="flex items-start gap-3 w-full p-3 rounded-md hover:bg-accent transition-colors text-left"
-									>
-										<div class="text-sm font-medium">{topic.title}</div>
-									</button>
-								{/each}
+								{#if loadingTopics}
+									<div class="px-3 py-2 text-xs text-muted-foreground">
+										Loading...
+									</div>
+								{:else if publishedLegalTopics.length > 0}
+									<div class="my-2 border-t"></div>
+									<div class="px-2 py-1.5">
+										<p class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Legal</p>
+									</div>
+									{#each publishedLegalTopics as topic (topic.id)}
+										<button
+											onclick={() => navigate(`/legal/${topic.id}`)}
+											class="flex items-start gap-3 w-full p-3 rounded-md hover:bg-accent transition-colors text-left"
+										>
+											<div class="flex-1">
+												<div class="text-sm font-medium">{topic.name}</div>
+												{#if topic.subtitle}
+													<div class="text-xs text-muted-foreground line-clamp-1">{topic.subtitle}</div>
+												{/if}
+											</div>
+										</button>
+									{/each}
+								{/if}
 							</div>
 						</div>
 					{/if}

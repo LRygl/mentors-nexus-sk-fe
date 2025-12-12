@@ -1,6 +1,7 @@
 import { BaseApiService } from '$lib/API/APIBase';
 import { API_CONFIG } from '$lib/API/APIConfiguration';
 import type { LegalTopic } from '$lib/types/entities/LegalTopic';
+import type { LegalItem } from '$lib/types/entities/LegalItem';
 
 export class LegalTopicAdminAPI extends BaseApiService {
 	private readonly ENDPOINT = API_CONFIG.ENDPOINTS.ADMIN.LEGAL_TOPIC;
@@ -47,6 +48,10 @@ export class LegalTopicAdminAPI extends BaseApiService {
 	}
 
 
+	async createLegalItem(sectionId: string, createData: Partial<LegalItem>) {
+		return await this.post
+		return undefined;
+	}
 }
 
 export const legalTopicAdminAPI = new LegalTopicAdminAPI();

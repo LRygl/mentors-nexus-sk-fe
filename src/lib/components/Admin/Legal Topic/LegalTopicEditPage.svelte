@@ -1,14 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { LegalTopic } from '$lib/types/entities/LegalTopic';
-	import { legalTopicStore } from '$lib/stores/defaults/LegalTopicStore';
+	import { legalTopicStore } from '$lib/stores/defaults/LegalTopicStore.svelte';
 	import LegalTopicDetailsSection from '$lib/components/Admin/Legal Topic/LegalTopicDetailsSection.svelte';
 	import LegalTopicSectionManager from '$lib/components/Admin/Legal Topic/LegalTopicSectionManager.svelte';
 	import type { LegalSection } from '$lib/types/entities/LegalSection';
 	import type { LegalItem } from '$lib/types/entities/LegalItem';
-	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
-	import { LegalSectionFormSchema } from '$lib/components/Forms/Schemas/Legal/LegalSectionFormSchema';
-	import { LegalItemFormSchema } from '$lib/components/Forms/Schemas/Legal/LegalItemFormSchema';
+	import AddLegalSectionModal from '$lib/components/Admin/Legal Topic/AddLegalSectionModal.svelte';
+	import AddLegalItemModal from '$lib/components/Admin/Legal Topic/AddLegalItemModal.svelte';
 
 	let { legalTopicId } = $props<{ legalTopicId?: string }>();
 
@@ -62,20 +61,9 @@
 		isItemModalOpen = true;
 	}
 
-	async function handleItemCreateSubmit(formData: Partial<LegalItem>) {
-		if (!selectedSectionId) return;
-		
-		const section = topic?.sections?.find(s => s.id?.toString() === selectedSectionId);
-		await legalTopicStore.createItem_InSection(selectedSectionId, {
-			...formData,
-			orderIndex: (section?.items?.length || 0) + 1
-		});
-		isItemModalOpen = false;
-		selectedSectionId = null;
-	}
-
 	async function handleItemUpdate(itemId: string, data: Partial<LegalItem>) {
-		await legalTopicStore.updateLegalItem(itemId, data);
+
+		// await legalTopicStore.updateLegalItem(itemId, data);
 	}
 
 	async function handleItemDelete(itemId: string) {
@@ -92,24 +80,14 @@
 		isSubItemModalOpen = true;
 	}
 
-	async function handleSubItemCreateSubmit(formData: Partial<LegalItem>) {
-		if (!selectedParentItemId) return;
-		
-		await legalTopicStore.createSubItem(selectedParentItemId, {
-			...formData,
-			orderIndex: 1 // Will be calculated on backend
-		});
-		isSubItemModalOpen = false;
-		selectedParentItemId = null;
-	}
-
-	async function handleSubItemDelete(parentItemId: string, subItemId: string) {
-		await legalTopicStore.deleteSubItem(parentItemId, subItemId);
+	async function handleSubItemDelete(subItemId: string) {
+		await legalTopicStore.deleteSubItem( subItemId);
 	}
 
 	async function handleSubItemReorder(parentItemId: string, subItemIds: number[]) {
 		await legalTopicStore.reorderSubItems(parentItemId, subItemIds);
 	}
+
 </script>
 
 <div class="min-h-screen py-8 bg-gray-50">
@@ -153,32 +131,23 @@
 </div>
 
 <!-- Section Creation Modal -->
-<UniversalCreateModal
+<AddLegalSectionModal
 	isOpen={isSectionModalOpen}
-	title="Create Legal Section"
-	formSchema={LegalSectionFormSchema}
-	onSubmit={handleSectionCreateSubmit}
-	onClose={() => isSectionModalOpen = false}
+	topicId={legalTopicId}
+	onClose={
+	() => isSectionModalOpen = false
+	}
 />
 
-<!-- Item Creation Modal -->
-<UniversalCreateModal
+<AddLegalItemModal
 	isOpen={isItemModalOpen}
-	title="Create Legal Item"
-	formSchema={LegalItemFormSchema}
-	onSubmit={handleItemCreateSubmit}
-	onClose={() => {
-		isItemModalOpen = false;
-		selectedSectionId = null;
-	}}
+	sectionId={selectedSectionId}
+	onClose={() => isItemModalOpen = false}
 />
 
-<!-- Sub-Item Creation Modal -->
-<UniversalCreateModal
+<AddLegalItemModal
 	isOpen={isSubItemModalOpen}
-	title="Create Sub-Item"
-	formSchema={LegalItemFormSchema}
-	onSubmit={handleSubItemCreateSubmit}
+	parentItemId={selectedParentItemId}
 	onClose={() => {
 		isSubItemModalOpen = false;
 		selectedParentItemId = null;
