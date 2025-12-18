@@ -15,19 +15,11 @@ export class LegalTopicAdminAPI extends BaseApiService {
 	// ============================================================================
 
 	async getAllLegalTopics(): Promise<LegalTopic[]> {
-		try {
 			return await this.get<LegalTopic[]>(`${this.ENDPOINT}/all`);
-		} catch (error) {
-			throw error;
-		}
 	}
 
 	async getLegalTopicById(topicId: string): Promise<LegalTopic> {
-		try {
 			return await this.get<LegalTopic>(`${this.ENDPOINT}/${topicId}`);
-		} catch (error) {
-			throw error;
-		}
 	}
 
 	// ============================================================================
@@ -35,7 +27,6 @@ export class LegalTopicAdminAPI extends BaseApiService {
 	// ============================================================================
 
 	async createLegalTopic(createData: Partial<LegalTopic>): Promise<LegalTopic> {
-		console.log(createData);
 		return await this.post<LegalTopic>(`${this.ENDPOINT}`, createData);
 	}
 

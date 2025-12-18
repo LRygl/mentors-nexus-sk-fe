@@ -12,6 +12,9 @@ export const API_CONFIG = {
 	VERSION: 'v1',
 
 	ENDPOINTS: {
+		FILES:{
+			COURSE: '/files/course'
+		},
 		// Auth endpoints
 		AUTH: {
 			LOGIN: '/auth/login',
@@ -37,7 +40,7 @@ export const API_CONFIG = {
 		ADMIN: {
 			FAQ: '/admin/faq',
 			FAQ_CATEGORY: '/admin/faq-category',
-			USERS: '/user/all',
+			USER: '/user',
 			COURSES: '/course',
 			COURSE_CATEGORY: '/category',
 			LESSONS: '/lesson',
@@ -45,6 +48,9 @@ export const API_CONFIG = {
 			LEGAL_TOPIC: '/admin/legal/topic',
 			LEGAL_SECTION: '/admin/legal/section',
 			LEGAL_ITEM: '/admin/legal/item',
+			SETTINGS: {
+				THEME: '/admin/settings/theme',
+			}
 		}
 	},
 	get FULL_BASE_URL() {

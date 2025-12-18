@@ -6,6 +6,8 @@ import { userStore } from '$lib/stores/defaults/UserStore.js';
 import type { TableCallbacks } from '$lib/types/ui/table';
 import { onMount } from 'svelte';
 import type { User } from '$lib/types/entities/User';
+import { ROUTES } from '$lib/Config/routes.config';
+import { goto } from '$app/navigation';
 
 let selectedItems = $state<Set<string>>(new Set());
 
@@ -19,8 +21,8 @@ onMount(async () => {
 
 // Table callbacks adapted for BaseStoreSvelte
 const tableCallbacks: TableCallbacks<User> = {
-	onRowClick: (user) => {
-		console.log(`[PAGE] Data table user row ${user.id} clicked`);
+	onRowClick: async (user: User) => {
+		await goto(`${ROUTES.ADMIN.USERS}/${user.id}`)
 	},
 
 	onCreate: () => {

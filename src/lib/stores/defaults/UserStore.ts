@@ -1,18 +1,18 @@
 import { BaseStoreSvelte } from '$lib/stores/BaseStore.svelte';
 import type { User } from '$lib/types/entities/User';
 import { userAdminApiService, type UserAdminApiService } from '$lib/API/Admin/UserAdminAPI';
+import type { LegalTopic } from '$lib/types/entities/LegalTopic';
 
 
 export class UserStoreSvelte extends BaseStoreSvelte<
 	User,
 	Partial<User>,
 	Partial<User>,
-	UserAdminApiService> {
-
+	UserAdminApiService
+> {
 	constructor() {
 		super(userAdminApiService);
 	}
-
 
 	async fetchAll(): Promise<User[]> {
 		this._loading = true;
@@ -28,7 +28,22 @@ export class UserStoreSvelte extends BaseStoreSvelte<
 		}
 	}
 
+	async fetchItem(userId: string): Promise<User> {
+		this._loadingItem = true;
+		this._itemError = null;
 
+		try {
+			const topic = await this.apiService.getUserById(userId);
+			this._selectedItem = topic;
+			return topic;
+		} catch (error) {
+			this._itemError = error instanceof Error ? error.message : 'Failed to load legal topic';
+			console.error('[STORE] Error fetching legal topic:', error);
+			throw error;
+		} finally {
+			this._loadingItem = false;
+		}
+	}
 }
 
 export const userStore = new UserStoreSvelte();

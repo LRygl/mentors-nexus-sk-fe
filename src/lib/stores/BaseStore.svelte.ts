@@ -2,6 +2,27 @@ import type { BaseEntity, PaginatedResult, PaginationParams } from '$lib/types/c
 import type { BaseApiService } from '$lib/API/APIBase';
 import { untrack } from 'svelte';
 
+
+/**
+ * Base Store for Svelte 5 that integrates with BaseApiService
+ * Provides reactive state management for CRUD operations
+ *
+ * Type Parameters:
+ * @template TEntity - The entity type (must extend BaseEntity)
+ * @template TCreateRequest - Request type for creating entities (defaults to Partial<TEntity>)
+ * @template TUpdateRequest - Request type for updating entities (defaults to Partial<TEntity>)
+ * @template TApiService - The API service type (must extend BaseApiService)
+ *
+ * Usage:
+ * ```typescript
+ * class UserStore extends BaseStoreSvelte<User, CreateUserRequest, UpdateUserRequest, UserApiService> {
+ *   constructor() {
+ *     super(userApiService, '/users');
+ *   }
+ * }
+ * ```
+ */
+
 export abstract class BaseStoreSvelte<
 	TEntity extends BaseEntity = BaseEntity,
 	TCreateRequest = Partial<TEntity>,
@@ -32,14 +53,17 @@ export abstract class BaseStoreSvelte<
 	protected _totalElements = $state(0);
 	protected _totalPages = $state(0);
 
-	// API Service
+	// API Service configuration
 	protected apiService: TApiService;
 
 	constructor(apiService: TApiService) {
 		this.apiService = apiService;
 	}
 
-	// Collection getters
+	// ============================================================
+	// GETTERS - Collection State
+	// ============================================================
+
 	get data(): TEntity[] {
 		return this._data;
 	}
@@ -56,7 +80,10 @@ export abstract class BaseStoreSvelte<
 		return this._data.length === 0 && !this._loading;
 	}
 
-	// Single item getters
+	// ============================================================
+	// GETTERS - Single Item State
+	// ============================================================
+
 	get selectedItem(): TEntity | null {
 		return this._selectedItem;
 	}
@@ -73,7 +100,10 @@ export abstract class BaseStoreSvelte<
 		return this._selectedItem != null;
 	}
 
-	// CRUD operation getters
+	// ============================================================
+	// GETTERS - CRUD Operation State
+	// ============================================================
+
 	get creating(): boolean {
 		return this._creating;
 	}
@@ -103,7 +133,10 @@ export abstract class BaseStoreSvelte<
 		return this._creating || this._updating || this._deleting || this._loading || this._loadingItem;
 	}
 
-	// Pagination getters
+	// ============================================================
+	// GETTERS - Pagination State
+	// ============================================================
+
 	get currentPage(): number {
 		return this._currentPage;
 	}
@@ -128,7 +161,14 @@ export abstract class BaseStoreSvelte<
 		return this._currentPage > 0;
 	}
 
-	// Collection methods - load paginated data
+	// ============================================================
+	// CORE CRUD METHODS (using BaseApiService)
+	// ============================================================
+
+	/**
+	 * Load paginated data
+	 * Uses GET request from BaseApiService
+	 */
 	async loadPage(page: number = 0, size: number = 20): Promise<void> {
 		if (this._loading) return;
 
@@ -152,7 +192,10 @@ export abstract class BaseStoreSvelte<
 		}
 	}
 
-	// Single item methods - lload individual item
+	/**
+	 * Load a single item by ID
+	 * Uses GET request from BaseApiService
+	 */
 	async loadItem(id: string): Promise<TEntity | null> {
 		if (this._loading) return null;
 
@@ -172,7 +215,10 @@ export abstract class BaseStoreSvelte<
 		}
 	}
 
-	// CREATE Operation
+	/**
+	 * Create a new item
+	 * Uses POST request from BaseApiService
+	 */
 	async create(createRequest: TCreateRequest): Promise<TEntity | null> {
 		if (this._creating) return null;
 
@@ -186,7 +232,6 @@ export abstract class BaseStoreSvelte<
 			this._totalElements += 1;
 			this._selectedItem = newItem;
 			return newItem;
-
 		} catch (error) {
 			this._createError = error instanceof Error ? error.message : 'Failed to create item';
 			console.error('Error loading create item:', error);
@@ -207,7 +252,7 @@ export abstract class BaseStoreSvelte<
 			const updatedItem = await this.updateItem(id, updateRequest);
 
 			// Update the item in the data array
-			const index = this._data.findIndex(item => item.id === id);
+			const index = this._data.findIndex((item) => item.id === id);
 			if (index != -1) {
 				this._data[index] = updatedItem;
 				this._data = [...this._data]; // Trigger reactivity
@@ -229,7 +274,7 @@ export abstract class BaseStoreSvelte<
 	}
 
 	async delete(id: string): Promise<boolean> {
-		console.log("Base Store DELETE Called", id);
+		console.log('Base Store DELETE Called', id);
 		if (this._deleting) return false;
 
 		this._deleting = true;
@@ -239,7 +284,7 @@ export abstract class BaseStoreSvelte<
 			await this.deleteItem(id);
 
 			// Remove from data array
-			this._data = this._data.filter(item => {
+			this._data = this._data.filter((item) => {
 				const itemUuid = (item as any).uuid;
 				const itemId = item.id;
 
@@ -279,7 +324,7 @@ export abstract class BaseStoreSvelte<
 
 	selectItemById(id: string): TEntity | null {
 		const item = this.getItemById(id);
-		if(item) {
+		if (item) {
 			this.selectItem(item);
 			return item;
 		}
@@ -300,9 +345,7 @@ export abstract class BaseStoreSvelte<
 		const idStr = id.toString();
 
 		// Update in data array
-		const index = this._data.findIndex(
-			(item) => item.id.toString() === idStr
-		);
+		const index = this._data.findIndex((item) => item.id.toString() === idStr);
 
 		if (index !== -1) {
 			this._data[index] = updatedItem;
@@ -406,9 +449,6 @@ export abstract class BaseStoreSvelte<
 		}
 	}
 
-
-
-
 	// Pagination nav methods
 	async nextPage(): Promise<void> {
 		if (this.hasNextPage) {
@@ -432,7 +472,10 @@ export abstract class BaseStoreSvelte<
 		await this.loadPage(0, size);
 	}
 
-	//Utility methods
+	// ============================================================
+	// UTILITY METHODS
+	// ============================================================
+
 	protected getItemById(id: string | number): TEntity | undefined {
 		const idStr = id.toString();
 
@@ -469,7 +512,10 @@ export abstract class BaseStoreSvelte<
 		await this.loadPage(this._currentPage, this._pageSize);
 	}
 
-	// Reset collection state
+	// ============================================================
+	// RESET METHODS
+	// ============================================================
+
 	clearCollection(): void {
 		untrack(() => {
 			this._data = [];
@@ -482,7 +528,7 @@ export abstract class BaseStoreSvelte<
 		});
 	}
 
- // Reset item state
+	// Reset item state
 	clearItemState(): void {
 		untrack(() => {
 			this._selectedItem = null;
@@ -500,7 +546,7 @@ export abstract class BaseStoreSvelte<
 			this._updateError = null;
 			this._deleting = false;
 			this._deleteError = null;
-		})
+		});
 	}
 
 	// Reset everything

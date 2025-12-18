@@ -3,6 +3,8 @@
 	import FeaturedCourses from '$lib/components/Sections/Public/FeaturedCourses.svelte';
 	import { courseStore } from '$lib/stores/defaults/CourseStore.svelte';
 	import { onMount } from 'svelte';
+	import CTABannerComponent from '$lib/components/Sections/Public/CTABannerComponent.svelte';
+	import { ctaBannerPresets as CTABannerConfig } from '$lib/Config/Components/CTABannerComponent/CTABannerConfig';
 
 let courses = $derived(courseStore.featured)
 
@@ -18,7 +20,8 @@ let courses = $derived(courseStore.featured)
 	<HeroSection />
 
 	<FeaturedCourses {courses} />
-	<div class="w-screen max-w-7xl mx-auto">
 
-	</div>
+	<CTABannerComponent
+		{...CTABannerConfig.startLearning}
+	/>
 </main>

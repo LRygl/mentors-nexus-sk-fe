@@ -1,4 +1,5 @@
 import type { SidebarConfig } from '$lib/types/ui/AdminSidebar';
+import { ROUTES } from './routes.config';
 
 export const sidebarConfig: SidebarConfig = {
 	logo: {
@@ -11,7 +12,7 @@ export const sidebarConfig: SidebarConfig = {
 			id: "dashboard",
 			label: "Dashboard",
 			icon: "LayoutDashboard",
-			href: "/admin"
+			href: ROUTES.ADMIN.DASHBOARD
 		},
 		{
 			id: "analytics",
@@ -28,7 +29,7 @@ export const sidebarConfig: SidebarConfig = {
 				{
 					id: "users",
 					label: "Users",
-					href: "/admin/users"
+					href: ROUTES.ADMIN.USERS
 				}
 			]
 		},
@@ -41,17 +42,17 @@ export const sidebarConfig: SidebarConfig = {
 				{
 					id: "courses",
 					label: "Stations",
-					href: "/admin/course",
+					href: ROUTES.ADMIN.COURSE
 				},
 				{
 					id: "course-category",
 					label: "Stations Categories",
-					href: "/admin/course-category",
+					href: ROUTES.ADMIN.COURSE_CATEGORIES
 				},
 				{
 					id: "lessons",
 					label: "Terminals",
-					href: "/admin/lesson",
+					href: ROUTES.ADMIN.LESSON
 				}
 			]
 		},
@@ -64,12 +65,12 @@ export const sidebarConfig: SidebarConfig = {
 				{
 					id: "faq-category",
 					label: "FAQ Categories",
-					href: "/admin/faq-categories",
+					href: ROUTES.ADMIN.FAQ_CATEGORIES
 				},
 				{
 					id: "faq",
 					label: "FAQs",
-					href: "/admin/faq",
+					href: ROUTES.ADMIN.FAQ
 				}
 			]
 		},
@@ -77,7 +78,7 @@ export const sidebarConfig: SidebarConfig = {
 			id: "legal",
 			label: "Legal",
 			icon: "Section",
-			href: "/admin/legal-topic"
+			href: ROUTES.ADMIN.LEGAL_TOPIC
 		},
 		{
 			id: "settings",
@@ -91,9 +92,9 @@ export const sidebarConfig: SidebarConfig = {
 					href: "/admin/settings/general"
 				},
 				{
-					id: "security",
-					label: "Security",
-					href: "/admin/settings/security"
+					id: "theme",
+					label: "Themes",
+					href: ROUTES.ADMIN.THEMES
 				},
 				{
 					id: "integrations",

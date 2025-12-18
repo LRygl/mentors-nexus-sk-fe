@@ -22,10 +22,6 @@ export interface FAQ extends BaseEntity {
 	helpfulVotes: number;
 	notHelpfulVotes: number;
 	priority: FAQPriority;
-	createdAt: Date;
-	updatedAt: Date;
-	createdBy?: string;
-	updatedBy?: string;
 
 	// Computed Fields from Spring Boot
 	helpfulnessRatio: number;

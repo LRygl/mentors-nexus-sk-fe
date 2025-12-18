@@ -37,7 +37,7 @@ const faqTableDefinition = defineTableConfig<FAQ>({
 			type: 'text',
 			searchable: true,
 			sortable: true,
-			cellClassName: 'font-semibold text-slate-900'
+			cellClassName: 'text-slate-900'
 		},
 		{
 			key: 'categoryName',
@@ -108,9 +108,9 @@ const faqTableDefinition = defineTableConfig<FAQ>({
 			key: 'viewCount',
 			header: 'Views',
 			type: 'count',
-			singular: 'view',
-			plural: 'views',
-			color: 'bg-green-100 text-green-700',
+			singular: '',
+			plural: '',
+			color: 'bg-primary-500 text-green-700',
 			searchable: false,
 			sortable: true,
 			width: 'w-28'
@@ -122,11 +122,14 @@ const faqTableDefinition = defineTableConfig<FAQ>({
 			searchable: false,
 			sortable: true,
 			width: 'w-28',
-			customRender: (value: number) => {
-				const percentage = Math.round(value * 100);
+			customRender: (faq: FAQ) => {
+				const total = faq.helpfulVotes + faq.notHelpfulVotes;
+				if (total === 0) return "N/A";
+				const percentage = Math.round((faq.helpfulVotes / total) * 100);
+
 				const color = percentage >= 75 ? 'text-green-600' :
 					percentage >= 50 ? 'text-yellow-600' : 'text-red-600';
-				return `<span class="font-semibold ${color}">${percentage}%</span>`;
+				return `<span class="${color}">${percentage}%</span>`;
 			}
 		},
 		{

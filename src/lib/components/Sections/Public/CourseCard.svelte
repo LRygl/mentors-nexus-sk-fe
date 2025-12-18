@@ -5,9 +5,11 @@
 	import { formatDuration } from '$lib/utils/DateTimeFormatter';
 	import { ROUTES } from '$lib/Config/routes.config';
 	import { messages } from '$lib/i18n/messages';
+	import { API_CONFIG } from '$lib/API/APIConfiguration';
 
 	// Props
 	let { course }: { course: Course } = $props();
+	let imageUrl = API_CONFIG.FULL_BASE_URL+API_CONFIG.ENDPOINTS.FILES.COURSE+course.imageUrl;
 
 	// Formatters
 	const formatPrice = (price: number) =>
@@ -19,7 +21,7 @@
 <div class="bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden h-full flex flex-col group">
 	<!-- Image -->
 	<div class="relative h-48 overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
-		<img src={course.imageUrl} alt={course.name} class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+		<img src={imageUrl} alt={course.name} class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
 
 		<!-- Badges -->
 		<div class="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold text-gray-800">

@@ -46,6 +46,7 @@ export const ROUTES = {
 		FAQ: '/admin/faq',
 		FAQ_CATEGORIES: '/admin/faq-categories',
 		SETTINGS: '/admin/settings',
+		THEMES: '/admin/settings/theme',
 		REPORTS: '/admin/reports',
 		COURSE: '/admin/course',
 		COURSE_CATEGORIES: '/admin/course-category',

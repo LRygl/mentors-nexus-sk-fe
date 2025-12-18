@@ -89,22 +89,6 @@ export function createCourseFields(
 			helpText: 'The instructor who will own this course',
 			colSpan: 1
 		},
-		{
-			name: 'status',
-			label: 'Status',
-			type: 'select',
-			group: 'publishing',
-			variants: { standard: true, detailed: true, edit: true, embedded: true },
-			required: true,
-			options: [
-				{ value: 'DRAFT', label: 'Draft' },
-				{ value: 'UNPUBLISHED', label: 'Unpublished' },
-				{ value: 'PUBLISHED', label: 'Published' }
-			],
-			defaultValue: 'DRAFT',
-			helpText: 'Current publication status',
-			colSpan: 1
-		},
 
 		// Metadata
 		{
@@ -136,7 +120,23 @@ export function createCourseFields(
 
 		// Publishing
 		{
-			name: 'published',
+			name: 'status',
+			label: 'Status',
+			type: 'select',
+			group: 'publishing',
+			variants: { standard: true, detailed: true, edit: true, embedded: true },
+			required: true,
+			options: [
+				{ value: 'DRAFT', label: 'Draft' },
+				{ value: 'UNPUBLISHED', label: 'Unpublished' },
+				{ value: 'PUBLISHED', label: 'Published' }
+			],
+			defaultValue: 'DRAFT',
+			helpText: 'Current publication status',
+			colSpan: 1
+		},
+		{
+			name: 'publishedAt',
 			label: 'Publish Date',
 			type: 'date',
 			group: 'publishing',
@@ -153,7 +153,7 @@ export function createCourseFields(
 			]
 		},
 		{
-			name: 'isFeatured',
+			name: 'featured',
 			label: 'Featured Terminal',
 			type: 'checkbox',
 			group: 'publishing',
