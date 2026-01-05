@@ -5,6 +5,7 @@ import {
 } from '$lib/components/Forms/Schemas/FormSchemaFactory';
 import type { Lesson } from '$lib/types/entities/Lesson';
 import { LessonCategory } from '$lib/types/enums/LessonCategory';
+import { LessonType } from '$lib/types/enums/LessonType';
 
 export function createLessonFields(): EntityFieldConfig[] {
 
@@ -56,10 +57,10 @@ export function createLessonFields(): EntityFieldConfig[] {
 			variants: { quick: true, standard: true, embedded: true },
 			required: true,
 			options: [
-				...Object.values(LessonCategory).map(category => ({
+				...Object.values(LessonCategory).map((category) => ({
 					label: category.charAt(0).toUpperCase() + category.slice(1).toLowerCase(),
 					value: category
-				})),
+				}))
 			],
 			placeholder: 'Lesson category',
 			helpText: 'Type of the terminal category',
@@ -92,7 +93,24 @@ export function createLessonFields(): EntityFieldConfig[] {
 			acceptedFileTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
 			colSpan: 2
 		},
-	]
+		{
+			name: 'lessonType',
+			label: 'Type',
+			type: 'select',
+			group: 'content',
+			variants: { quick: true, standard: true, embedded: true },
+			required: true,
+			options: [
+				...Object.values(LessonType).map((category) => ({
+					label: category.charAt(0).toUpperCase() + category.slice(1).toLowerCase(),
+					value: category
+				}))
+			],
+			placeholder: 'Lesson category',
+			helpText: 'Type of the terminal category',
+			colSpan: 1
+		}
+	];
 }
 
 const lessonGroup: EntityGroupConfig[] = [

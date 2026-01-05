@@ -28,6 +28,32 @@ export function createCourseFields(
 	return [
 		// Basic Information
 		{
+			name: 'goals',
+			label: 'Learning Goals',
+			type: 'stringList',
+			group: 'details',
+			variants: { standard: true, embedded: true },
+			required: true,
+			minItems: 1,
+			maxItems: 10,
+			placeholder: 'Enter terminal name',
+			helpText: 'A clear, descriptive name for your terminal',
+			colSpan: 2
+		},
+		{
+			name: 'requirements',
+			label: 'Course Requirements',
+			type: 'stringList',
+			group: 'details',
+			variants: { quick: true, standard: true, detailed: true, edit: true, embedded: true },
+			required: true,
+			minItems: 1,
+			maxItems: 10,
+			placeholder: 'Enter course prerequisities',
+			helpText: 'A clear, descriptive name for your terminal',
+			colSpan: 2
+		},
+		{
 			name: 'name',
 			label: 'Terminal Name',
 			type: 'text',
@@ -45,25 +71,12 @@ export function createCourseFields(
 			label: 'Terminal Description',
 			type: 'text',
 			group: 'basic',
-			variants: { quick: true, embedded: true },
+			variants: { quick: true, standard: true, detailed: true, edit: true, embedded: true },
 			required: true,
 			minLength: 1,
 			maxLength: 250,
 			placeholder: 'Enter terminal description',
 			helpText: 'A clear, descriptive information about your terminal',
-			colSpan: 2
-		},
-		{
-			name: 'imageUrl',
-			label: 'Course Image',
-			type: 'image',
-			group: 'basic', // ✅ This must match the group id exactly
-			variants: { standard: true, detailed: true, edit: true, embedded: true },
-			required: false,
-			placeholder: 'Upload a course thumbnail...',
-			helpText: 'A featured image for your course (JPEG, PNG, WebP, or GIF)',
-			maxFileSize: 5 * 1024 * 1024, // 5MB
-			acceptedFileTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
 			colSpan: 2
 		},
 		{
@@ -88,6 +101,19 @@ export function createCourseFields(
 			placeholder: 'Select course owner...',
 			helpText: 'The instructor who will own this course',
 			colSpan: 1
+		},
+		{
+			name: 'imageUrl',
+			label: 'Course Image',
+			type: 'image',
+			group: 'basic', // ✅ This must match the group id exactly
+			variants: { standard: true, detailed: true, edit: true, embedded: true },
+			required: false,
+			placeholder: 'Upload a course thumbnail...',
+			helpText: 'A featured image for your course (JPEG, PNG, WebP, or GIF)',
+			maxFileSize: 5 * 1024 * 1024, // 5MB
+			acceptedFileTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+			colSpan: 2
 		},
 
 		// Metadata
@@ -176,7 +202,7 @@ const courseGroups: EntityGroupConfig[] = [
 		variant: 'default',
 		collapsible: false,
 		variants: {
-			embedded: true,
+			embedded: true
 		}
 	},
 	{
@@ -187,28 +213,28 @@ const courseGroups: EntityGroupConfig[] = [
 		variant: 'default',
 		collapsible: true,
 		variants: {
-			embedded: true,
+			embedded: true
 		}
-	},
-	{
-		id: 'publishing',
-		title: 'Publishing',
-		description: 'Publication status and scheduling',
-		icon: '🚀',
-		variant: 'default',
-		collapsible: true,
-		variants: { embedded: true }
 	},
 
 	// EDIT/STANDARD VARIANTS - rounded cards
 	{
 		id: 'basic',
-		title: 'Terminal Details',
+		title: 'Basic Information',
 		description: 'Basic information about your terminal',
 		icon: '📝',
 		variant: 'default',
 		collapsible: false,
 		variants: { standard: true, edit: true }
+	},
+	{
+		id: 'details',
+		title: 'Basic Information',
+		description: 'Basic information about your terminal',
+		icon: '📝',
+		variant: 'default',
+		collapsible: false,
+		variants: { standard: true, embedded: true }
 	},
 	{
 		id: 'metadata',
@@ -227,7 +253,7 @@ const courseGroups: EntityGroupConfig[] = [
 		variant: 'default',
 		collapsible: true,
 		collapsed: true,
-		variants: { standard: true, edit: true }
+		variants: { standard: true, embedded: true }
 	}
 ];
 

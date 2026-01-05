@@ -15,6 +15,7 @@
 	import TagInput from '$lib/components/Forms/Fields/TagInput.svelte';
 	import MultiSelect from '$lib/components/Forms/Fields/MultiSelect.svelte';
 	import ImageUpload from '$lib/components/Forms/Fields/ImageUpload.svelte';
+	import StringListInput from '$lib/components/Forms/Fields/StringListInput.svelte';
 
 	interface Props {
 		field: FormField;
@@ -54,7 +55,8 @@
 		color: ColorInput as any,
 		tags: TagInput as any,
 		multiselect: MultiSelect as any,
-		image: ImageUpload as any
+		image: ImageUpload as any,
+		stringList: StringListInput as any,
 	};
 
 	/**

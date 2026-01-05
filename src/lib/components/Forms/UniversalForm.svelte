@@ -169,6 +169,8 @@
 				return [];
 			case 'image':
 				return '';
+			case 'stringList':
+				return [];
 			default:
 				return '';
 		}

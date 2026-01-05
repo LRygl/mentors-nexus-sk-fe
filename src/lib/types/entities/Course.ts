@@ -36,6 +36,9 @@ export interface Course extends BaseEntity {
 	students?: number;  // Number of enrolled students
 	rating?: number;
 
+	goals: string[];
+	requirements: string[];
+
 
 }
 

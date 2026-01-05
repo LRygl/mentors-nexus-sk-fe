@@ -32,7 +32,8 @@ export type FormFieldType =
 	| 'slider'
 	| 'toggle'
 	| 'tags'
-	| 'custom';
+	| 'custom'
+	| 'stringList';
 
 export type FormLayout = 'single' | 'two-column' | 'three-column' | 'grid' | 'compact';
 export type FormVariant = 'default' | 'bordered' | 'floating' | 'minimal';
@@ -127,8 +128,8 @@ export interface FormField {
 	variant?: FormVariant;
 
 	/*
-	* Type-specific properties
-	*/
+	 * Type-specific properties
+	 */
 	min?: number;
 	max?: number;
 	step?: number;
@@ -141,11 +142,11 @@ export interface FormField {
 	pattern?: string;
 
 	// Tag input specific (NEW)
-	maxTags?: number;         // Maximum number of tags allowed
-	minTags?: number;         // Minimum number of tags required
+	maxTags?: number; // Maximum number of tags allowed
+	minTags?: number; // Minimum number of tags required
 	allowDuplicates?: boolean; // Whether to allow duplicate tags
-	tagPattern?: RegExp;      // Optional regex pattern for tag validation
-	tagMaxLength?: number;    // Maximum length for individual tags
+	tagPattern?: RegExp; // Optional regex pattern for tag validation
+	tagMaxLength?: number; // Maximum length for individual tags
 	tagValidator?: (tag: string) => boolean;
 
 	minItems?: number;
@@ -193,6 +194,13 @@ export interface FormField {
 
 	// Rich text
 	toolbar?: string[];
+
+	// StringList specific options (add these)
+	minItems?: number;
+	maxItems?: number;
+	maxItemLength?: number;
+	numbered?: boolean;
+	addButtonText?: string;
 }
 
 // ============================================================================

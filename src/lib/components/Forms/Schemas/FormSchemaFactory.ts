@@ -13,7 +13,17 @@ export type FormVariant = 'quick' | 'standard' | 'detailed' | 'edit' | 'link' | 
 export interface EntityFieldConfig {
 	name: string;
 	label: string;
-	type: 'text' | 'textarea' | 'number' | 'checkbox' | 'select' | 'date' | 'image' | 'tags' | 'multiselect';
+	type:
+		| 'text'
+		| 'textarea'
+		| 'number'
+		| 'checkbox'
+		| 'select'
+		| 'date'
+		| 'image'
+		| 'tags'
+		| 'multiselect'
+		| 'stringList';
 
 	// Visibility in different form variants
 	variants: {
@@ -56,6 +66,10 @@ export interface EntityFieldConfig {
 
 	// Group assignment
 	group?: string;
+
+	maxItemLength?: number;
+	numbered?: boolean;
+	addButtonText?: string;
 }
 
 /**
@@ -298,6 +312,16 @@ export class FormSchemaFactory<T = any> {
 					...baseOptions,
 					maxFileSize: field.maxFileSize,
 					acceptedFileTypes: field.acceptedFileTypes
+				});
+				break;
+			case 'stringList':
+				builder.stringlist(field.name, field.label, {
+					...baseOptions,
+					minItems: field.minItems,
+					maxItems: field.maxItems,
+					maxItemLength: field.maxItemLength,
+					numbered: field.numbered,
+					addButtonText: field.addButtonText
 				});
 				break;
 		}

@@ -17,13 +17,18 @@ export class FormBuilder<T = Record<string, any>> {
 	private lastAddedField: FormField | null = null;
 
 	// Updated constructor to support both old and new API
-	constructor(configOrTitle?: string | {
-		title?: string;
-		description?: string;
-		layout?: FormLayout;
-		variant?: FormVariant;
-		size?: FieldSize;
-	}, description?: string) {
+	constructor(
+		configOrTitle?:
+			| string
+			| {
+					title?: string;
+					description?: string;
+					layout?: FormLayout;
+					variant?: FormVariant;
+					size?: FieldSize;
+			  },
+		description?: string
+	) {
 		if (typeof configOrTitle === 'string') {
 			// Old API compatibility
 			this.schema = {
@@ -75,10 +80,7 @@ export class FormBuilder<T = Record<string, any>> {
 	/**
 	 * Configure validation behavior
 	 */
-	validation(config: {
-		validateOnChange?: boolean;
-		validateOnBlur?: boolean;
-	}): FormBuilder<T> {
+	validation(config: { validateOnChange?: boolean; validateOnBlur?: boolean }): FormBuilder<T> {
 		Object.assign(this.schema, config);
 		return this;
 	}
@@ -102,13 +104,15 @@ export class FormBuilder<T = Record<string, any>> {
 	 */
 	group(
 		title?: string,
-		descriptionOrOptions?: string | {
-			description?: string;
-			icon?: string;
-			collapsible?: boolean;
-			collapsed?: boolean;
-			variant?: 'default' | 'card' | 'minimal' | 'embedded';
-		}
+		descriptionOrOptions?:
+			| string
+			| {
+					description?: string;
+					icon?: string;
+					collapsible?: boolean;
+					collapsed?: boolean;
+					variant?: 'default' | 'card' | 'minimal' | 'embedded';
+			  }
 	): FormBuilder<T> {
 		let options: any = {};
 		let description: string | undefined;
@@ -350,7 +354,13 @@ export class FormBuilder<T = Record<string, any>> {
 	select(
 		name: string,
 		label: string,
-		optionsArray: Array<{ label: string; value: any; disabled?: boolean; icon?: string; color?: string }>,
+		optionsArray: Array<{
+			label: string;
+			value: any;
+			disabled?: boolean;
+			icon?: string;
+			color?: string;
+		}>,
 		options: {
 			placeholder?: string;
 			required?: boolean;
@@ -440,7 +450,9 @@ export class FormBuilder<T = Record<string, any>> {
 				type: 'custom' as const,
 				validator: (value: any) => {
 					if (value instanceof File && !options.acceptedFileTypes!.includes(value.type)) {
-						const types = options.acceptedFileTypes!.map(t => t.split('/')[1].toUpperCase()).join(', ');
+						const types = options
+							.acceptedFileTypes!.map((t) => t.split('/')[1].toUpperCase())
+							.join(', ');
 						return `Invalid file type. Accepted: ${types}`;
 					}
 					return null;
@@ -458,14 +470,17 @@ export class FormBuilder<T = Record<string, any>> {
 			helpText: options.helpText,
 			defaultValue: options.defaultValue || '',
 			maxFileSize: options.maxFileSize || 5 * 1024 * 1024, // Default 5MB
-			acceptedFileTypes: options.acceptedFileTypes || ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+			acceptedFileTypes: options.acceptedFileTypes || [
+				'image/jpeg',
+				'image/png',
+				'image/webp',
+				'image/gif'
+			],
 			dependencies: options.dependencies,
 			conditionalValidation: options.conditionalValidation,
 			validationRules
 		});
 	}
-
-
 
 	/**
 	 * Add new field types
@@ -577,6 +592,82 @@ export class FormBuilder<T = Record<string, any>> {
 	}
 
 	/**
+	 * Add a string list field (for goals, requirements, etc.)
+	 */
+	stringlist(
+		name: string,
+		label: string,
+		options: {
+			placeholder?: string;
+			helpText?: string;
+			required?: boolean;
+			minItems?: number;
+			maxItems?: number;
+			maxItemLength?: number;
+			numbered?: boolean;
+			addButtonText?: string;
+			defaultValue?: string[];
+			colSpan?: 1 | 2 | 3 | 4;
+			dependencies?: FormFieldDependency[];
+			conditionalValidation?: ConditionalValidation[];
+		} = {}
+	): FormBuilder<T> {
+		const validationRules: ValidationRule[] = [];
+
+		// Calculate effective minimum (use minItems if set, otherwise 1 if required)
+		const effectiveMinItems = options.minItems ?? (options.required ? 1 : 0);
+
+		// Add minItems validation
+		if (effectiveMinItems > 0) {
+			validationRules.push({
+				type: 'custom' as const,
+				message: `At least ${effectiveMinItems} ${effectiveMinItems === 1 ? 'item is' : 'items are'} required`,
+				validator: (value: any) => {
+					const arr = Array.isArray(value) ? value : [];
+					if (arr.length < effectiveMinItems) {
+						return `At least ${effectiveMinItems} ${effectiveMinItems === 1 ? 'item is' : 'items are'} required`;
+					}
+					return null;
+				}
+			});
+		}
+
+		// Add maxItems validation
+		if (options.maxItems) {
+			validationRules.push({
+				type: 'custom' as const,
+				message: `Maximum ${options.maxItems} items allowed`,
+				validator: (value: any) => {
+					const arr = Array.isArray(value) ? value : [];
+					if (arr.length > options.maxItems!) {
+						return `Maximum ${options.maxItems} items allowed`;
+					}
+					return null;
+				}
+			});
+		}
+
+		return this.addField({
+			name,
+			label,
+			type: 'stringList',
+			placeholder: options.placeholder || `Add ${label.toLowerCase()}...`,
+			helpText: options.helpText,
+			required: effectiveMinItems > 0,
+			minItems: options.minItems ?? 0,
+			maxItems: options.maxItems ?? 20,
+			maxItemLength: options.maxItemLength ?? 500,
+			numbered: options.numbered ?? true,
+			addButtonText: options.addButtonText ?? 'Add',
+			defaultValue: options.defaultValue ?? [],
+			colSpan: options.colSpan || 2,
+			dependencies: options.dependencies,
+			conditionalValidation: options.conditionalValidation,
+			validationRules
+		});
+	}
+
+	/**
 	 * Add an icon selector field
 	 */
 	iconSelector(
@@ -611,7 +702,6 @@ export class FormBuilder<T = Record<string, any>> {
 			validationRules
 		});
 	}
-
 
 	/**
 	 * Add a multiselect field
@@ -657,7 +747,6 @@ export class FormBuilder<T = Record<string, any>> {
 			validationRules
 		});
 	}
-
 
 	/**
 	 * Add a custom field
@@ -708,7 +797,9 @@ export class FormBuilder<T = Record<string, any>> {
 			this.lastAddedField.conditionalValidation = [
 				{
 					when: dependency,
-					rules: [{ type: 'required', message: message || `${this.lastAddedField.label} is required` }]
+					rules: [
+						{ type: 'required', message: message || `${this.lastAddedField.label} is required` }
+					]
 				}
 			];
 		}
@@ -738,7 +829,11 @@ export class FormBuilder<T = Record<string, any>> {
 	/**
 	 * Helper method to create dependency conditions
 	 */
-	static when(field: string, condition: 'equals' | 'not-equals' | 'truthy' | 'falsy', value?: any): FormFieldDependency {
+	static when(
+		field: string,
+		condition: 'equals' | 'not-equals' | 'truthy' | 'falsy',
+		value?: any
+	): FormFieldDependency {
 		return { field, condition, value };
 	}
 
