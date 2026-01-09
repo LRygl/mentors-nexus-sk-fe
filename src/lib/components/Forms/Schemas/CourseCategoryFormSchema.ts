@@ -5,6 +5,7 @@ import {
 } from '$lib/components/Forms/Schemas/FormSchemaFactory';
 import type { CourseCategory } from '$lib/types/entities/CourseCategory';
 import { createCourseSchemaFactory } from '$lib/components/Forms/Schemas/CourseFormSchema';
+import { messages } from '$lib/i18n/messages';
 
 export const QUICK_COLORS = [
 	{ name: 'Blue', value: '#3B82F6' },
@@ -23,37 +24,37 @@ export function createCourseCategoryFields(courseCategory: CourseCategory[] = []
 	return [
 		{
 			name: 'name',
-			label: 'Category name',
+			label: messages.courseCategory.forms.name,
 			type: 'text',
 			group: 'content',
-			variants: { quick: true, standard: true, embedded: true },
+			variants: { standard: true, embedded: true },
 			required: true,
 			minLength: 3,
 			maxLength: 20,
-			placeholder: 'Name of the new category?',
-			helpText: 'Keep it clear and concise',
+			placeholder: messages.courseCategory.forms.namePlaceholder,
+			helpText: messages.courseCategory.forms.nameHelpText,
 			colSpan: 1
 		},
 		{
 			name: 'description',
-			label: 'Description',
+			label: messages.courseCategory.forms.description,
 			type: 'text',
 			group: 'content',
-			variants: { standard: true, edit: true, embedded: true },
+			variants: { standard: true, embedded: true },
 			required: true,
 			minLength: 3,
-			maxLength: 20,
-			placeholder: 'Name of the new category?',
-			helpText: 'Keep it clear and concise',
+			maxLength: 200,
+			placeholder: messages.courseCategory.forms.descriptionPlaceholder,
+			helpText: messages.courseCategory.forms.descriptionHelpText,
 			colSpan: 1
 		},
 		{
 			name: 'colorCode',
 			label: 'Color',
-			type: 'color',
+			type: '',
 			group: 'content',
-			variants: { standard: true, edit: true, embedded: true },
-			options: QUICK_COLORS.map(color => ({
+			variants: { standard: true, embedded: true },
+			options: QUICK_COLORS.map((color) => ({
 				label: color.name,
 				value: color.value,
 				color: color.value
@@ -61,18 +62,18 @@ export function createCourseCategoryFields(courseCategory: CourseCategory[] = []
 			defaultValue: QUICK_COLORS[0].value,
 			helpText: 'Choose a color for this category',
 			colSpan: 1
-		},
+		}
 	];
 }
 
 const courseCategoryGroup: EntityGroupConfig[] = [
 	{
 		id: 'content',
-		title: 'Content',
-		description: 'Question and answer content',
+		title: messages.courseCategory.formGroup.contentGroupTitle,
+		description: messages.courseCategory.formGroup.contentGroupDescription,
 		icon: '📝',
 		variant: 'default',
-		variants: { standard: true, edit: true, embedded: true },
+		variants: { standard: true, embedded: true },
 	}
 ]
 

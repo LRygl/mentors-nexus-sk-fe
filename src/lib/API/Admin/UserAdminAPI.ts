@@ -17,6 +17,9 @@ export class UserAdminApiService extends BaseApiService {
 		return await this.get<User>(`${this.ENDPOINT}/${userId}`);
 	}
 
+	async updateUser(id: string, updateData: Partial<User>) {
+		return await this.put<User>(`${this.ENDPOINT}/${id}`, updateData);
+	}
 }
 
 export const userAdminApiService = new UserAdminApiService;

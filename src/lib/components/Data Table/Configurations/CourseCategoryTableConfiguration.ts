@@ -45,7 +45,7 @@ const courseCategoryTableDefinition = defineTableConfig<CourseCategory>({
 			}
 		},
 		{
-			key: 'created',
+			key: 'createdAt',
 			header: 'Created',
 			type: 'datetime',
 			searchable: false,
@@ -53,7 +53,7 @@ const courseCategoryTableDefinition = defineTableConfig<CourseCategory>({
 			cellClassName: 'font-mono text-xs text-slate-500',
 		},
 		{
-			key: 'updated',
+			key: 'updatedAt',
 			header: 'Updated',
 			type: 'datetime',
 			searchable: false,

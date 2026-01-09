@@ -1,3 +1,5 @@
+import DateFormatter from '$lib/utils/DateTimeFormatter';
+
 console.log('Loading APIBase');
 import type { RequestConfig } from '$lib/types/common';
 import { API_CONFIG } from '$lib/API/APIConfiguration';
@@ -63,12 +65,16 @@ export abstract class BaseApiService {
 	): Promise<T> {
 		const url = this.buildUrl(endpoint);
 		const headers = await this.getHeaders(config);
+
+		// Transform dates before sending
+		const transformedBody = body ? DateFormatter.transformForApi(body) : undefined;
+
 		const response = await this.executeRequest(
 			() =>
 				fetch(url, {
 					method: 'POST',
 					headers,
-					body: body ? JSON.stringify(body) : undefined,
+					body: transformedBody ? JSON.stringify(transformedBody) : undefined,
 					credentials: 'include',
 					signal: this.createAbortSignal(config?.timeout)
 				}),
@@ -123,12 +129,17 @@ export abstract class BaseApiService {
 	): Promise<T> {
 		const url = this.buildUrl(endpoint);
 		const headers = await this.getHeaders(config);
+
+		// Transform dates before sending
+		const transformedBody = body ? DateFormatter.transformForApi(body) : undefined;
+
+
 		const response = await this.executeRequest(
 			() =>
 				fetch(url, {
 					method: 'PUT',
 					headers,
-					body: body ? JSON.stringify(body) : undefined,
+					body: transformedBody ? JSON.stringify(transformedBody) : undefined,
 					credentials: 'include',
 					signal: this.createAbortSignal(config?.timeout)
 				}),

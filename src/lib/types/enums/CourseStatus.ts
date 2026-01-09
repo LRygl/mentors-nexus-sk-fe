@@ -22,3 +22,4 @@ export const CourseStatusColors: Record<CourseStatus, { from: string; to: string
 export function getCourseStatusColor(status?: CourseStatus) {
 	return CourseStatusColors[status ?? CourseStatus.UNPUBLISHED];
 }
+

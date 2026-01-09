@@ -14,6 +14,8 @@
 	let isLoading = $derived(courseCategoryStore.loadingItem);
 	let error = $derived(courseCategoryStore.itemError);
 
+
+
 	onMount(async () => {
 		await loadCourseCategory();
 	});

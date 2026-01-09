@@ -15,6 +15,7 @@
 	import { goto } from '$app/navigation';
 	import { confirmationModal } from '$lib/components/Modals/ConfirmationModalService.svelte';
 	import { userStore } from '$lib/stores/defaults/UserStore';
+	import { messages } from '$lib/i18n/messages';
 
 	let selectedItems = $state<Set<string>>(new Set);
 	let isCreateModalOpen = $state<boolean>(false);
@@ -120,8 +121,8 @@
 <section class="h-dvh m-5">
 	<!-- Header Section -->
 	<AdminHeaderSection
-		heading="Stations"
-		subHeading="Organize and manage your users with ease"
+		heading={messages.course.admin.heading}
+		subHeading={messages.course.admin.subHeading}
 	/>
 
 	<!-- Universal Data Table -->

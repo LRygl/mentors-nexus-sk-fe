@@ -6,6 +6,7 @@ import {
 } from '$lib/components/Forms/Schemas/FormSchemaFactory';
 import type { CourseCategory } from '$lib/types/entities/CourseCategory';
 import type { User } from '$lib/types/entities/User';
+import { CourseStatus } from '$lib/types/enums/CourseStatus';
 
 export function createCourseFields(
 	courseCategories: CourseCategory[] = [],
@@ -90,13 +91,13 @@ export function createCourseFields(
 			colSpan: 1
 		},
 		{
-			name: 'courseOwnerId', // Store just the ID
+			name: 'courseOwnerId',
 			label: 'Course Owner',
 			type: 'select',
 			group: 'basic',
 			variants: { standard: true, detailed: true, edit: true, embedded: true },
 			required: true,
-			searchable: true, // Makes it easy to find users
+			searchable: true,
 			options: userOptions,
 			placeholder: 'Select course owner...',
 			helpText: 'The instructor who will own this course',
@@ -106,7 +107,7 @@ export function createCourseFields(
 			name: 'imageUrl',
 			label: 'Course Image',
 			type: 'image',
-			group: 'basic', // ✅ This must match the group id exactly
+			group: 'basic',
 			variants: { standard: true, detailed: true, edit: true, embedded: true },
 			required: false,
 			placeholder: 'Upload a course thumbnail...',
@@ -157,7 +158,7 @@ export function createCourseFields(
 				{ value: 'UNPUBLISHED', label: 'Unpublished' },
 				{ value: 'PUBLISHED', label: 'Published' }
 			],
-			defaultValue: 'DRAFT',
+			defaultValue: CourseStatus.DRAFT,
 			helpText: 'Current publication status',
 			colSpan: 1
 		},
@@ -174,7 +175,7 @@ export function createCourseFields(
 				{
 					field: 'status',
 					condition: 'equals',
-					value: 'PUBLISHED'
+					value: CourseStatus.PUBLISHED,
 				}
 			]
 		},

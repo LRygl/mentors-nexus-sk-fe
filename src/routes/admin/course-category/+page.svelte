@@ -15,6 +15,7 @@ import { toastService } from '$lib/Services/ToastService.svelte';
 import { goto } from '$app/navigation';
 import { confirmationModal } from '$lib/components/Modals/ConfirmationModalService.svelte';
 import { ROUTES } from '$lib/Config/routes.config';
+import { messages } from '$lib/i18n/messages';
 
 	let isCreateModalOpen = $state<boolean>(false);
 	let selectedItems = $state<Set<string>>(new Set);
@@ -29,22 +30,19 @@ import { ROUTES } from '$lib/Config/routes.config';
 
 const tableCallbacks: TableCallbacks<CourseCategory> = {
 	onRowClick: async (courseCategory) => {
-		console.log(`[PAGE] Data table user row ${courseCategory.id} clicked`);
-		await goto(`${ROUTES.ADMIN.COURSE_CATEGORIES}/${courseCategory.id}`);
+		await goto(ROUTES.ADMIN.courseCategory(courseCategory.id));
 
 	},
 	onAction: async (actionId, courseCategory) => {
 		switch (actionId) {
 			case 'view':
-				console.log("View Action was called by the user in the dropdown")
-				await goto(`/admin/faq-categories/${courseCategory.id}`);
+				await goto(ROUTES.ADMIN.courseCategory(courseCategory.id));
 				break;
 			case 'delete':
 				const confirmed = await confirmationModal.delete(`Delete FAQ Category?`,`Are you sure you want to delete this category?`)
 				if (confirmed) {
 					try {
 						await courseCategoryStore.delete(courseCategory.id);
-						console.log('Category deleted successfully');
 					} catch (error) {
 						console.error('Failed to delete category:', error);
 						toastService.error('Failed to delete category:',`Operation failed with error: ${error}`);
@@ -57,7 +55,6 @@ const tableCallbacks: TableCallbacks<CourseCategory> = {
 	},
 
 	onCreate: () => {
-		console.log('[PAGE] Creating new course category');
 		createModal();
 	}
 }
@@ -131,13 +128,13 @@ function handleModalSubmit(event: Event) {
 <!-- Create Category Modal -->
 <UniversalCreateModal
 	isOpen={isCreateModalOpen}
-	title="Create FAQ Category"
-	subtitle="Add a new category to organize your FAQs"
+	title={messages.courseCategory.forms.title}
+	subtitle={messages.courseCategory.forms.subTitle}
 	icon={FileText}
 	iconBgColor="from-indigo-500 to-purple-600"
 	loading={courseCategoryStore.creating}
 	error={courseCategoryStore.createError}
-	submitLabel="Create Category"
+	submitLabel={messages.courseCategory.forms.submitLabel}
 	onclose={closeCreateModal}
 	onsubmit={handleModalSubmit}
 >

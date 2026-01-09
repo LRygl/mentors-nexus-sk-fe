@@ -1,12 +1,206 @@
-// ============================================================================
-// DATE FORMATTING UTILITIES
-// Handles ISO date strings from Spring Boot backend
-// ============================================================================
-
-/**
- * Format ISO date string: "2025-10-02T12:37:32.327734"
- */
 export class DateFormatter {
+
+	/**
+	 * Converts date values to ISO-8601 Instant format for backend compatibility
+	 * Input: Date object, date string (YYYY-MM-DD), or existing ISO string
+	 * Output: ISO-8601 instant string (2026-01-07T00:00:00.000Z)
+	 */
+	static toISOInstant(value: unknown): string | null {
+		if (!value) return null;
+
+		// Already an ISO string with time component
+		if (typeof value === 'string' && value.includes('T')) {
+			return value;
+		}
+
+		// Date object
+		if (value instanceof Date) {
+			return value.toISOString();
+		}
+
+		// Date string without time (YYYY-MM-DD) - add time component
+		if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+			return `${value}T00:00:00.000Z`;
+		}
+
+		// Return as-is if we can't parse it
+		return String(value);
+	}
+
+	/**
+	 * Converts ISO instant to date string for HTML form inputs
+	 * Input: ISO-8601 instant string or Date object
+	 * Output: YYYY-MM-DD string for <input type="date">
+	 */
+	static toDateInputValue(value: unknown): string {
+		if (!value) return '';
+
+		if (value instanceof Date) {
+			return value.toISOString().split('T')[0];
+		}
+
+		if (typeof value === 'string') {
+			// If it's an ISO string, extract just the date part
+			if (value.includes('T')) {
+				return value.split('T')[0];
+			}
+			// Already a date string
+			if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+				return value;
+			}
+		}
+
+		return '';
+	}
+
+	/**
+	 * Converts ISO instant to datetime-local input value
+	 * Input: ISO-8601 instant string
+	 * Output: YYYY-MM-DDTHH:MM string for <input type="datetime-local">
+	 */
+	static toDateTimeInputValue(value: unknown): string {
+		if (!value) return '';
+
+		if (value instanceof Date) {
+			return value.toISOString().slice(0, 16);
+		}
+
+		if (typeof value === 'string' && value.includes('T')) {
+			return value.slice(0, 16);
+		}
+
+		return '';
+	}
+
+	/**
+	 * Common date field name patterns for auto-detection
+	 */
+	private static readonly DATE_FIELD_PATTERNS = [
+		/date$/i,           // endsDate, publishedDate, etc.
+		/At$/i,             // createdAt, updatedAt, publishedAt, etc.
+		/time$/i,           // startTime, endTime
+		/^(start|end|from|to|published|created|updated|expired|valid)/i
+	];
+
+	/**
+	 * Check if a field name looks like a date field
+	 */
+	static isDateFieldName(fieldName: string): boolean {
+		return this.DATE_FIELD_PATTERNS.some(pattern => pattern.test(fieldName));
+	}
+
+	/**
+	 * Check if a value looks like a date-only string (YYYY-MM-DD)
+	 */
+	static isDateOnlyString(value: unknown): boolean {
+		return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value);
+	}
+
+	/**
+	 * Check if a value looks like an ISO instant string
+	 */
+	static isISOInstantString(value: unknown): boolean {
+		return typeof value === 'string' && value.includes('T') && /^\d{4}-\d{2}-\d{2}T/.test(value);
+	}
+
+	/**
+	 * Recursively transforms all date fields in an object to ISO-8601 Instant format
+	 * Use before sending data to Spring Boot backend
+	 *
+	 * @param data - Object to transform
+	 * @param dateFields - Optional explicit list of field names to transform
+	 */
+	static transformForApi<T extends Record<string, any>>(
+		data: T,
+		dateFields?: string[]
+	): T {
+		if (!data || typeof data !== 'object') return data;
+
+		const result = { ...data };
+
+		for (const [key, value] of Object.entries(result)) {
+			if (value === null || value === undefined) continue;
+
+			// Check if this field should be transformed
+			const shouldTransform =
+				dateFields?.includes(key) ||
+				this.isDateFieldName(key) ||
+				this.isDateOnlyString(value);
+
+			if (shouldTransform && value) {
+				(result as any)[key] = this.toISOInstant(value);
+			}
+
+			// Recursively handle nested objects (but not arrays or Date objects)
+			else if (
+				typeof value === 'object' &&
+				!Array.isArray(value) &&
+				!(value instanceof Date)
+			) {
+				(result as any)[key] = this.transformForApi(value, dateFields);
+			}
+
+			// Handle arrays of objects
+			else if (Array.isArray(value)) {
+				(result as any)[key] = value.map(item =>
+					typeof item === 'object' && item !== null
+						? this.transformForApi(item, dateFields)
+						: item
+				);
+			}
+		}
+
+		return result;
+	}
+
+	/**
+	 * Recursively transforms all date fields from API response to form-friendly format
+	 * Use after receiving data from Spring Boot backend
+	 *
+	 * @param data - Object to transform
+	 */
+	static transformFromApi<T extends Record<string, any>>(data: T): T {
+		if (!data || typeof data !== 'object') return data;
+
+		const result = { ...data };
+
+		for (const [key, value] of Object.entries(result)) {
+			if (value === null || value === undefined) continue;
+
+			// Check if this looks like a date field with ISO instant value
+			const isDateField = this.isDateFieldName(key);
+			const isISOInstant = this.isISOInstantString(value);
+
+			if (isDateField && isISOInstant) {
+				(result as any)[key] = this.toDateInputValue(value);
+			}
+
+			// Recursively handle nested objects
+			else if (
+				typeof value === 'object' &&
+				!Array.isArray(value) &&
+				!(value instanceof Date)
+			) {
+				(result as any)[key] = this.transformFromApi(value);
+			}
+
+			// Handle arrays of objects
+			else if (Array.isArray(value)) {
+				(result as any)[key] = value.map(item =>
+					typeof item === 'object' && item !== null
+						? this.transformFromApi(item)
+						: item
+				);
+			}
+		}
+
+		return result;
+	}
+
+	// ========================================================================
+	// EXISTING FORMATTING METHODS
+	// ========================================================================
+
 	/**
 	 * Parse ISO string to Date object
 	 */
@@ -107,7 +301,6 @@ export class DateFormatter {
 		});
 	}
 
-
 	/**
 	 * Format duration from minutes to human-readable format
 	 * @param minutes - Duration in minutes
@@ -152,8 +345,6 @@ export class DateFormatter {
 		const minutes = Math.floor(seconds / 60);
 		return this.formatDuration(minutes, format);
 	}
-
-
 
 	/**
 	 * Format as relative time (e.g., "2 hours ago", "3 days ago")
@@ -215,9 +406,11 @@ export class DateFormatter {
 	}
 }
 
-/**
- * Convenience functions
- */
+// ============================================================================
+// CONVENIENCE FUNCTIONS
+// ============================================================================
+
+// Display formatting
 export const formatDate = (date: string | Date, format?: 'short' | 'long') =>
 	DateFormatter.formatDate(date, format);
 
@@ -236,18 +429,20 @@ export const formatDurationFromSeconds = (seconds: number, format?: 'short' | 'l
 export const formatRelative = (date: string | Date) =>
 	DateFormatter.formatRelative(date);
 
-/**
- * Usage in your UniversalDataTable component:
- *
- * import { DateFormatter } from '$lib/utils/dateFormatter';
- *
- * // In your cell rendering logic:
- * if (column.renderType === 'date') {
- *   const formatted = DateFormatter.format(cellValue, {
- *     type: column.renderOptions?.dateFormat || 'date',
- *     format: column.renderOptions?.format || 'short'
- *   });
- * }
- */
+// API transformation
+export const toISOInstant = (value: unknown) =>
+	DateFormatter.toISOInstant(value);
+
+export const toDateInputValue = (value: unknown) =>
+	DateFormatter.toDateInputValue(value);
+
+export const toDateTimeInputValue = (value: unknown) =>
+	DateFormatter.toDateTimeInputValue(value);
+
+export const transformDatesForApi = <T extends Record<string, any>>(data: T, dateFields?: string[]) =>
+	DateFormatter.transformForApi(data, dateFields);
+
+export const transformDatesFromApi = <T extends Record<string, any>>(data: T) =>
+	DateFormatter.transformFromApi(data);
 
 export default DateFormatter;

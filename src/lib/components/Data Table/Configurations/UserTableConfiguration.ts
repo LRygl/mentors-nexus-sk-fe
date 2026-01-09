@@ -20,7 +20,7 @@ const userTableDefinition = defineTableConfig<User>({
 			type: 'text',
 			searchable: false,
 			sortable: true,
-			cellClassName: 'font-mono text-xs text-slate-500',
+			cellClassName: 'font-mono text-xs text-slate-500'
 		},
 		{
 			key: 'email',
@@ -28,8 +28,28 @@ const userTableDefinition = defineTableConfig<User>({
 			type: 'text',
 			searchable: false,
 			sortable: true,
-			cellClassName: 'font-mono text-xs text-slate-500',
+			cellClassName: 'font-mono text-xs text-slate-500'
 		},
+		{
+			key: 'registerDate',
+			header: 'Register Date',
+			type: 'datetime'
+		},
+		{
+			key: 'role',
+			header: 'Role',
+			type: 'badge'
+		},
+		{
+			key: 'isAccountNonLocked',
+			header: 'Active',
+			type: 'badge'
+		},
+		{
+			key: 'joinedCourses',
+			header: 'Joined Courses',
+			type: 'text'
+		}
 	],
 	actions: [
 		{
@@ -40,6 +60,14 @@ const userTableDefinition = defineTableConfig<User>({
 			variant: ActionType.DEFAULT,
 			group: 'Actions'
 		},
+		{
+			id: 'block',
+			label: 'Block User',
+			description: 'Block user access',
+			icon: Eye,
+			variant: ActionType.DANGER,
+			group: 'Actions'
+		}
 	],
 
 	searchable: true,
@@ -49,12 +77,13 @@ const userTableDefinition = defineTableConfig<User>({
 	sortable: true,
 
 	emptyTitle: 'No Users',
-	emptyDescription: 'Get started by defining questions which might be interesting to your users and provide simple answers.',
+	emptyDescription:
+		'Get started by defining questions which might be interesting to your users and provide simple answers.',
 	emptyActionLabel: 'Create your first FAQ Category!',
 	loadingTitle: 'Loading FAQ Categories',
 	loadingDescription: 'Please wait while we fetch your FAQ Categories...',
 	searchPlaceholder: 'Search FAQ Categories...'
-})
+});
 
 export const UserTablePreset = createTablePreset(userTableDefinition);
 

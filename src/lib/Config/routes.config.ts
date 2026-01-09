@@ -19,7 +19,7 @@ export const ROUTES = {
 		STORE: '/store',
 		COURSE: '/store/course',
 		LESSON: 'store/course/lesson',
-		SUPPORT: '/support',
+		SUPPORT: '/support'
 	},
 
 	// ============================================
@@ -32,7 +32,7 @@ export const ROUTES = {
 		ORDERS: '/orders',
 		INVOICES: '/invoices',
 		SUBSCRIPTIONS: '/subscriptions',
-		COURSES: '/course',
+		COURSES: '/course'
 	},
 
 	// ============================================
@@ -50,8 +50,9 @@ export const ROUTES = {
 		REPORTS: '/admin/reports',
 		COURSE: '/admin/course',
 		COURSE_CATEGORIES: '/admin/course-category',
+		//Different notation used for url path with parameter
+		courseCategory: (id: string | number) => `/admin/course-category/${id}`,
 		LESSON: '/admin/lesson',
-		LEGAL_TOPIC: '/admin/legal-topic',
-	},
-
+		LEGAL_TOPIC: '/admin/legal-topic'
+	}
 } as const;

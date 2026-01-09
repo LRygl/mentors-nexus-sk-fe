@@ -1,17 +1,14 @@
 <script lang="ts">
 
 	import { onMount } from 'svelte';
-	import { legalTopicStore } from '$lib/stores/defaults/LegalTopicStore.svelte';
-	import LegalTopicSectionManager from '$lib/components/Admin/Legal Topic/LegalTopicSectionManager.svelte';
 	import LegalTopicDetailsSection from '$lib/components/Admin/Legal Topic/LegalTopicDetailsSection.svelte';
 	import { userStore } from '$lib/stores/defaults/UserStore';
-	import UserDetailsSection from '$lib/components/Admin/User/UserDetailsSection.svelte';
-	import type { LegalTopic } from '$lib/types/entities/LegalTopic';
 	import type { User } from '$lib/types/entities/User';
+	import UserDetailsSection from '$lib/components/Admin/User/UserDetailsSection.svelte';
 
 	let { userId } = $props<{ userId?: string }>();
 
-	let user = $derived(userStore.selectItem);
+	let user = $derived(userStore.selectedItem);
 	let isLoading = $derived(userStore.loadingItem);
 	let error = $derived(userStore.itemError);
 
@@ -43,7 +40,7 @@
 			</div>
 		{:else if user}
 			<UserDetailsSection
-				{user}
+				topic={user}
 				onUpdate={handleUserUpdate}
 			/>
 

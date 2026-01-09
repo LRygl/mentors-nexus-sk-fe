@@ -3,6 +3,9 @@
 	import { UserPlus, Mail, Lock, Eye, EyeOff, AlertCircle, Loader2, ArrowRight } from 'lucide-svelte';
 	import { authStore } from '$lib/stores/Auth.svelte.js';
 	import { ROUTES } from '$lib/utils/Redirect';
+	import { isErrorCode, parseApiError } from '$lib/API/APIErrors';
+	import PasswordStrengthIndicator
+		from '$lib/components/Component/PasswordStrengthIndicator/PasswordStrengthIndicator.svelte';
 
 	let firstName = $state('');
 	let lastName = $state('');
@@ -12,6 +15,9 @@
 	let isLoading = $state(false);
 	let errorMessage = $state('');
 	let successMessage = $state('');
+
+	// Track which field has the error (for highlighting)
+	let errorField = $state<'email' | 'password' | 'general' | null>(null);
 
 	let touched = $state({
 		firstName: false,
@@ -36,13 +42,19 @@
 		showPassword = !showPassword;
 	}
 
+	function clearErrors() {
+		errorMessage = '';
+		errorField = null;
+	}
+
 	async function handleRegister(event: Event) {
 		event.preventDefault();
 		touched = { firstName: true, lastName: true, email: true, password: true };
+
 		if (!formValid) return;
 
 		isLoading = true;
-		errorMessage = '';
+		clearErrors();
 		successMessage = '';
 
 		try {
@@ -54,8 +66,19 @@
 			});
 			successMessage = 'Account created successfully! Redirecting to login...';
 			setTimeout(() => goto(ROUTES.PUBLIC.LOGIN), 2000);
-		} catch (error: any) {
-			errorMessage = error.message || 'Registration failed. Please try again.';
+		} catch (error: unknown) {
+			// Parse the error into a user-friendly message
+			console.log(error);
+			errorMessage = parseApiError(error);
+
+			// Determine which field to highlight based on error type
+			if (isErrorCode(error, 'UserAlreadyRegistered') || isErrorCode(error, 'InvalidEmail')) {
+				errorField = 'email';
+			} else if (isErrorCode(error, 'WeakPassword')) {
+				errorField = 'password';
+			} else {
+				errorField = 'general';
+			}
 		} finally {
 			isLoading = false;
 		}
@@ -63,7 +86,7 @@
 </script>
 
 <div class="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-900">
-	<!-- Animated background (same as login) -->
+	<!-- Animated background -->
 	<div class="absolute inset-0 overflow-hidden">
 		<div class="absolute top-0 left-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
 		<div class="absolute top-0 right-1/4 w-96 h-96 bg-indigo-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
@@ -85,8 +108,18 @@
 				<div class="px-8 pb-10">
 					{#if errorMessage}
 						<div class="mb-6 bg-red-500/20 border border-red-500/50 rounded-xl p-4 flex items-start gap-3 animate-shake">
-							<AlertCircle class="w-5 h-5 text-red-300 mt-0.5" />
-							<p class="text-sm text-red-100">{errorMessage}</p>
+							<AlertCircle class="w-5 h-5 text-red-300 mt-0.5 flex-shrink-0" />
+							<div class="flex-1">
+								<p class="text-sm text-red-100">{errorMessage}</p>
+								{#if errorField === 'email'}
+									<a
+										href={ROUTES.PUBLIC.LOGIN}
+										class="text-xs text-red-200 hover:text-white underline mt-1 inline-block"
+									>
+										Go to sign in →
+									</a>
+								{/if}
+							</div>
 						</div>
 					{/if}
 					{#if successMessage}
@@ -104,7 +137,8 @@
 									type="text"
 									bind:value={firstName}
 									onblur={() => handleBlur('firstName')}
-									class="w-full py-3 px-4 bg-white/10 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+									oninput={clearErrors}
+									class="w-full py-3 px-4 bg-white/10 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-colors"
 									placeholder="John"
 									required
 								/>
@@ -115,7 +149,8 @@
 									type="text"
 									bind:value={lastName}
 									onblur={() => handleBlur('lastName')}
-									class="w-full py-3 px-4 bg-white/10 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-indigo-500 outline-none"
+									oninput={clearErrors}
+									class="w-full py-3 px-4 bg-white/10 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-colors"
 									placeholder="Doe"
 									required
 								/>
@@ -131,11 +166,16 @@
 									type="email"
 									bind:value={email}
 									onblur={() => handleBlur('email')}
-									class="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-indigo-300 focus:ring-2 focus:ring-indigo-500 outline-none"
+									oninput={clearErrors}
+									class="w-full pl-12 pr-4 py-3 bg-white/10 border rounded-xl text-white placeholder-indigo-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-colors
+										{errorField === 'email' ? 'border-red-500/50 bg-red-500/10' : 'border-white/20'}"
 									placeholder="you@example.com"
 									required
 								/>
 							</div>
+							{#if touched.email && !isValidEmail(email)}
+								<p class="text-xs text-red-300 mt-1.5">Please enter a valid email address</p>
+							{/if}
 						</div>
 
 						<!-- Password -->
@@ -147,11 +187,17 @@
 									type={showPassword ? 'text' : 'password'}
 									bind:value={password}
 									onblur={() => handleBlur('password')}
-									class="w-full pl-12 pr-12 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-indigo-300 focus:ring-2 focus:ring-indigo-500 outline-none"
+									oninput={clearErrors}
+									class="w-full pl-12 pr-12 py-3 bg-white/10 border rounded-xl text-white placeholder-indigo-300 focus:ring-2 focus:ring-indigo-500 outline-none transition-colors
+										{errorField === 'password' ? 'border-red-500/50 bg-red-500/10' : 'border-white/20'}"
 									placeholder="Create a password"
 									required
 								/>
-								<button type="button" onclick={togglePasswordVisibility} class="absolute right-4 top-3.5 text-indigo-300 hover:text-white">
+								<button
+									type="button"
+									onclick={togglePasswordVisibility}
+									class="absolute right-4 top-3.5 text-indigo-300 hover:text-white transition-colors"
+								>
 									{#if showPassword}
 										<EyeOff class="w-5 h-5" />
 									{:else}
@@ -159,13 +205,16 @@
 									{/if}
 								</button>
 							</div>
+
+							<!-- Password Strength Indicator -->
+							<PasswordStrengthIndicator {password} />
 						</div>
 
 						<!-- Submit -->
 						<button
 							type="submit"
 							disabled={isLoading}
-							class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-indigo-500 hover:to-purple-500 transition-all"
+							class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3.5 rounded-xl font-semibold flex items-center justify-center gap-2 hover:from-indigo-500 hover:to-purple-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 						>
 							{#if isLoading}
 								<Loader2 class="w-5 h-5 animate-spin" />

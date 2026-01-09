@@ -2,10 +2,11 @@ import { createTablePreset, defineTableConfig } from '$lib/components/Data Table
 import type { Course } from '$lib/types/entities/Course';
 import { Eye, Star, StarOff } from '@lucide/svelte';
 import { ActionType } from '$lib/types';
+import { messages } from '$lib/i18n/messages';
 
 const courseTableDefinition = defineTableConfig<Course>({
-	entity: 'Course',
-	entityPlural: 'Courses',
+	entity: messages.course.entity,
+	entityPlural: messages.course.entityPlural,
 
 	idField: 'id',
 	titleField: 'name',
@@ -134,8 +135,8 @@ const courseTableDefinition = defineTableConfig<Course>({
 		},
 		{
 			id: 'delete',
-			label: 'Delete',
-			description: 'Delete the course record',
+			label: messages.course.admin.actions.deleteLabel,
+			description: messages.course.admin.actions.deleteDescription,
 			icon: Eye,
 			variant: ActionType.DANGER,
 			group: 'Management'
@@ -148,12 +149,12 @@ const courseTableDefinition = defineTableConfig<Course>({
 	exportable: true,
 	sortable: true,
 
-	emptyTitle: 'No Terminals',
-	emptyDescription: 'Get started by defining questions which might be interesting to your users and provide simple answers.',
-	emptyActionLabel: 'Create your first Terminal',
-	loadingTitle: 'Loading Courses',
-	loadingDescription: 'Please wait while we fetch your Courses...',
-	searchPlaceholder: 'Search Courses...'
+	emptyTitle: messages.course.data.emptyTitle,
+	emptyDescription: messages.course.data.emptyDescription,
+	emptyActionLabel: messages.course.data.emptyActionLabel,
+	loadingTitle: messages.course.data.loadingTitle,
+	loadingDescription: messages.course.data.loadingDescription,
+	searchPlaceholder: messages.course.data.searchPlaceholder,
 })
 
 export const CourseTablePreset = createTablePreset(courseTableDefinition);
@@ -164,5 +165,20 @@ export const CourseTableConfig = {
 	CourseTableActions: (course: Course) => CourseTablePreset.getActions(course),
 	CourseTableProps: () => CourseTablePreset.props(),
 
-	all: () => CourseTablePreset.all()
+	all: () => CourseTablePreset.all(),
+
+	// Create Embedded variant
+	embedded: () => {
+		const base = CourseTablePreset.all();
+		return {
+			...base,
+			props: {
+				...base.props,
+				searchable: false,
+				filterable: false,
+				selectable: false,
+				exportable: false
+			}
+		};
+	}
 };
