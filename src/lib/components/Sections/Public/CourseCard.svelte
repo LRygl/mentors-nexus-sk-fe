@@ -6,9 +6,14 @@
 	import { ROUTES } from '$lib/Config/routes.config';
 	import { messages } from '$lib/i18n/messages';
 	import { API_CONFIG } from '$lib/API/APIConfiguration';
+	import DificultyIndicator from '$lib/components/DificultyIndicator.svelte';
 
 	// Props
 	let { course }: { course: Course } = $props();
+
+
+console.log("Course IMAGE URL: ", course.imageUrl)
+
 	let imageUrl = API_CONFIG.FULL_BASE_URL+API_CONFIG.ENDPOINTS.FILES.COURSE+course.imageUrl;
 
 	// Formatters
@@ -20,12 +25,12 @@
 
 <div class="bg-white rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-500 overflow-hidden h-full flex flex-col group">
 	<!-- Image -->
-	<div class="relative h-48 overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
+	<div class="relative h-48 overflow-hidden bg-linear-to-br from-blue-100 to-purple-100">
 		<img src={imageUrl} alt={course.name} class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
 
 		<!-- Badges -->
 		<div class="absolute top-4 left-4 px-3 py-1 bg-white/90 backdrop-blur-sm rounded-full text-xs font-bold text-gray-800">
-			{course.level} 3
+			<DificultyIndicator level={course.level} size="sm" showLabel={false} />
 		</div>
 		<div class="absolute top-4 right-4 px-3 py-1 bg-blue-600/90 backdrop-blur-sm rounded-full text-xs font-bold text-white">
 			{course.categories} Test
@@ -65,7 +70,7 @@
 			</div>
 			<div class="flex items-center gap-2 text-sm text-gray-600">
 				<Users class="w-4 h-4 text-purple-600" />
-				<span>350 {messages.course.courseStudentCout}</span>
+				<span>{course.students} {messages.course.courseStudentCout}</span>
 			</div>
 		</div>
 
@@ -83,7 +88,7 @@
 		<!-- Price & CTA -->
 		<div class="flex items-center justify-between pt-4 border-t border-gray-100">
 			<div class="text-2xl font-black text-gray-900">{formatPrice(course.price)}</div>
-			<Button class="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105">
+			<Button class="bg-linear-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold px-6 py-2 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 group-hover:scale-105">
 				<a href="{ROUTES.PUBLIC.COURSE}/{course.id}">{messages.course.viewCourseDetail}</a>
 			</Button>
 		</div>

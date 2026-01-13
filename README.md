@@ -13,6 +13,13 @@
   - [ ] Sort/Filter courses
   - [ ] Allow users to preview free lessons in course
   - [ ] For protected lessons redirect to purchase page
+  - [ ] List enrolled courses on the USer DEtail Page
+  - [ ] Allow users to enroll on course page in public view
+  - [ ] Handle user status and enrolment status on course scree
+  - [ ] allow access to course lessons based on enrollment status
+  - [ ] Add addition views for user - ADMIN ...
+  - [ ] Unenroll users Enroll users
+  - [ ] Finish the course screen
 
 
 

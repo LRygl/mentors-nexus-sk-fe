@@ -5,6 +5,8 @@ import {
 import type { User } from '$lib/types/entities/User';
 import { Eye } from '@lucide/svelte';
 import { ActionType } from '$lib/types';
+import type { CourseCategory } from '$lib/types/entities/CourseCategory';
+import type { Course } from '$lib/types/entities/Course';
 
 const userTableDefinition = defineTableConfig<User>({
 	entity: 'User',
@@ -20,7 +22,7 @@ const userTableDefinition = defineTableConfig<User>({
 			type: 'text',
 			searchable: false,
 			sortable: true,
-			cellClassName: 'font-mono text-xs text-slate-500'
+			cellClassName: 'text-xs font-mono text-slate-400 tracking-tight'
 		},
 		{
 			key: 'email',
@@ -28,27 +30,47 @@ const userTableDefinition = defineTableConfig<User>({
 			type: 'text',
 			searchable: false,
 			sortable: true,
-			cellClassName: 'font-mono text-xs text-slate-500'
+			cellClassName: 'text-xs font-mono text-slate-600 tracking-tight'
 		},
 		{
 			key: 'registerDate',
 			header: 'Register Date',
-			type: 'datetime'
+			type: 'datetime',
+			cellClassName: 'text-xs font-mono text-slate-400 tracking-tight'
 		},
 		{
 			key: 'role',
 			header: 'Role',
-			type: 'badge'
+			type: 'badge',
+			cellClassName: 'text-xs font-mono text-slate-400 tracking-tight'
 		},
 		{
 			key: 'isAccountNonLocked',
 			header: 'Active',
-			type: 'badge'
+			type: 'badge',
+			cellClassName: 'text-xs font-mono text-slate-400 tracking-tight'
 		},
 		{
 			key: 'joinedCourses',
 			header: 'Joined Courses',
-			type: 'text'
+			type: 'text',
+			accessor: (user: User) => {
+				const count = user?.joinedCourses?.length ?? 0;
+				if (count === 0) return 'No course';
+				return `${count} ${count === 1 ? 'course' : 'courses'}`;
+			},
+			cellClassName: 'text-xs font-mono text-slate-400 tracking-tight'
+		},
+		{
+			key: 'ownedCourses',
+			header: 'Owned Courses',
+			type: 'text',
+			accessor: (user: User) => {
+				const count = user?.ownedCourses?.length ?? 0;
+				if (count === 0) return 'No course';
+				return `${count} ${count === 1 ? 'course' : 'courses'}`;
+			},
+			cellClassName: 'text-xs font-mono text-slate-400 tracking-tight'
 		}
 	],
 	actions: [

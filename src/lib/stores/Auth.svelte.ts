@@ -9,9 +9,11 @@ import { goto, invalidateAll } from '$app/navigation';
 import { browser } from '$app/environment';
 import { ROUTES } from '$lib/Config/routes.config';
 import { tick } from 'svelte';
+import { enrollmentService } from '$lib/Services/EnrollmentService.svelte';
+import type { AuthUser } from '$lib/types/entities/Auth';
 
 class AuthStore {
-	user = $state<User | null>(null);
+	user = $state<AuthUser | null>(null);
 	isLoading = $state(false);
 	isInitialized = $state(false);
 	lastCheck = $state<number>(0);
@@ -59,14 +61,16 @@ class AuthStore {
 			this.lastCheck = Date.now();
 
 			console.log('[Auth] User authenticated:', user.email);
+			// Initialize user enrolled courses
 
+			await enrollmentService.initialize(user.enrolledCourseIds);
 			// Start session management after successful auth
 			this.startSessionManagement();
-
 		} catch (error) {
 			this.user = null;
 			console.log('[Auth] No active session');
-
+			// Clear enrollments on auth failure
+			enrollmentService.clear();
 			// Stop any running timers
 			this.stopSessionManagement();
 		} finally {
@@ -88,7 +92,7 @@ class AuthStore {
 
 		try {
 			const response = await authService.login({ email, password, rememberMe });
-			this.user = response.user;
+			this.user = response;
 			this.lastCheck = Date.now();
 
 			console.log('[Auth] Login successful:', {
@@ -97,6 +101,9 @@ class AuthStore {
 				timestamp: new Date().toISOString()
 			});
 
+			console.log('[Auth] List Enrolled courses: ', response.enrolledCourseIds);
+			// Initialize enrollments from login response
+			await enrollmentService.initialize(response.enrolledCourseIds);
 			// Start session management
 			this.startSessionManagement();
 
@@ -119,7 +126,6 @@ class AuthStore {
 		this.isLoading = true;
 		try {
 			const response = await authService.register(userData);
-			this.user = response.user;
 			this.lastCheck = Date.now();
 			return response;
 		} finally {

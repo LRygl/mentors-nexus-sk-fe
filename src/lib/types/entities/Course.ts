@@ -2,6 +2,7 @@ import type { BaseEntity } from '$lib/types';
 import type { CourseSection } from '$lib/types/entities/CourseSection';
 import type { CourseStatus } from '$lib/types/enums/CourseStatus';
 import type { User } from '$lib/types/entities/User';
+import type { CourseLevel } from '$lib/types/enums/CourseLevel';
 
 /**
  * Course Interface
@@ -29,7 +30,7 @@ export interface Course extends BaseEntity {
 	categoryIds?: string[];  // Array of category IDs (for form)
 	categories?: string[];  // Array of category names (for display)
 
-	level?: string;
+	level?: CourseLevel;
 
 	sections: CourseSection[];  // Course sections with lessons
 	duration?: number;

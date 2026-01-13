@@ -30,6 +30,7 @@ export const API_CONFIG = {
 		CATEGORY: '/category',
 		FAQ: '/faq',
 		FAQ_CATEGORY: '/faq-category',
+		LESSON: '/lesson',
 		USER: '/user',
 		EVENT: '/event',
 		LEGAL: {

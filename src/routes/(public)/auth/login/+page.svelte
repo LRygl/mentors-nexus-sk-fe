@@ -94,7 +94,7 @@
 			} else {
 				// Option 2: Use role-based redirect
 				//redirectPath = getLoginRedirectPath(response.user.role);
-				redirectPath = getLoginRedirectPath(response.user.role)
+				redirectPath = getLoginRedirectPath(response.role)
 				console.log('[LOGIN] Redirecting based on role:', redirectPath);
 			}
 
@@ -110,7 +110,7 @@
 	}
 </script>
 
-<div class="min-h-screen w-full relative overflow-hidden bg-gradient-to-br from-indigo-950 via-purple-900 to-pink-900">
+<div class="min-h-screen w-full relative overflow-hidden bg-linear-to-br from-indigo-950 via-purple-900 to-pink-900">
 	<!-- Animated Background Elements -->
 	<div class="absolute inset-0 overflow-hidden">
 		<!-- Animated Orbs -->
@@ -137,7 +137,7 @@
 			<div class="backdrop-blur-xl bg-white/10 rounded-3xl shadow-2xl border border-white/20 overflow-hidden transform transition-all duration-500 hover:scale-[1.02]">
 				<!-- Header -->
 				<div class="px-8 py-10 text-center">
-					<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 mb-6 shadow-lg">
+					<div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-linear-to-br from-indigo-500 to-purple-600 mb-6 shadow-lg">
 						<Lock class="w-8 h-8 text-white" />
 					</div>
 					<h1 class="text-4xl font-bold text-white mb-2">Welcome Back</h1>
@@ -149,7 +149,7 @@
 					<!-- Session Expired Warning -->
 					{#if urlErrorMessage}
 						<div class="mb-6 bg-yellow-500/20 backdrop-blur-sm border border-yellow-500/50 rounded-xl p-4 flex items-start gap-3 animate-shake">
-							<AlertCircle class="w-5 h-5 text-yellow-300 flex-shrink-0 mt-0.5" />
+							<AlertCircle class="w-5 h-5 text-yellow-300 shrink-0 mt-0.5" />
 							<div class="flex-1">
 								<p class="text-sm font-semibold text-yellow-100 mb-1">Session Issue</p>
 								<p class="text-sm text-yellow-200">{urlErrorMessage}</p>
@@ -159,7 +159,7 @@
 					<!-- Login Error -->
 					{#if errorMessage}
 						<div class="mb-6 bg-red-500/20 backdrop-blur-sm border border-red-500/50 rounded-xl p-4 flex items-start gap-3 animate-shake">
-							<AlertCircle class="w-5 h-5 text-red-300 flex-shrink-0 mt-0.5" />
+							<AlertCircle class="w-5 h-5 text-red-300 shrink-0 mt-0.5" />
 							<p class="text-sm text-red-100">{errorMessage}</p>
 						</div>
 					{/if}
@@ -251,7 +251,7 @@
 						<button
 							type="submit"
 							disabled={isLoading}
-							class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-3.5 px-4 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+							class="w-full bg-linear-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white py-3.5 px-4 rounded-xl font-semibold focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center gap-2 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
 						>
 							{#if isLoading}
 								<Loader2 class="w-5 h-5 animate-spin" />

@@ -43,12 +43,7 @@ const faqCategoryFAQsTableDefinition = defineTableConfig<FAQ>({
 			color: 'bg-blue-100 text-blue-700',
 			width: 'w-32',
 			accessor: (category: CourseCategory) => {
-				console.log('Category object:', category);
-				console.log('Has course?:', !!category.courses);
-				console.log('Courses count:', category.courses?.length);
-
 				const count = category.courses?.length ?? 0;
-
 				if (count === 0) return 'No course';
 				return `${count} ${count === 1 ? 'course' : 'courses'}`;
 			}

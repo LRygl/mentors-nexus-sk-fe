@@ -26,6 +26,14 @@ const lessonTableDefinition = defineTableConfig<Lesson>({
 			cellClassName: 'font-mono text-xs text-slate-500'
 		},
 		{
+			key: 'category',
+			header: 'Category',
+			type: 'badge',
+			searchable: false,
+			sortable: true,
+			cellClassName: 'font-mono text-xs text-slate-500'
+		},
+		{
 			key: 'title',
 			header: 'Title',
 			type: 'text',
@@ -64,6 +72,14 @@ const lessonTableDefinition = defineTableConfig<Lesson>({
 			searchable: false,
 			sortable: true,
 			cellClassName: 'font-mono text-xs text-slate-500'
+		},
+		{
+			key: 'type',
+			header: 'Type',
+			type: 'badge',
+			searchable: false,
+			sortable: true,
+			cellClassName: 'font-mono text-xs text-slate-500'
 		}
 	],
 	actions: [
@@ -83,7 +99,7 @@ const lessonTableDefinition = defineTableConfig<Lesson>({
 			variant: ActionType.DEFAULT,
 			group: 'Actions',
 			condition: (lesson: Lesson) => {
-				return !!lesson.course
+				return !!lesson.course;
 			}
 		},
 		{

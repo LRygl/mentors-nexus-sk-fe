@@ -17,9 +17,18 @@
 		Sparkles
 	} from 'lucide-svelte';
 	import { Button } from '$lib/components/ui/button';
+	import { enrollmentStore } from '$lib/stores/defaults/EnrollmentStore.svelte.js';
+	import { LessonType } from '$lib/types/enums/LessonType';
+	import { formatDuration } from '$lib/utils/DurationUtils';
+	import DificultyIndicator from '$lib/components/DificultyIndicator.svelte';
+	import { goto } from '$app/navigation';
 
 	let { data }: { data: PageData } = $props();
 	let course = $derived(data.course);
+	let courseDuration = $derived(formatDuration(course.duration));
+
+	// Reactive state from stores
+	let isEnrolled = $derived(enrollmentStore.isEnrolledIn(course.id));
 
 	// Track expanded sections
 	let expandedSections = $state<Set<number>>(new Set());
@@ -44,6 +53,35 @@
 	const totalLessons = $derived(
 		course.sections?.reduce((acc, section) => acc + (section.lessons?.length || 0), 0) || 0
 	);
+
+
+	/**
+	 * Handle lesson click based on enrollment status and lesson type
+	 */
+	const handleLessonClick = (lesson: { id: number | string; type: LessonType }) => {
+		// Free lessons - always accessible
+		if (lesson.type === LessonType.FREE) {
+			goto(`/store/course/${course.id}/lesson/${lesson.id}`);
+			return;
+		}
+
+		// Paid lessons - check enrollment
+		if (isEnrolled) {
+			// User is enrolled - go to lesson
+			goto(`/store/course/${course.id}/lesson/${lesson.id}`);
+		} else {
+			// User is not enrolled - go to purchase page
+			goto(`/courses/${course.id}/purchase`);
+		}
+	};
+
+	/**
+	 * Check if a lesson is accessible to the
+	 */
+	const isLessonAccessible = (lessonType: LessonType): boolean => {
+		return lessonType === LessonType.FREE || isEnrolled;
+	};
+
 </script>
 
 <div class="min-h-screen w-full bg-gradient-to-b from-gray-50 to-white">
@@ -63,12 +101,10 @@
 						{/if}
 						{#if course.level}
               <span class="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-xs font-medium">
-                {course.level}
+
+								<DificultyIndicator level={course.level} showLabel={false} />
               </span>
 						{/if}
-						<span class="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-xs font-medium">
-              {course.status}
-            </span>
 					</div>
 
 					<!-- Title -->
@@ -99,7 +135,7 @@
 
 						<div class="flex items-center gap-2 text-blue-100">
 							<Clock class="w-4 h-4" />
-							<span>{course.duration || 0} hours</span>
+							<span>{courseDuration || 0}</span>
 						</div>
 
 						<div class="flex items-center gap-2 text-blue-100">
@@ -108,18 +144,8 @@
 						</div>
 					</div>
 
-					<!-- Instructor Preview -->
-					<div class="flex items-center gap-3 pt-4">
-						<div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center font-bold">
-							{course.owner?.firstName?.charAt(0)}{course.owner?.lastName?.charAt(0)}
-						</div>
-						<div>
-							<p class="text-sm text-blue-200">Created by</p>
-							<p class="font-medium">{course.owner?.firstName} {course.owner?.lastName}</p>
-						</div>
-					</div>
 				</div>
-
+				{#if !isEnrolled}
 				<!-- Purchase Card -->
 				<div class="lg:col-span-1">
 					<div class="bg-white rounded-2xl shadow-2xl p-6 text-gray-900">
@@ -146,9 +172,11 @@
 
 						<!-- CTA Buttons -->
 						<div class="space-y-3">
-							<Button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-6 rounded-xl shadow-lg">
-								Purchase Now
-							</Button>
+
+								<Button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-6 rounded-xl shadow-lg">
+									Purchase Now
+								</Button>
+
 							<Button variant="outline" class="w-full py-6 rounded-xl">
 								Add to Wishlist
 							</Button>
@@ -172,6 +200,8 @@
 						</div>
 					</div>
 				</div>
+				{/if}
+
 			</div>
 		</div>
 	</div>
@@ -266,28 +296,42 @@
 									</button>
 
 									<!-- Lessons -->
+									<!-- Inside the Lessons section, replace the lesson rendering: -->
 									{#if expandedSections.has(section.id)}
 										<div class="divide-y divide-gray-100">
 											{#if section.lessons && section.lessons.length > 0}
-												{#each section.lessons as lesson, lessonIndex}
-													<div class="flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors">
-														<div class="w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center">
-															{#if lesson.isFree}
+												{#each section.lessons as lesson}
+													{@const accessible = isLessonAccessible(lesson.type)}
+													<button
+														onclick={() => handleLessonClick(lesson)}
+														class="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors text-left cursor-pointer"
+													>
+														<!-- Icon -->
+														<div class="w-8 h-8 rounded-lg flex items-center justify-center {accessible ? 'bg-green-100' : 'bg-gray-100'}">
+															{#if accessible}
 																<Play class="w-4 h-4 text-green-600" />
 															{:else}
 																<Lock class="w-4 h-4 text-gray-400" />
 															{/if}
 														</div>
+
+														<!-- Lesson Info -->
 														<div class="flex-1">
 															<p class="font-medium text-gray-900">{lesson.title}</p>
-															<p class="text-xs text-gray-500">{lesson.duration || 0} min</p>
+															<p class="text-xs text-gray-500">{formatDuration(lesson.duration)}</p>
 														</div>
-														{#if lesson.isFree}
-                              <span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
-                                Preview
-                              </span>
+
+														<!-- Badge -->
+														{#if lesson.type === LessonType.FREE}
+						<span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
+							Free
+						</span>
+														{:else if !isEnrolled}
+						<span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded">
+							Locked
+						</span>
 														{/if}
-													</div>
+													</button>
 												{/each}
 											{:else}
 												<div class="p-4 text-center text-gray-500 text-sm">
@@ -355,6 +399,12 @@
 					<h3 class="font-bold text-gray-900 mb-4">Course Details</h3>
 					<div class="space-y-3 text-sm">
 						<div class="flex justify-between">
+						<span class="text-gray-600">Date published</span>
+						<span class="font-medium text-gray-900">
+                {new Date(course.publishedAt).toLocaleDateString('cs-CZ')}
+              </span>
+					</div>
+						<div class="flex justify-between">
 							<span class="text-gray-600">Last updated</span>
 							<span class="font-medium text-gray-900">
                 {new Date(course.updatedAt).toLocaleDateString('cs-CZ')}
@@ -370,7 +420,7 @@
 						</div>
 						<div class="flex justify-between">
 							<span class="text-gray-600">Duration</span>
-							<span class="font-medium text-gray-900">{course.duration || 0} hours</span>
+							<span class="font-medium text-gray-900">{courseDuration || 0}</span>
 						</div>
 					</div>
 				</section>

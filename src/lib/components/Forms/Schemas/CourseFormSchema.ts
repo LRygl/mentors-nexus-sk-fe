@@ -7,6 +7,8 @@ import {
 import type { CourseCategory } from '$lib/types/entities/CourseCategory';
 import type { User } from '$lib/types/entities/User';
 import { CourseStatus } from '$lib/types/enums/CourseStatus';
+import { LessonType } from '$lib/types/enums/LessonType';
+import { CourseLevel } from '$lib/types/enums/CourseLevel';
 
 export function createCourseFields(
 	courseCategories: CourseCategory[] = [],
@@ -104,6 +106,23 @@ export function createCourseFields(
 			colSpan: 1
 		},
 		{
+			name: 'level',
+			label: 'Level',
+			type: 'select',
+			group: 'basic',
+			variants: { quick: true, standard: true, embedded: true },
+			required: true,
+			options: [
+				...Object.values(CourseLevel).map((category) => ({
+					label: category.charAt(0).toUpperCase() + category.slice(1).toLowerCase(),
+					value: category
+				}))
+			],
+			placeholder: 'Course Level',
+			helpText: 'Type of the terminal category',
+			colSpan: 1
+		},
+		{
 			name: 'imageUrl',
 			label: 'Course Image',
 			type: 'image',
@@ -175,7 +194,7 @@ export function createCourseFields(
 				{
 					field: 'status',
 					condition: 'equals',
-					value: CourseStatus.PUBLISHED,
+					value: CourseStatus.PUBLISHED
 				}
 			]
 		},

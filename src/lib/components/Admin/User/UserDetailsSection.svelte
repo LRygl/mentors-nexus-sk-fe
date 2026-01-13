@@ -91,7 +91,8 @@
 />
 
 Enrolled Courses
-
+<pre>
+</pre>
 <br/><br/>
 
 Invoices

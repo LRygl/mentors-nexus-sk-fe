@@ -1,8 +1,7 @@
 console.log('Loading AuthService');
 import { BaseApiService } from '$lib/API/APIBase';
 import { API_CONFIG } from '$lib/API/APIConfiguration';
-import type { User } from '$lib/types/entities/User';
-import type { LoginRequest, LoginResponse, RegisterRequest } from '$lib/types/entities/Auth';
+import type { AuthUser, LoginApiResponse, LoginRequest, RegisterRequest } from '$lib/types/entities/Auth';
 
 
 /**
@@ -19,29 +18,26 @@ class AuthService extends BaseApiService {
 	 * Login user
 	 * Spring Boot sets HttpOnly cookies automatically
 	 */
-	async login(credentials: LoginRequest): Promise<LoginResponse> {
-		const response = await this.post<LoginResponse>(
-			API_CONFIG.ENDPOINTS.AUTH.LOGIN,
-			credentials,
-			{ skipAuth: true }
-		);
-
+	async login(credentials: LoginRequest): Promise<AuthUser> {
 		// Cookies (access_token, refresh_token) are automatically stored by browser
 		// We only get the user data in the response
-		return response;
+		return (
+			await this.post<LoginApiResponse>(API_CONFIG.ENDPOINTS.AUTH.LOGIN, credentials, {
+				skipAuth: true
+			})
+		).user;
 	}
 
 	/**
 	 * Register new user
 	 */
-	async register(userData: RegisterRequest): Promise<LoginResponse> {
-		const response = await this.post<LoginResponse>(
+	async register(userData: RegisterRequest): Promise<void> {
+		await this.post<RegisterRequest>(
 			API_CONFIG.ENDPOINTS.AUTH.REGISTER,
 			userData,
 			{ skipAuth: true }
 		);
 
-		return response;
 	}
 
 	/**
@@ -73,8 +69,8 @@ class AuthService extends BaseApiService {
 	 * Get current user from server
 	 * Cookie is sent automatically, Spring Boot validates
 	 */
-	async getCurrentUser(): Promise<User> {
-		return await this.get<User>(API_CONFIG.ENDPOINTS.AUTH.ME);
+	async getCurrentUser(): Promise<AuthUser> {
+		return await this.get<AuthUser>(API_CONFIG.ENDPOINTS.AUTH.ME);
 	}
 
 	/**

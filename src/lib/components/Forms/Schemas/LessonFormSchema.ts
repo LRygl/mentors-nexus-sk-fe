@@ -21,7 +21,7 @@ export function createLessonFields(): EntityFieldConfig[] {
 			maxLength: 20,
 			placeholder: 'Name of the new category?',
 			helpText: 'Keep it clear and concise',
-			colSpan: 2
+			colSpan: 3
 		},
 		{
 			name: 'description',
@@ -34,7 +34,7 @@ export function createLessonFields(): EntityFieldConfig[] {
 			maxLength: 20,
 			placeholder: 'Name of the new category?',
 			helpText: 'Keep it clear and concise',
-			colSpan: 2
+			colSpan: 3
 		},
 		{
 			name: 'duration',
@@ -66,6 +66,23 @@ export function createLessonFields(): EntityFieldConfig[] {
 			helpText: 'Type of the terminal category',
 			colSpan: 1
 		},
+		{
+			name: 'type',
+			label: 'Type',
+			type: 'select',
+			group: 'terminal',
+			variants: { quick: true, standard: true, embedded: true },
+			required: true,
+			options: [
+				...Object.values(LessonType).map((category) => ({
+					label: category.charAt(0).toUpperCase() + category.slice(1).toLowerCase(),
+					value: category
+				}))
+			],
+			placeholder: 'Lesson category',
+			helpText: 'Type of the terminal category',
+			colSpan: 1
+		},
 
 		{
 			name: 'imageUrl',
@@ -78,7 +95,7 @@ export function createLessonFields(): EntityFieldConfig[] {
 			helpText: 'A featured image for your course (JPEG, PNG, WebP, or GIF)',
 			maxFileSize: 5 * 1024 * 1024, // 5MB
 			acceptedFileTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-			colSpan: 2
+			colSpan: 3
 		},
 		{
 			name: 'videoUrl',
@@ -91,24 +108,7 @@ export function createLessonFields(): EntityFieldConfig[] {
 			helpText: 'A featured image for your course (JPEG, PNG, WebP, or GIF)',
 			maxFileSize: 5 * 1024 * 1024, // 5MB
 			acceptedFileTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-			colSpan: 2
-		},
-		{
-			name: 'lessonType',
-			label: 'Type',
-			type: 'select',
-			group: 'content',
-			variants: { quick: true, standard: true, embedded: true },
-			required: true,
-			options: [
-				...Object.values(LessonType).map((category) => ({
-					label: category.charAt(0).toUpperCase() + category.slice(1).toLowerCase(),
-					value: category
-				}))
-			],
-			placeholder: 'Lesson category',
-			helpText: 'Type of the terminal category',
-			colSpan: 1
+			colSpan: 3
 		}
 	];
 }
