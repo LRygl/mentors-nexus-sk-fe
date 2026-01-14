@@ -6,15 +6,15 @@ import type {
 	FAQCategoryPaginationParams,
 	UpdateFAQCategoryRequest
 } from '$lib/types/entities/faqCategory';
-import { faqCategoryAdminApiService, type FAQCategoryAdminApiService } from '$lib/api/admin/faqCategoryAdminApiService';
+import { faqCategoryAdminApiService, type FAQCategoryAdminAPI } from '$lib/API/Admin/FAQCategoryAdminAPI';
 import type { FAQ, PaginatedResult, PaginationParams } from '$lib/types';
-import { faqAdminApiService, type FAQAdminApiService } from '$lib/api/admin/faqAdminApi';
+import { faqAdminApiService, type FAQAdminApiService } from '$lib/API/Admin/FAQAdminAPI';
 
 export class FAQCategoryStore extends BaseStoreSvelte<
 	FAQCategory,
 	CreateFAQCategoryRequest,
 	UpdateFAQCategoryRequest,
-	FAQCategoryAdminApiService>{
+	FAQCategoryAdminAPI>{
 
 	private rollbackStates = new Map<string, FAQCategory>();
 	private _filters = $state<FAQCategoryPaginationParams>({
@@ -37,76 +37,83 @@ export class FAQCategoryStore extends BaseStoreSvelte<
 		return await this.apiService.getFAQCategoryPage(faqCategoryParams);
 	}
 
-	//TODO Check local storage first before querying api
+	//TODO Check local storage first before querying API
 	async fetchItem(id: string): Promise<FAQCategory> {
-		const category = await this.apiService.getFAQCategoryById(id);
-		this.updateItemInStore(id, category);
-		return category;
+		this._loading = true;
+		this._error = null;
+
+		try {
+			const category = await this.apiService.getFAQCategoryById(id);
+			console.log('✅ Fetched category:', category.name, 'FAQs:', category.faqs?.length || 0);
+			this.updateItemInStore(id, category);
+			return category;
+		} catch (error) {
+			this._error = error instanceof Error ? error.message : 'Failed to fetch category';
+			console.error('FAQ Category Store: Error fetching item:', error);
+			throw error;
+		} finally {
+			this._loading = false;
+		}
 	}
 
 	async createItem(createRequest: CreateFAQCategoryRequest): Promise<FAQCategory> {
 		return await this.apiService.createFAQCategory(createRequest);
 	}
 
+	async deleteItem(id: string): Promise<void> {
+		return await  this.apiService.deleteFAQCategory(id);
+	}
+
+
 	/**
 	 * Optimistically link FAQ to category with rollback capability
 	 * @param faqUuid - The FAQ UUID to link
 	 * @param categoryUuid - The category UUID to link to
 	 */
+
+	// TODO Remove the optimistic update as it is now handled by the BaseStore
 	async linkFAQToFAQCategory(faqUuid: string, categoryUuid: string): Promise<FAQ> {
-		const category = this._data.find(c=>c.uuid === categoryUuid);
+		const category = this._data.find(c => c.uuid === categoryUuid);
 
 		if (!category) {
-			throw new Error("Category not found")
+			throw new Error("Category not found");
 		}
 
 		if (category.faqs && category.faqs.some(f => f.uuid === faqUuid)) {
-			throw new Error('FAQ is already linked to this category')
+			throw new Error('FAQ is already linked to this category');
 		}
 
-		console.debug("====== Starting optimistic update ===========")
-		console.debug("Storing original data for rollback")
-		const categoryId = category.id;
-		this.rollbackStates.set(categoryId, JSON.parse(JSON.stringify(category)));
+		return await this.optimisticUpdate(
+			category.id,
+			(cat) => ({
+				...cat,
+				faqs: [...(cat.faqs || [])],
+				faqCount: (cat.faqCount || 0) + 1
+			}),
+			async () => {
+				const linkedFAQ = await faqAdminApiService.linkFAQToCategory(faqUuid, categoryUuid);
 
-		try {
-			const linkedFAQData = await faqAdminApiService.linkFAQToCategory(faqUuid, categoryUuid);
-			const updatedCategory: FAQCategory = {
-				...category,
-				faqs: [...(category.faqs || []), linkedFAQData],
-				faqCount: (category.faqCount || 0) + 1,
-				publishedFaqCount: linkedFAQData.isPublished
-					? (category.publishedFaqCount || 0) + 1
-					: category.publishedFaqCount
-			};
+				// Update with actual data from API
+				const updatedCategory: FAQCategory = {
+					...category,
+					faqs: [...(category.faqs || []), linkedFAQ],
+					faqCount: (category.faqCount || 0) + 1,
+					publishedFaqCount: linkedFAQ.isPublished
+						? (category.publishedFaqCount || 0) + 1
+						: category.publishedFaqCount
+				};
+				this.updateItemInStore(category.id, updatedCategory);
 
-			this.updateItemInStore(categoryId, updatedCategory);
-			// Update sucessful - remove rollback state
-			console.debug("Local store updated - Deleting rollback")
-			this.rollbackStates.delete(categoryId);
-			return linkedFAQData;
-
-		} catch (e) {
-			console.error("Failed to link FAQ to category, rolling back state",e);
-
-			// Rollback state
-			const originalCategory = this.rollbackStates.get(categoryId);
-			if (originalCategory) {
-				this.updateItemInStore(categoryId, originalCategory);
-				this.rollbackStates.delete(categoryId);
+				return linkedFAQ;
 			}
-			throw e;
-		}
+		);
 	}
 
 	/**
-	 * Optimistically unlink FAQ from category with rollback capability
-	 * @param categoryId - The category ID to unlink from
-	 * @param faqUuid - The FAQ UUID to unlink
+	 * Unlink FAQ from category with optimistic update
 	 */
-	async unlinkFAQFromFAQCategory(categoryId: string, faqUuid: string): Promise<void> {
-		// Find the category and FAQ
-		const category = this._data.find(c=>c.id === categoryId);
+	async unlinkFAQFromFAQCategory(categoryId: string, faqUuid: string): Promise<FAQ> {
+		const category = this._data.find(c => c.id === categoryId);
 
 		if (!category || !category.faqs) {
 			throw new Error('Category or FAQs not found');
@@ -117,40 +124,20 @@ export class FAQCategoryStore extends BaseStoreSvelte<
 			throw new Error('FAQ not found in category');
 		}
 
-		// Step 2: Store original state for potential rollback
-		this.rollbackStates.set(categoryId, JSON.parse(JSON.stringify(category)));
-		// Step 3: Optimistically update the store - remove FAQ from category
-		const updatedCategory: FAQCategory = {
-			...category,
-			faqs: category.faqs.filter(f => f.uuid !== faqUuid),
-			faqCount: Math.max(0, (category.faqCount || 0) - 1),
-			publishedFaqCount: faqToRemove.isPublished
-				? Math.max(0, (category.publishedFaqCount || 0) - 1)
-				: category.publishedFaqCount
-		};
-
-		this.updateItemInStore(categoryId, updatedCategory);
-
-		try {
-			// Step 4: Make API call
-			await faqAdminApiService.unlinkFAQFromCategory(faqUuid);
-
-			// Step 5: Success - remove rollback state
-			this.rollbackStates.delete(categoryId);
-
-		} catch (error) {
-			console.error('Failed to unlink FAQ, rolling back:', error);
-
-			// Step 6: Rollback on error
-			const originalCategory = this.rollbackStates.get(categoryId);
-			if (originalCategory) {
-				this.updateItemInStore(categoryId, originalCategory);
-				this.rollbackStates.delete(categoryId);
+		return await this.optimisticUpdate(
+			categoryId,
+			(cat) => ({
+				...cat,
+				faqs: cat.faqs!.filter(f => f.uuid !== faqUuid),
+				faqCount: Math.max(0, (cat.faqCount || 0) - 1),
+				publishedFaqCount: faqToRemove.isPublished
+					? Math.max(0, (cat.publishedFaqCount || 0) - 1)
+					: cat.publishedFaqCount
+			}),
+			async () => {
+				return await faqAdminApiService.unlinkFAQFromCategory(faqUuid);
 			}
-
-			// Re-throw error for the component to handle UI feedback
-			throw error;
-		}
+		);
 	}
 
 	/**

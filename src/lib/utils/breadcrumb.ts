@@ -38,7 +38,12 @@ export const PAGE_MAP: PageMap = {
 		title: 'FAQ',
 		parent: 'Admin',
 		parentHref: '/admin',
-	}
+	},
+	'/admin/settings/notifications': {
+	title: 'Notifications',
+		parent: 'Settings',
+		parentHref: '/settings',
+}
 };
 
 export function formatSegmentName(segment: string): string {

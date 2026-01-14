@@ -36,7 +36,7 @@ import {
 	Trophy,
 	Flag,
 	Hash,
-	Eye
+	Eye, PencilLine
 } from '@lucide/svelte';
 import type { Component, ComponentType } from 'svelte';
 
@@ -84,7 +84,7 @@ export const availableIcons: IconData[] = [
 	{ name: 'Database', displayName: 'Data', component: Database, category: 'files' },
 	{ name: 'Download', displayName: 'Downloads', component: Download, category: 'files' },
 	{ name: 'Upload', displayName: 'Uploads', component: Upload, category: 'files' },
-
+	{ name: 'PencilLine', displayName: 'PencilLine', component: PencilLine, category: 'files'},
 	// Technical & Tools
 	{ name: 'Server', displayName: 'Technical', component: Server, category: 'technical' },
 	{ name: 'Wrench', displayName: 'Maintenance', component: Wrench, category: 'technical' },

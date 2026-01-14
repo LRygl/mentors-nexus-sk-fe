@@ -1,5 +1,13 @@
-// src/lib/types/ui/table.ts - Corrected Version
-import type { Component, Snippet } from 'svelte';
+// ============================================================================
+// TABLE TYPE DEFINITIONS
+// Core types for the table configuration system
+// ============================================================================
+
+import type { Component } from 'svelte';
+
+// ============================================================================
+// TABLE ACTION TYPES
+// ============================================================================
 
 export interface TableAction {
 	id: string;
@@ -12,7 +20,10 @@ export interface TableAction {
 	divider?: boolean;
 }
 
-// Simplified column definition - no complex render functions
+// ============================================================================
+// TABLE COLUMN TYPES
+// ============================================================================
+
 export interface TableColumn<T = any> {
 	key: keyof T | string;
 	header: string;
@@ -23,15 +34,20 @@ export interface TableColumn<T = any> {
 	align?: 'left' | 'center' | 'right';
 	headerClassName?: string;
 	cellClassName?: string;
-	// For custom rendering, we'll use a different approach in the component
-	renderType?: 'text' | 'badge' | 'user' | 'image' | 'color' | 'count' | 'date' | 'custom';
-	renderOptions?: Record<string, any>; // Configuration for different render types
-	renderCustom?:(item: T) => any;
+
+	// Rendering types
+	renderType?: 'text' | 'badge' | 'user' | 'image' | 'color' | 'count' | 'date' | 'custom' | 'duration';
+	renderOptions?: Record<string, any>;
+	renderCustom?: (item: T) => any;
 }
 
+// ============================================================================
+// TABLE CONFIGURATION
+// ============================================================================
+
 export interface TableConfig<T = any> {
-	idField: keyof T;
-	titleField: keyof T;
+	idField: keyof T | string;
+	titleField: keyof T | string;
 	createButtonLabel?: string;
 	loadingTitle?: string;
 	loadingDescription?: string;
@@ -40,11 +56,9 @@ export interface TableConfig<T = any> {
 	actionsInline?: boolean;
 }
 
-export interface SelectionState {
-	selectedItems: Set<string>;
-	isAllSelected: boolean;
-	isPartiallySelected: boolean;
-}
+// ============================================================================
+// TABLE CALLBACKS
+// ============================================================================
 
 export interface TableCallbacks<T = any> {
 	onRowClick?: (item: T) => void;
@@ -58,7 +72,10 @@ export interface TableCallbacks<T = any> {
 	onBulkDelete?: (selectedIds: string[]) => void;
 }
 
-// Utility type for table store integration
+// ============================================================================
+// TABLE STORE INTEGRATION
+// ============================================================================
+
 export interface TableStore<T> {
 	data: T[];
 	loading: boolean;
@@ -69,8 +86,25 @@ export interface TableStore<T> {
 	createItem?: (data: any) => Promise<T>;
 }
 
-// Simplified column builders without complex rendering
-export class TableColumnBuilder<T> {
+// ============================================================================
+// SELECTION STATE
+// ============================================================================
+
+export interface SelectionState {
+	selectedItems: Set<string>;
+	isAllSelected: boolean;
+	isPartiallySelected: boolean;
+}
+
+// ============================================================================
+// COLUMN BUILDER HELPERS
+// Convenience functions for creating common column types
+// ============================================================================
+
+export class TableColumnBuilder {
+	/**
+	 * Create an ID column
+	 */
 	static id<T>(key: keyof T, options: {
 		prefix?: string;
 		searchable?: boolean;
@@ -82,15 +116,22 @@ export class TableColumnBuilder<T> {
 			key,
 			header: 'ID',
 			searchable: options.searchable ?? false,
-			accessor: (item) => options.prefix ? `${options.prefix}${item[key]}` : item[key],
+			sortable: true,
+			accessor: options.prefix
+				? (item) => `${options.prefix}${item[key]}`
+				: undefined,
 			cellClassName: `font-mono text-xs text-slate-500 ${options.cellClassName || ''}`,
-			width: options.width,
+			width: options.width || 'w-20',
 			headerClassName: options.headerClassName
 		};
 	}
 
+	/**
+	 * Create a text column
+	 */
 	static text<T>(key: keyof T, header: string, options: {
 		searchable?: boolean;
+		sortable?: boolean;
 		width?: string;
 		align?: 'left' | 'center' | 'right';
 		headerClassName?: string;
@@ -99,7 +140,9 @@ export class TableColumnBuilder<T> {
 		return {
 			key,
 			header,
+			renderType: 'text',
 			searchable: options.searchable ?? true,
+			sortable: options.sortable ?? true,
 			width: options.width,
 			align: options.align,
 			headerClassName: options.headerClassName,
@@ -107,9 +150,13 @@ export class TableColumnBuilder<T> {
 		};
 	}
 
+	/**
+	 * Create a badge/status column
+	 */
 	static badge<T>(key: keyof T, header: string, options: {
 		colorMap?: Record<string, string>;
 		searchable?: boolean;
+		sortable?: boolean;
 		width?: string;
 		headerClassName?: string;
 		cellClassName?: string;
@@ -117,21 +164,26 @@ export class TableColumnBuilder<T> {
 		return {
 			key,
 			header,
-			searchable: options.searchable ?? true,
 			renderType: 'badge',
 			renderOptions: { colorMap: options.colorMap },
+			searchable: options.searchable ?? true,
+			sortable: options.sortable ?? true,
 			width: options.width,
 			headerClassName: options.headerClassName,
 			cellClassName: options.cellClassName
 		};
 	}
 
+	/**
+	 * Create a count column (e.g., "5 items")
+	 */
 	static count<T>(key: keyof T, header: string, options: {
 		singular: string;
 		plural: string;
 		showZero?: boolean;
 		color?: string;
 		searchable?: boolean;
+		sortable?: boolean;
 		width?: string;
 		headerClassName?: string;
 		cellClassName?: string;
@@ -139,23 +191,28 @@ export class TableColumnBuilder<T> {
 		return {
 			key,
 			header,
-			searchable: options.searchable ?? false,
 			renderType: 'count',
 			renderOptions: {
 				singular: options.singular,
 				plural: options.plural,
-				showZero: options.showZero,
+				showZero: options.showZero ?? true,
 				color: options.color
 			},
+			searchable: options.searchable ?? false,
+			sortable: options.sortable ?? true,
 			width: options.width,
 			headerClassName: options.headerClassName,
 			cellClassName: options.cellClassName
 		};
 	}
 
+	/**
+	 * Create a date column
+	 */
 	static date<T>(key: keyof T, header: string, options: {
 		format?: 'relative' | 'short' | 'long';
 		searchable?: boolean;
+		sortable?: boolean;
 		width?: string;
 		headerClassName?: string;
 		cellClassName?: string;
@@ -163,23 +220,139 @@ export class TableColumnBuilder<T> {
 		return {
 			key,
 			header,
-			searchable: options.searchable ?? false,
 			renderType: 'date',
 			renderOptions: { format: options.format || 'short' },
+			searchable: options.searchable ?? false,
+			sortable: options.sortable ?? true,
 			cellClassName: `text-slate-600 ${options.cellClassName || ''}`,
 			width: options.width,
 			headerClassName: options.headerClassName
 		};
 	}
+
+	static duration<T>(key: keyof T, header: string, options: {
+		durationUnit?: 'seconds' | 'minutes';
+		format?: 'short' | 'long';
+		searchable?: boolean;
+		sortable?: boolean;
+		width?: string;
+		headerClassName?: string;
+		cellClassName?: string;
+	} = {}): TableColumn<T> {
+		return {
+			key,
+			header,
+			renderType: 'duration',
+			renderOptions: {
+				durationUnit: options.durationUnit || 'minutes',
+				format: options.format || 'short'
+			},
+			searchable: options.searchable ?? false,
+			sortable: options.sortable ?? true,
+			width: options.width,
+			headerClassName: options.headerClassName,
+			cellClassName: options.cellClassName
+		};
+	}
+
+	/**
+	 * Create a custom rendered column
+	 */
+	static custom<T>(key: keyof T, header: string, options: {
+		renderCustom: (item: T) => any;
+		searchable?: boolean;
+		sortable?: boolean;
+		width?: string;
+		headerClassName?: string;
+		cellClassName?: string;
+	}): TableColumn<T> {
+		return {
+			key,
+			header,
+			renderType: 'custom',
+			renderCustom: options.renderCustom,
+			searchable: options.searchable ?? false,
+			sortable: options.sortable ?? false,
+			width: options.width,
+			headerClassName: options.headerClassName,
+			cellClassName: options.cellClassName
+		};
+	}
+
+	/**
+	 * Create a color swatch column
+	 */
+	static color<T>(key: keyof T, header: string, options: {
+		width?: string;
+		headerClassName?: string;
+		cellClassName?: string;
+	} = {}): TableColumn<T> {
+		return {
+			key,
+			header,
+			renderType: 'color',
+			searchable: false,
+			sortable: false,
+			width: options.width || 'w-24',
+			headerClassName: options.headerClassName,
+			cellClassName: options.cellClassName
+		};
+	}
+
+	/**
+	 * Create an image column
+	 */
+	static image<T>(key: keyof T, header: string, options: {
+		width?: string;
+		headerClassName?: string;
+		cellClassName?: string;
+	} = {}): TableColumn<T> {
+		return {
+			key,
+			header,
+			renderType: 'image',
+			searchable: false,
+			sortable: false,
+			width: options.width || 'w-20',
+			headerClassName: options.headerClassName,
+			cellClassName: options.cellClassName
+		};
+	}
 }
 
-// Common column presets
+// ============================================================================
+// COMMON COLUMN PRESETS
+// Quick shortcuts for standard columns
+// ============================================================================
+
 export const CommonColumns = {
-	id: <T>(key: keyof T = 'id' as keyof T) => TableColumnBuilder.id(key),
-	name: <T>(key: keyof T = 'name' as keyof T) => TableColumnBuilder.text(key, 'Name'),
-	title: <T>(key: keyof T = 'title' as keyof T) => TableColumnBuilder.text(key, 'Title'),
-	createdAt: <T>(key: keyof T = 'createdAt' as keyof T) => TableColumnBuilder.date(key, 'Created'),
-	updatedAt: <T>(key: keyof T = 'updatedAt' as keyof T) => TableColumnBuilder.date(key, 'Updated')
+	id: <T>(key: keyof T = 'id' as keyof T) =>
+		TableColumnBuilder.id(key),
+
+	name: <T>(key: keyof T = 'name' as keyof T) =>
+		TableColumnBuilder.text(key, 'Name', { searchable: true }),
+
+	title: <T>(key: keyof T = 'title' as keyof T) =>
+		TableColumnBuilder.text(key, 'Title', { searchable: true }),
+
+	description: <T>(key: keyof T = 'description' as keyof T) =>
+		TableColumnBuilder.text(key, 'Description', { searchable: true }),
+
+	createdAt: <T>(key: keyof T = 'createdAt' as keyof T) =>
+		TableColumnBuilder.date(key, 'Created', { format: 'short' }),
+
+	updatedAt: <T>(key: keyof T = 'updatedAt' as keyof T) =>
+		TableColumnBuilder.date(key, 'Updated', { format: 'relative' }),
+
+	status: <T>(key: keyof T = 'status' as keyof T) =>
+		TableColumnBuilder.badge(key, 'Status'),
+
+	duration: <T>(key: keyof T = 'duration' as keyof T) =>
+		TableColumnBuilder.duration(key, 'Duration', {
+			durationUnit: 'minutes',
+			format: 'short',
+			cellClassName: 'font-mono text-xs text-slate-500'
+		})
 };
 
 export default TableColumnBuilder;

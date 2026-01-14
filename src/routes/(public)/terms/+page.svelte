@@ -1,6 +1,6 @@
 <script lang="ts">
-	import HeaderSection from '\$lib/components/Sections/header-section.svelte';
-	import SubheadingSection from '\$lib/components/Sections/subheading-section.svelte';
+	import HeaderSection from '$lib/components/Sections/Public/header-section.svelte';
+	import SubheadingSection from '$lib/components/Sections/Public/subheading-section.svelte';
 	import {
 		AlertTriangle,
 		BookOpen,
@@ -10,7 +10,6 @@
 		Phone,
 		Scale,
 		Shield,
-		ShieldCheck,
 		User
 	} from 'lucide-svelte';
 
@@ -55,10 +54,10 @@
 			title: 'Course Access and Content',
 			icon: BookOpen,
 			content: [
-				'1. Access to courses is granted based on enrollment and payment status.',
+				'1. Access to course is granted based on enrollment and payment status.',
 				'Course content is for personal, non-commercial use only unless otherwise specified.',
 				'Users may not redistribute, modify, or resell course materials without explicit permission.',
-				'We reserve the right to modify or discontinue courses with reasonable notice.'
+				'We reserve the right to modify or discontinue course with reasonable notice.'
 			]
 		},
 		{

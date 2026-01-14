@@ -1,33 +1,33 @@
 <script lang="ts">
 
+	import { onMount, type Snippet } from 'svelte';
+
  export const reset = true;
  import "../../app.css";
- import * as Sidebar from "$lib/components/ui/sidebar/index"
- import AppSidebar from "$lib/components/app-sidebar.svelte";
- import { Separator } from "$lib/components/ui/separator/index"
  import Breadcrumb from '$lib/components/Breadcrumb.svelte';
+ import AdminSidebar from '$lib/components/AdminSidebar.svelte';
 
- interface PageInfo {
-	 title: string;
-	 parent?: string;
+ interface Props {
+	 children: Snippet;
  }
 
+ //export const ssr = false;
+ let { children }: Props = $props();
 
 </script>
 
-<Sidebar.Provider>
-	<AppSidebar />
-	<Sidebar.Inset>
+<div class="flex h-screen">
+	<AdminSidebar />
+	<div class="flex-1 flex flex-col overflow-hidden">
 		<header class="bg-background sticky top-0 flex h-16 shrink-0 items-center gap-2 border-b px-4">
-			<Sidebar.Trigger class="-ml-1" />
-			<Separator orientation="vertical" class="mr-2 h-4" />
 			<Breadcrumb />
 		</header>
-		<main class="p-4 bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
-			<slot/>
+		<main class="flex-1 overflow-y-auto p-4 bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+			{@render children()}
 		</main>
-	</Sidebar.Inset>
-</Sidebar.Provider>
+	</div>
+</div>
+
 
 <style>
 	@reference "tailwindcss";

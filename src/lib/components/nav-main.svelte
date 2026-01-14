@@ -19,6 +19,8 @@
 		}[];
 	} = $props();
 </script>
+
+dfsdfsd
 <Sidebar.Group>
 	<Sidebar.GroupLabel>Platform</Sidebar.GroupLabel>
 	<Sidebar.Menu>

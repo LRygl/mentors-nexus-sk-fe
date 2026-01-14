@@ -152,7 +152,7 @@ export class BaseTableStore<T> implements TableStore<T> {
 			throw new Error(`${this.entityName} not found`);
 		}
 
-		// Remove id and other unique fields, add "Copy" to name if it exists
+		// Remove id and other unique Fields, add "Copy" to name if it exists
 		const duplicateData = {
 			...originalItem,
 			id: undefined,

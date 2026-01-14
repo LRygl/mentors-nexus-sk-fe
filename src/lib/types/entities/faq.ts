@@ -22,12 +22,8 @@ export interface FAQ extends BaseEntity {
 	helpfulVotes: number;
 	notHelpfulVotes: number;
 	priority: FAQPriority;
-	createdAt: Date;
-	updatedAt: Date;
-	createdBy?: string;
-	updatedBy?: string;
 
-	// Computed fields from Spring Boot
+	// Computed Fields from Spring Boot
 	helpfulnessRatio: number;
 	isPopular: boolean;
 	fullUrl: string;
@@ -48,6 +44,11 @@ export interface FAQCreateFormData {
 	categoryId?: number;
 	isPublished: boolean;
 	isFeatured: boolean;
+}
+
+export interface FAQLinkData {
+	faqUuid: string;
+	categoryUuid: string;
 }
 
 

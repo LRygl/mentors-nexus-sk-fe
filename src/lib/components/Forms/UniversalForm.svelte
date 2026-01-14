@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { AlertCircle, Check, ChevronDown, Eye, EyeOff, FileText, Hash, Type, PencilLine } from 'lucide-svelte';
 	import { FormValidator } from '$lib/utils/formValidator';
 	import type {
 		FormCallbacks,
@@ -9,9 +8,10 @@
 		FormValidationResult
 	} from '$lib/types/entities/forms';
 	import { onMount } from 'svelte';
-	import IconSelector from '$lib/components/UI/IconSelector.svelte';
-	import DynamicIcon from '$lib/components/UI/DynamicIcon.svelte';
 	import { FormDependencyHandler } from '$lib/components/Forms/FormDependencyHandler';
+	import FormGroupRenderer from '$lib/components/Forms/FormGroupRenderer.svelte';
+	import FormFieldRenderer from '$lib/components/Forms/FormFieldRenderer.svelte';
+	import { prepareEntityDataForSubmit } from '$lib/utils/ImageUtils';
 
 	// Props
 	interface Props<T extends Record<string, any> = Record<string, any>> {
@@ -20,6 +20,11 @@
 		callbacks?: FormCallbacks<T>;
 		className?: string;
 		disabled?: boolean;
+		showValidationSummary?: boolean;
+		mode?: 'standard' | 'embedded'; // embedded = inline editing with change tracking
+		onDirtyChange?: (isDirty: boolean) => void; // Callback when dirty state changes
+		imageBaseUrl?: string;
+		extractImageFile?: boolean;
 	}
 
 	let {
@@ -27,23 +32,26 @@
 		initialData = {},
 		callbacks = {},
 		className = '',
-		disabled = false
+		disabled = false,
+		showValidationSummary = true,
+		mode = 'standard',
+		onDirtyChange,
+		imageBaseUrl,
+		extractImageFile = true,
 	}: Props = $props();
 
-	// Get all fields from schema (either from groups or direct fields)
+	// Form element reference for external access
+	let formElement = $state<HTMLFormElement>();
+
+	// Store original data for change detection (embedded mode)
+	let originalData = $state<Record<string, any>>({});
+
+	// Get all Fields from schema (either from groups or direct Fields)
 	const allFields = $derived(() => {
 		if (schema.groups) {
 			return schema.groups.flatMap(group => group.fields);
 		}
 		return schema.fields || [];
-	});
-
-	// Add this derived value to check field visibility
-	const visibleFields = $derived(() => {
-		const fields = allFields();
-		return fields.filter(field =>
-			FormDependencyHandler.isFieldVisible(field, formState.data)
-		);
 	});
 
 	// Form state
@@ -52,26 +60,87 @@
 		errors: {},
 		touched: {},
 		isValid: false,
-		isDirty: false
+		isDirty: false,
+		loading: {},
+		isSubmitting: false,
+		submitCount: 0
 	});
+
+	// Check if form has unsaved changes (embedded mode only)
+	const hasChanges = $derived(() => {
+		if (mode !== 'embedded') return false;
+		const currentData = JSON.stringify(formState.data);
+		const original = JSON.stringify(originalData);
+		const isDifferent = currentData !== original;
+		return isDifferent;
+	});
+
+	// Update isDirty when hasChanges updates (embedded mode)
+	$effect(() => {
+		if (mode === 'embedded') {
+			const dirty = hasChanges();
+			if (formState.isDirty !== dirty) {
+				formState.isDirty = dirty;
+				onDirtyChange?.(dirty);
+			}
+		}
+	});
+
+	// Watch validation state and trigger callback when it changes
+	$effect(() => {
+		const isValid = formState.isValid;
+		const errors = formState.errors;
+
+		// Trigger validation callback whenever validation state changes
+		callbacks.onValidate?.({ isValid, errors });
+	});
+
+	// Helper function to check if we should show error for a field
+	function shouldShowError(fieldName: string): boolean {
+		return !!(
+			formState.errors[fieldName] &&
+			(formState.touched[fieldName] || formState.submitCount > 0)
+		);
+	}
 
 	// Initialize form data
 	onMount(() => {
 		const defaultData: Record<string, any> = {};
 		const fields = allFields();
-
 		fields.forEach(field => {
 			const initialValue = initialData[field.name] ?? field.defaultValue;
 			defaultData[field.name] = getDefaultValueForField(field, initialValue);
 		});
 
 		formState.data = defaultData;
+
+		// Store original data for embedded mode
+		if (mode === 'embedded') {
+			originalData = JSON.parse(JSON.stringify(defaultData));
+		}
 		validateForm();
+		// Don't validate on mount - form starts as valid
+		// Validation will happen when user interacts with fields
+		//formState.isValid = true;
+		//formState.errors = {};
 	});
 
-	// Helper function to check if field should be rendered
+	// Helper to check if field should be rendered
+	const visibleFieldNames = $derived.by(() => {
+		const fields = allFields();
+		const visible = new Set<string>();
+
+		fields.forEach(field => {
+			if (FormDependencyHandler.isFieldVisible(field, formState.data)) {
+				visible.add(field.name);
+			}
+		});
+
+		return Array.from(visible);
+	});
+
 	function shouldRenderField(field: FormField): boolean {
-		return FormDependencyHandler.isFieldVisible(field, formState.data);
+		return visibleFieldNames.includes(field.name);
 	}
 
 	// Get appropriate default value for field type
@@ -85,6 +154,8 @@
 			case 'textarea':
 			case 'color':
 			case 'icon-selector':
+			case 'date':
+			case 'datetime-local':
 				return '';
 			case 'number':
 				return field.min ?? 0;
@@ -92,24 +163,29 @@
 				return false;
 			case 'select':
 				return field.options?.[0]?.value ?? '';
+			case 'tags':
+				return [];
+			case 'multiselect':
+				return [];
+			case 'image':
+				return '';
+			case 'stringList':
+				return [];
 			default:
 				return '';
 		}
 	}
 
 	// Validation
-	// Enhanced validateForm function
 	function validateForm(): FormValidationResult {
 		const fields = allFields();
 		const errors: Record<string, string> = {};
 
 		fields.forEach(field => {
-			// Skip validation for invisible fields
 			if (!FormDependencyHandler.isFieldVisible(field, formState.data)) {
 				return;
 			}
 
-			// Get current validation rules
 			const currentRules = FormDependencyHandler.getConditionalValidationRules(field, formState.data);
 			const fieldWithCurrentRules = { ...field, validationRules: currentRules };
 
@@ -128,7 +204,8 @@
 		formState.isValid = Object.keys(errors).length === 0;
 
 		const result = { isValid: formState.isValid, errors };
-		callbacks.onValidate?.(result);
+
+		// Note: Don't call callback here, let the $effect handle it to avoid double-calling
 		return result;
 	}
 
@@ -137,16 +214,13 @@
 		const field = fields.find(f => f.name === fieldName);
 		if (!field) return;
 
-		// Skip validation if field is not visible
 		if (!FormDependencyHandler.isFieldVisible(field, formState.data)) {
 			delete formState.errors[fieldName];
+			formState.isValid = Object.keys(formState.errors).length === 0;
 			return;
 		}
 
-		// Get current validation rules (including conditional ones)
 		const currentRules = FormDependencyHandler.getConditionalValidationRules(field, formState.data);
-
-		// Create a temporary field with current rules for validation
 		const fieldWithCurrentRules = { ...field, validationRules: currentRules };
 
 		const error = FormValidator.validateField(
@@ -161,325 +235,253 @@
 			delete formState.errors[fieldName];
 		}
 
-		formState.isValid = Object.values(formState.errors).every(err => !err);
+		formState.isValid = Object.keys(formState.errors).length === 0;
+
 	}
 
-
-	// Handle field changes
 	function handleFieldChange(fieldName: string, value: any) {
-		formState.data[fieldName] = value;
-		formState.touched[fieldName] = true;
-		formState.isDirty = true;
+		// Defensive parameter check
+		let actualFieldName: string;
+		let actualValue: any;
+
+		if (Array.isArray(fieldName) && typeof value === 'string') {
+			actualFieldName = value;
+			actualValue = fieldName;
+		} else {
+			actualFieldName = fieldName;
+			actualValue = value;
+		}
+
+		formState.data[actualFieldName] = actualValue;
+		formState.touched[actualFieldName] = true;
+
+		// Don't set isDirty here in embedded mode - let the effect handle it
+		if (mode !== 'embedded') {
+			formState.isDirty = true;
+		}
 
 		// Validate the changed field
-		validateField(fieldName);
+		validateField(actualFieldName);
 
-		// Re-validate all fields that might depend on this field
+		// Re-validate dependent fields
 		const fields = allFields();
 		fields.forEach(field => {
-			if (field.dependencies?.some(dep => dep.field === fieldName)) {
+			if (field.dependencies?.some(dep => dep.field === actualFieldName)) {
 				validateField(field.name);
 			}
 		});
 
-		callbacks.onChange?.(fieldName, value, formState);
+		callbacks.onChange?.(actualFieldName, actualValue, formState);
 	}
 
-	// Handle form submission
-	function handleSubmit(event: Event) {
-		event.preventDefault();
-		const fields = allFields();
-
-		// Mark all fields as touched
-		fields.forEach(field => {
-			formState.touched[field.name] = true;
-		});
-
-		const validationResult = validateForm();
-		if (validationResult.isValid) {
-			callbacks.onSubmit?.(formState.data);
-		}
-	}
-
-	// Export functions for parent component
-	export function getFormData() {
-		return formState.data;
-	}
-
-	export function validateFormExternal(): boolean {
-		const result = validateForm();
-		return result.isValid;
+	/**
+	 * Public API - These methods can be called from parent components
+	 */
+	export function submit() {
+		formElement?.requestSubmit();
 	}
 
 	export function reset(newData?: Partial<any>) {
 		if (newData) {
 			formState.data = { ...formState.data, ...newData };
+			if (mode === 'embedded') {
+				originalData = JSON.parse(JSON.stringify(formState.data));
+			}
 		}
 		formState.errors = {};
 		formState.touched = {};
 		formState.isDirty = false;
+		formState.submitCount = 0;
 		validateForm();
 	}
 
-	// Field component getters
-	function getFieldIconName(fieldType: string):string {
-		switch (fieldType) {
-			case 'text': return 'PencilLine';
-			case 'textarea': return 'PencilLine';
-			case 'number': return 'Hash';
-			default: return 'Type';
+	// EMBEDDED MODE: Discard changes and revert to original
+	export function discard() {
+		if (mode === 'embedded') {
+			formState.data = JSON.parse(JSON.stringify(originalData));
+			formState.errors = {};
+			formState.touched = {};
+			formState.isDirty = false;
+			formState.submitCount = 0;
+			validateForm();
 		}
 	}
 
-	// Handle custom component changes
-	function createCustomChangeHandler(fieldName: string) {
-		return (value: unknown) => handleFieldChange(fieldName, value);
+	// EMBEDDED MODE: Get current form data
+	export function getFormData() {
+		return { ...formState.data };
 	}
 
+	// EMBEDDED MODE: Get list of changed fields
+	export function getChangedFields(): string[] {
+		if (mode !== 'embedded') return [];
+		const changed: string[] = [];
+		Object.keys(formState.data).forEach(key => {
+			if (JSON.stringify(formState.data[key]) !== JSON.stringify(originalData[key])) {
+				changed.push(key);
+			}
+		});
+		return changed;
+	}
+
+	// EMBEDDED MODE: Check if form is valid
+	export function isFormValid(): boolean {
+		return formState.isValid;
+	}
+
+	// EMBEDDED MODE: Check for unsaved changes
+	export function hasUnsavedChanges(): boolean {
+		return mode === 'embedded' ? hasChanges() : false;
+	}
+
+	// Handle form submission
+	async function handleSubmit(event: Event) {
+		event.preventDefault();
+
+		if (formState.isSubmitting) {
+			return;
+		}
+
+		const fields = allFields();
+		formState.submitCount++;
+
+		// Mark all visible fields as touched
+		fields.forEach(field => {
+			if (shouldRenderField(field)) {
+				formState.touched[field.name] = true;
+			}
+		});
+
+		// Validate before submitting
+		const validationResult = validateForm();
+
+		if (validationResult.isValid) {
+			formState.isSubmitting = true;
+			try {
+				// Extract image file if enabled
+				let submitData = formState.data;
+				let imageFile: File | undefined;
+
+				if (extractImageFile) {
+					const prepared = prepareEntityDataForSubmit(formState.data);
+					submitData = prepared.data;
+					imageFile = prepared.imageFile;
+
+				}
+
+				// Call onSubmit with both data and imageFile
+				await callbacks.onSubmit?.(submitData, imageFile);
+
+				// Update original data after successful submit (embedded mode)
+				if (mode === 'embedded') {
+					// Store the clean data (without File objects) as original
+					originalData = JSON.parse(JSON.stringify(submitData));
+					formState.submitCount = 0;
+				}
+			} catch (error) {
+				console.error('[FORM] Submit error:', error);
+			} finally {
+				formState.isSubmitting = false;
+			}
+		} else {
+			console.log('[FORM] Validation failed, not submitting');
+		}
+	}
+
+	// Helper to get field label for error display
+	function getFieldLabel(fieldName: string): string {
+		const fields = allFields();
+		const field = fields.find(f => f.name === fieldName);
+		return field?.label || fieldName;
+	}
+
+	// Scroll to field with error
+	function scrollToField(fieldName: string) {
+		const fieldElement = formElement?.querySelector(`[name="${fieldName}"]`);
+		if (fieldElement) {
+			fieldElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			if (fieldElement instanceof HTMLElement) {
+				fieldElement.focus();
+			}
+		}
+	}
+
+	// Get validation errors that should be shown
+	const visibleValidationErrors = $derived(() => {
+		if (!showValidationSummary || formState.submitCount === 0) return {};
+		return formState.errors;
+	});
+
+	// Adjust validation summary default based on mode
+	const shouldShowSummary = $derived(
+		mode === 'embedded' ? false : showValidationSummary
+	);
 </script>
 
-<form onsubmit={handleSubmit} class="space-y-6 {className}">
-	{#if schema.title || schema.description}
-		<div class="mb-6">
-			{#if schema.title}
-				<h2 class="text-lg font-semibold text-slate-900 mb-2">{schema.title}</h2>
-			{/if}
-			{#if schema.description}
-				<p class="text-sm text-slate-600">{schema.description}</p>
-			{/if}
-		</div>
-	{/if}
-
-	<!-- Render grouped fields -->
+<form bind:this={formElement} onsubmit={handleSubmit} class="space-y-6 {className}">
+	<!-- Render Grouped Fields -->
 	{#if schema.groups}
 		{#each schema.groups as group}
-			<div class="space-y-4 {group.className || ''}">
-				{#if group.title || group.description}
-					<div>
-						{#if group.title}
-							<h3 class="text-md font-medium text-slate-800 mb-1">{group.title}</h3>
-						{/if}
-						{#if group.description}
-							<p class="text-sm text-slate-600">{group.description}</p>
-						{/if}
-					</div>
-				{/if}
-
-				<div class="grid grid-cols-1 {schema.layout === 'two-column' ? 'lg:grid-cols-2' : ''} gap-4">
-					{#each group.fields as field}
-						<!-- Only render field if it should be visible based on dependencies -->
-						{#if shouldRenderField(field)}
-							<div class="space-y-2 {field.colSpan === 2 ? 'lg:col-span-2' : ''} {field.className || ''}">
-								{@render fieldRenderer(field)}
-							</div>
-						{/if}
-					{/each}
-				</div>
-			</div>
+			<FormGroupRenderer
+				{group}
+				{formState}
+				layout={schema.layout}
+				{disabled}
+				onChange={handleFieldChange}
+				visibleFields={visibleFieldNames}
+				{shouldShowError}
+			/>
 		{/each}
 	{:else if schema.fields}
-		<!-- Render direct fields -->
+		<!-- Render Direct Fields (No Groups) -->
 		<div class="grid grid-cols-1 {schema.layout === 'two-column' ? 'lg:grid-cols-2' : ''} gap-4">
 			{#each schema.fields as field}
-				{#if shouldRenderField(field)}
+				{#if visibleFieldNames.includes(field.name)}
 					<div class="space-y-2 {field.colSpan === 2 ? 'lg:col-span-2' : ''} {field.className || ''}">
-						{@render fieldRenderer(field)}
+						<FormFieldRenderer
+							{field}
+							{formState}
+							{disabled}
+							onChange={handleFieldChange}
+							{shouldShowError}
+							{imageBaseUrl}
+						/>
 					</div>
 				{/if}
 			{/each}
 		</div>
 	{/if}
-</form>
 
-<!-- Add visual feedback for conditional fields -->
-{#snippet fieldRenderer(field: FormField)}
-	<!-- Add conditional styling for dependent fields -->
-	<div class="transition-all duration-200 {field.dependencies ? 'animate-in slide-in-from-top-2' : ''}">
-		<!-- Field Label -->
-		{#if field.type !== 'checkbox'}
-			<label class="flex items-center gap-2 text-sm font-medium text-slate-700">
-				<DynamicIcon iconName={getFieldIconName(field.type)} class="w-4 h-4" size={16} />
-				{field.label}
-				{#if field.required || (field.conditionalValidation && field.conditionalValidation.some(cv => FormDependencyHandler.evaluateDependency(cv.when, formState.data)))}
-					<span class="text-red-500">*</span>
-				{/if}
-				<!-- Add dependency indicator -->
-				{#if field.dependencies}
-					<span class="text-xs text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded">conditional</span>
-				{/if}
-			</label>
-		{/if}
-
-		<!-- Field Input -->
-		{#if field.type === 'text'}
-			<div class="relative">
-				<input
-					type="text"
-					bind:value={formState.data[field.name]}
-					oninput={(e) => {
-						const target = e.currentTarget;
-						handleFieldChange(field.name, target.value);
-					}}
-					placeholder={field.placeholder}
-					disabled={disabled}
-					min={field.min}
-					max={field.max}
-					class="w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
-				/>
-				{#if formState.data[field.name] && !formState.errors[field.name]}
-					<Check class="absolute right-3 top-2.5 w-4 h-4 text-green-500" />
-				{/if}
-				{#if formState.errors[field.name]}
-					<AlertCircle class="absolute right-3 top-2.5 w-4 h-4 text-red-500" />
-				{/if}
-			</div>
-
-		{:else if field.type === 'textarea'}
-			<textarea
-				bind:value={formState.data[field.name]}
-				oninput={(e) => {
-					const target = e.currentTarget;
-					handleFieldChange(field.name, target.value);
-				}}
-				placeholder={field.placeholder}
-				disabled={disabled}
-				rows={field.rows || 3}
-				class="w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors resize-none {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
-			></textarea>
-
-		{:else if field.type === 'number'}
-			<input
-				type="number"
-				bind:value={formState.data[field.name]}
-				oninput={(e) => {
-					const target = e.currentTarget;
-					handleFieldChange(field.name, parseInt(target.value) || field.min || 0);
-				}}
-				placeholder={field.placeholder}
-				disabled={disabled}
-				min={field.min}
-				max={field.max}
-				class="w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
-			/>
-
-		{:else if field.type === 'color'}
-			<div class="flex gap-2">
-				<input
-					type="color"
-					bind:value={formState.data[field.name]}
-					onchange={(e) => {
-						const target = e.currentTarget;
-						handleFieldChange(field.name, target.value);
-					}}
-					disabled={disabled}
-					class="w-10 h-10 rounded border border-slate-300 cursor-pointer"
-				/>
-				<input
-					type="text"
-					bind:value={formState.data[field.name]}
-					oninput={(e) => {
-						const target = e.currentTarget;
-						handleFieldChange(field.name, target.value);
-					}}
-					placeholder={field.placeholder || '#3B82F6'}
-					disabled={disabled}
-					class="flex-1 px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
-				/>
-			</div>
-
-		{:else if field.type === 'select'}
-			<div class="relative">
-				<select
-					bind:value={formState.data[field.name]}
-					onchange={(e) => {
-					const target = e.currentTarget;
-					handleFieldChange(field.name, target.value);
-				}}
-					disabled={disabled}
-					class="w-full px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-colors appearance-none {formState.errors[field.name] ? 'border-red-300 bg-red-50' : 'border-slate-300'}"
-				>
-					{#each field.options || [] as option}
-						<option
-							value={option.value}
-							disabled={option.value === '' && field.placeholder}
-							selected={formState.data[field.name] === option.value}
-						>
-							{option.label}
-						</option>
-					{/each}
-				</select>
-				<ChevronDown class="absolute right-3 top-2.5 w-4 h-4 text-slate-400 pointer-events-none" />
-
-				<!-- Success indicator -->
-				{#if formState.data[field.name] && !formState.errors[field.name]}
-					<Check class="absolute right-8 top-2.5 w-4 h-4 text-green-500" />
-				{/if}
-				{#if formState.errors[field.name]}
-					<AlertCircle class="absolute right-8 top-2.5 w-4 h-4 text-red-500" />
-				{/if}
-		</div>
-
-	{:else if field.type === 'checkbox'}
-		<div class="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 cursor-pointer transition-colors">
-			<div class="flex items-center gap-3">
-				{#if formState.data[field.name]}
-					<Eye class="w-4 h-4 text-slate-600" />
-				{:else}
-					<EyeOff class="w-4 h-4 text-slate-400" />
-				{/if}
-				<div>
-					<span class="text-sm font-medium text-slate-800">{field.label}</span>
-					{#if field.helpText}
-						<p class="text-xs text-slate-500">{field.helpText}</p>
-					{/if}
+	<!-- Validation Error Summary (hidden by default in embedded mode) -->
+	{#if shouldShowSummary && Object.keys(visibleValidationErrors()).length > 0}
+		<div class="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+			<div class="flex items-start gap-2">
+				<div class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5">
+					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<circle cx="12" cy="12" r="10"></circle>
+						<line x1="12" y1="8" x2="12" y2="12"></line>
+						<line x1="12" y1="16" x2="12.01" y2="16"></line>
+					</svg>
+				</div>
+				<div class="flex-1">
+					<h4 class="text-sm font-semibold text-red-900 mb-2">
+						Please fix the following errors:
+					</h4>
+					<ul class="space-y-1">
+						{#each Object.entries(visibleValidationErrors()) as [fieldName, error]}
+							<li class="text-sm text-red-700">
+								<button
+									type="button"
+									onclick={() => scrollToField(fieldName)}
+									class="hover:underline text-left"
+								>
+									<strong>{getFieldLabel(fieldName)}:</strong> {error}
+								</button>
+							</li>
+						{/each}
+					</ul>
 				</div>
 			</div>
-			<input
-				type="checkbox"
-				bind:checked={formState.data[field.name]}
-				onchange={(e) => {
-          const target = e.currentTarget;
-          handleFieldChange(field.name, target.checked);
-        }}
-				disabled={disabled}
-				class="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
-			/>
 		</div>
-
-	{:else if field.type === 'icon-selector'}
-		<IconSelector
-			selectedIcon={formState.data[field.name]}
-			onselect={(iconName) => handleFieldChange(field.name, iconName)}
-			label={field.label}
-			placeholder={field.placeholder}
-			previewColor={field.previewColor}
-			required={field.required}
-		/>
-
-	{:else if field.type === 'custom' && field.component}
-		{#if field.component}
-			{@const Component = field.component}
-			<Component
-				bind:value={formState.data[field.name]}
-				onchange={createCustomChangeHandler(field.name)}
-				{disabled}
-				{...(field.componentProps || {})}
-			/>
-		{/if}
 	{/if}
-
-		<!-- Field Error/Help Text with enhanced messaging for conditional fields -->
-		{#if formState.errors[field.name] && formState.touched[field.name]}
-			<p class="text-xs text-red-600">{formState.errors[field.name]}</p>
-		{:else if field.helpText}
-			<p class="text-xs text-slate-500">
-				{field.helpText}
-				{#if field.dependencies}
-					<span class="text-amber-600">
-						• Shown when {field.dependencies[0].field} is {field.dependencies[0].condition === 'truthy' ? 'enabled' : 'disabled'}
-					</span>
-				{/if}
-			</p>
-		{/if}
-	</div>
-{/snippet}
+</form>

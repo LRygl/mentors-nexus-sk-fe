@@ -1,7 +1,12 @@
+import type { User } from 'lucide-svelte';
+
 export interface BaseEntity {
 	id: string;
+	uuid: string;
 	createdAt: Date;
 	updatedAt: Date;
+	createdBy: string;
+	updatedBy: string;
 }
 
 export interface PaginationParams {

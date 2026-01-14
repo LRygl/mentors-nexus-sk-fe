@@ -22,7 +22,7 @@
 		{ label: 'Features', href: '/features' },
 		{ label: 'Pricing', href: '/pricing' },
 		{ label: 'Documentation', href: '/docs' },
-		{ label: 'API', href: '/api' }
+		{ label: 'API', href: '/API' }
 	];
 
 	const supportLinks: FooterLink[] = [

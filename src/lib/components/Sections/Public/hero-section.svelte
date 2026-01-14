@@ -25,6 +25,8 @@
 
 	// Simulate loading and animations
 	import { onMount } from 'svelte';
+	import { ROUTES } from '$lib/Config/routes.config';
+	import { goto } from '$app/navigation';
 
 	onMount(() => {
 		setTimeout(() => {
@@ -103,7 +105,7 @@
             </span>
 					</Button>
 
-					<Button class="group px-8 py-4 h-auto bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/20 hover:border-white/40 text-white font-semibold text-lg rounded-2xl transition-all duration-300 hover:scale-105">
+					<Button onclick={()=> goto(ROUTES.PUBLIC.STORE)} class="group px-8 py-4 h-auto bg-white/10 hover:bg-white/20 backdrop-blur-xl border border-white/20 hover:border-white/40 text-white font-semibold text-lg rounded-2xl transition-all duration-300 hover:scale-105">
             <span class="flex items-center gap-2">
               Explore Courses
               <TrendingUp class="w-5 h-5 group-hover:translate-x-1 transition-transform" />

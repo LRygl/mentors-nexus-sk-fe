@@ -1,6 +1,27 @@
 import type { BaseEntity, PaginatedResult, PaginationParams } from '$lib/types/common';
-import type { BaseApiService } from '$lib/api/baseApi';
+import type { BaseApiService } from '$lib/API/APIBase';
 import { untrack } from 'svelte';
+
+
+/**
+ * Base Store for Svelte 5 that integrates with BaseApiService
+ * Provides reactive state management for CRUD operations
+ *
+ * Type Parameters:
+ * @template TEntity - The entity type (must extend BaseEntity)
+ * @template TCreateRequest - Request type for creating entities (defaults to Partial<TEntity>)
+ * @template TUpdateRequest - Request type for updating entities (defaults to Partial<TEntity>)
+ * @template TApiService - The API service type (must extend BaseApiService)
+ *
+ * Usage:
+ * ```typescript
+ * class UserStore extends BaseStoreSvelte<User, CreateUserRequest, UpdateUserRequest, UserApiService> {
+ *   constructor() {
+ *     super(userApiService, '/users');
+ *   }
+ * }
+ * ```
+ */
 
 export abstract class BaseStoreSvelte<
 	TEntity extends BaseEntity = BaseEntity,
@@ -32,14 +53,17 @@ export abstract class BaseStoreSvelte<
 	protected _totalElements = $state(0);
 	protected _totalPages = $state(0);
 
-	// API Service
+	// API Service configuration
 	protected apiService: TApiService;
 
 	constructor(apiService: TApiService) {
 		this.apiService = apiService;
 	}
 
-	// Collection getters
+	// ============================================================
+	// GETTERS - Collection State
+	// ============================================================
+
 	get data(): TEntity[] {
 		return this._data;
 	}
@@ -56,7 +80,10 @@ export abstract class BaseStoreSvelte<
 		return this._data.length === 0 && !this._loading;
 	}
 
-	// Single item getters
+	// ============================================================
+	// GETTERS - Single Item State
+	// ============================================================
+
 	get selectedItem(): TEntity | null {
 		return this._selectedItem;
 	}
@@ -73,7 +100,10 @@ export abstract class BaseStoreSvelte<
 		return this._selectedItem != null;
 	}
 
-	// CRUD operation getters
+	// ============================================================
+	// GETTERS - CRUD Operation State
+	// ============================================================
+
 	get creating(): boolean {
 		return this._creating;
 	}
@@ -103,7 +133,10 @@ export abstract class BaseStoreSvelte<
 		return this._creating || this._updating || this._deleting || this._loading || this._loadingItem;
 	}
 
-	// Pagination getters
+	// ============================================================
+	// GETTERS - Pagination State
+	// ============================================================
+
 	get currentPage(): number {
 		return this._currentPage;
 	}
@@ -128,7 +161,14 @@ export abstract class BaseStoreSvelte<
 		return this._currentPage > 0;
 	}
 
-	// Collection methods - load paginated data
+	// ============================================================
+	// CORE CRUD METHODS (using BaseApiService)
+	// ============================================================
+
+	/**
+	 * Load paginated data
+	 * Uses GET request from BaseApiService
+	 */
 	async loadPage(page: number = 0, size: number = 20): Promise<void> {
 		if (this._loading) return;
 
@@ -152,7 +192,10 @@ export abstract class BaseStoreSvelte<
 		}
 	}
 
-	// Single item methods - lload individual item
+	/**
+	 * Load a single item by ID
+	 * Uses GET request from BaseApiService
+	 */
 	async loadItem(id: string): Promise<TEntity | null> {
 		if (this._loading) return null;
 
@@ -172,7 +215,10 @@ export abstract class BaseStoreSvelte<
 		}
 	}
 
-	// CREATE Operation
+	/**
+	 * Create a new item
+	 * Uses POST request from BaseApiService
+	 */
 	async create(createRequest: TCreateRequest): Promise<TEntity | null> {
 		if (this._creating) return null;
 
@@ -186,7 +232,6 @@ export abstract class BaseStoreSvelte<
 			this._totalElements += 1;
 			this._selectedItem = newItem;
 			return newItem;
-
 		} catch (error) {
 			this._createError = error instanceof Error ? error.message : 'Failed to create item';
 			console.error('Error loading create item:', error);
@@ -207,7 +252,7 @@ export abstract class BaseStoreSvelte<
 			const updatedItem = await this.updateItem(id, updateRequest);
 
 			// Update the item in the data array
-			const index = this._data.findIndex(item => item.id === id);
+			const index = this._data.findIndex((item) => item.id === id);
 			if (index != -1) {
 				this._data[index] = updatedItem;
 				this._data = [...this._data]; // Trigger reactivity
@@ -229,6 +274,7 @@ export abstract class BaseStoreSvelte<
 	}
 
 	async delete(id: string): Promise<boolean> {
+		console.log('Base Store DELETE Called', id);
 		if (this._deleting) return false;
 
 		this._deleting = true;
@@ -238,20 +284,33 @@ export abstract class BaseStoreSvelte<
 			await this.deleteItem(id);
 
 			// Remove from data array
-			this._data = this._data.filter(item => item.id != id);
+			this._data = this._data.filter((item) => {
+				const itemUuid = (item as any).uuid;
+				const itemId = item.id;
+
+				// ✅ Match against BOTH id and uuid
+				// Remove the item if either matches
+				const matchesId = String(itemId) === String(id);
+				const matchesUuid = itemUuid && String(itemUuid) === String(id);
+
+				// Keep the item only if NEITHER matches
+				return !matchesId && !matchesUuid;
+			});
 
 			// Update total count
 			this._totalElements = Math.max(0, this._totalElements - 1);
 
 			// Clear selection if it was the deleted item
-			if (this._selectedItem?.id === id) {
+			const selectedId = this._selectedItem?.id;
+			const selectedUuid = (this._selectedItem as any)?.uuid;
+			if (String(selectedId) === String(id) || String(selectedUuid) === String(id)) {
 				this._selectedItem = null;
 			}
+
 			return true;
 		} catch (error) {
 			this._deleteError = error instanceof Error ? error.message : 'Failed to delete item';
-			console.error('Error loading delete item:', error);
-			return false;
+			throw error;
 		} finally {
 			this._deleting = false;
 		}
@@ -265,7 +324,7 @@ export abstract class BaseStoreSvelte<
 
 	selectItemById(id: string): TEntity | null {
 		const item = this.getItemById(id);
-		if(item) {
+		if (item) {
 			this.selectItem(item);
 			return item;
 		}
@@ -276,6 +335,118 @@ export abstract class BaseStoreSvelte<
 	clearSelection(): void {
 		this._selectedItem = null;
 		this._itemError = null;
+	}
+
+	/**
+	 * Update a specific item in the store by ID or UUID
+	 * Maintains reactivity by creating new array reference
+	 */
+	protected updateItemInStore(id: string | number, updatedItem: TEntity): void {
+		const idStr = id.toString();
+
+		// Update in data array
+		const index = this._data.findIndex((item) => item.id.toString() === idStr);
+
+		if (index !== -1) {
+			this._data[index] = updatedItem;
+		}
+
+		// ALSO update selectedItem if it matches
+		if (this._selectedItem && this._selectedItem.id.toString() === idStr) {
+			this._selectedItem = updatedItem;
+		}
+	}
+
+	/**
+	 * Refresh a single item from the backend
+	 * Useful after operations that modify the item on the server
+	 */
+	async refreshItem(itemId: string): Promise<TEntity> {
+		try {
+			const updatedItem = await this.fetchItem(itemId);
+			this.updateItemInStore(itemId, updatedItem);
+			return updatedItem;
+		} catch (error) {
+			console.error('BaseStore: Error refreshing item:', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Optimistic update with automatic rollback on failure
+	 * @param itemId - ID of item to update
+	 * @param optimisticUpdate - Function that returns the optimistically updated item
+	 * @param apiCall - Async function that performs the actual API call
+	 * @returns The result from the API call
+	 */
+	async optimisticUpdate<TResult>(
+		itemId: string,
+		optimisticUpdate: (currentItem: TEntity) => TEntity,
+		apiCall: () => Promise<TResult>
+	): Promise<TResult> {
+		// Find the current item (now checks both array and selectedItem)
+		const currentItem = this.getItemById(itemId) || this.getItemByUuid(itemId);
+
+		if (!currentItem) {
+			throw new Error(`Item with id ${itemId} not found`);
+		}
+
+		// Store original state for rollback
+		const originalItem = JSON.parse(JSON.stringify(currentItem));
+
+		try {
+			// Apply optimistic update
+			const updatedItem = optimisticUpdate(currentItem);
+			this.updateItemInStore(itemId, updatedItem);
+
+			// Perform API call
+			const result = await apiCall();
+
+			console.log('[BaseStore] Optimistic update succeeded');
+			return result;
+		} catch (error) {
+			// Rollback on error
+			console.error('[BaseStore] Optimistic update failed, rolling back:', error);
+			this.updateItemInStore(itemId, originalItem);
+			throw error;
+		}
+	}
+
+	/**
+	 * Batch update multiple items optimistically
+	 * Useful for operations affecting multiple items at once
+	 */
+	async batchOptimisticUpdate<TResult>(
+		updates: Array<{
+			itemId: string;
+			optimisticUpdate: (currentItem: TEntity) => TEntity;
+		}>,
+		apiCall: () => Promise<TResult>
+	): Promise<TResult> {
+		// Store original states
+		const rollbackStates = new Map<string, TEntity>();
+
+		// Apply all optimistic updates
+		for (const { itemId, optimisticUpdate } of updates) {
+			const currentItem = this.getItemById(itemId) || this.getItemByUuid(itemId);
+			if (currentItem) {
+				rollbackStates.set(itemId, JSON.parse(JSON.stringify(currentItem)));
+				const updatedItem = optimisticUpdate(currentItem);
+				this.updateItemInStore(itemId, updatedItem);
+			}
+		}
+
+		try {
+			const result = await apiCall();
+			return result;
+		} catch (error) {
+			// Rollback all changes
+			console.error('Batch optimistic update failed, rolling back:', error);
+			for (const [itemId, originalItem] of rollbackStates) {
+				this.updateItemInStore(itemId, originalItem);
+			}
+			throw error;
+		}
 	}
 
 	// Pagination nav methods
@@ -301,20 +472,50 @@ export abstract class BaseStoreSvelte<
 		await this.loadPage(0, size);
 	}
 
-	//Utility methods
-	getItemById(id: string): TEntity | undefined {
-		return this._data.find((item: TEntity) => item.id === id);
+	// ============================================================
+	// UTILITY METHODS
+	// ============================================================
+
+	protected getItemById(id: string | number): TEntity | undefined {
+		const idStr = id.toString();
+
+		// First check the data array
+		const itemInArray = this._data.find((item) => item.id.toString() === idStr);
+		if (itemInArray) {
+			return itemInArray;
+		}
+
+		// Also check selectedItem
+		if (this._selectedItem && this._selectedItem.id.toString() === idStr) {
+			return this._selectedItem;
+		}
+
+		return undefined;
 	}
 
-	getItemByUuid(uuid: string): TEntity | undefined {
-		return this._data.find((item: TEntity) => (item as any).uuid === uuid);
+	protected getItemByUuid(uuid: string): TEntity | undefined {
+		// First check the data array
+		const itemInArray = this._data.find((item) => item.uuid === uuid);
+		if (itemInArray) {
+			return itemInArray;
+		}
+
+		// Also check selectedItem
+		if (this._selectedItem && this._selectedItem.uuid === uuid) {
+			return this._selectedItem;
+		}
+
+		return undefined;
 	}
 
 	async refresh(): Promise<void> {
 		await this.loadPage(this._currentPage, this._pageSize);
 	}
 
-	// Reset collection state
+	// ============================================================
+	// RESET METHODS
+	// ============================================================
+
 	clearCollection(): void {
 		untrack(() => {
 			this._data = [];
@@ -327,7 +528,7 @@ export abstract class BaseStoreSvelte<
 		});
 	}
 
- // Reset item state
+	// Reset item state
 	clearItemState(): void {
 		untrack(() => {
 			this._selectedItem = null;
@@ -345,7 +546,7 @@ export abstract class BaseStoreSvelte<
 			this._updateError = null;
 			this._deleting = false;
 			this._deleteError = null;
-		})
+		});
 	}
 
 	// Reset everything

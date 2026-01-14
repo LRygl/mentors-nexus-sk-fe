@@ -1,30 +1,34 @@
-<!-- src/routes/admin/faq-categories/+page.svelte -->
+<!-- src/routes/Admin/faq-categories/+page.svelte -->
 <script lang="ts">
 	import AdminHeaderSection from '$lib/components/Sections/Admin/AdminHeaderSection.svelte';
-	import UniversalDataTable from '$lib/components/UI/UniversalDataTable.svelte';
+	import UniversalDataTable from '$lib/components/Data Table/UniversalDataTable.svelte';
 	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
 
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
+	import { afterNavigate, goto } from '$app/navigation';
 	import { FileText } from 'lucide-svelte';
 
-	import type { FAQCategory } from '$lib/types/entities/faqCategory';
+	import type { FAQCategory, FAQCategoryFormData } from '$lib/types/entities/faqCategory';
 	import type { TableCallbacks } from '$lib/types/ui/table';
 
 	import { faqCategoryStore } from '$lib/stores/defaults/faqCategoryStore.svelte';
-	import { getFAQCategoryActions } from './faqCategoryActions';
-	import { getFAQCategoryFormSchema, transformToCreateRequest } from '$lib/components/Forms/FAQCategoryFormSchema';
-	import { faqCategoryTableColumns, faqCategoryTableConfig } from './fatCategoryTableConfig';
+	import { createFAQCategoryFormSchema } from '$lib/components/Forms/Schemas/FAQCategoryFormSchema';
+	import { confirmationModal } from '$lib/components/Modals/ConfirmationModalService.svelte';
+	import { toastService } from '$lib/Services/ToastService.svelte';
+	import { FAQCategoryTablePreset } from '$lib/components/Data Table/Configurations/FAQCategoryConfiguration';
+	import { ROUTES } from '$lib/Config/routes.config';
 
 	// Modal and Form State
-	let isCreateModalOpen = $state(false);
+	let isCreateModalOpen = $state<boolean>(false);
 	let formRef: any;
-	let formIsValid = $state(false);
 	let selectedItems = $state<Set<string>>(new Set());
 
 	// Form schema
-	const formSchema = getFAQCategoryFormSchema('admin');
+	const createFormSchema = $derived(createFAQCategoryFormSchema(`quick`));
+
+	// Data table configuration
+	const tableConfig = FAQCategoryTablePreset.all();
 
 	// Initialize data on component mount
 	onMount(async () => {
@@ -34,21 +38,28 @@
 		}
 	});
 
+
+	afterNavigate(async ({ from, to }) => {
+		console.log('Navigation:', from?.url.pathname, '→', to?.url.pathname);
+
+		// Refresh if coming from a category detail page
+		if (from?.url.pathname?.includes('/admin/faq-categories/') &&
+			from?.url.pathname !== '/admin/faq-categories') {
+			console.log('🔄 Refreshing categories after detail page visit');
+			await faqCategoryStore.refresh();
+		}
+	});
+
 	// Table callbacks adapted for BaseStoreSvelte
 	const tableCallbacks: TableCallbacks<FAQCategory> = {
-		onRowClick: (category) => {
-			console.log(`FAQ Categor row ${category.id} clicked`);
-			goto(`/admin/faq-categories/${category.id}`);
+		onRowClick: async (category) => {
+			await goto(`${ROUTES.ADMIN.FAQ_CATEGORIES}/${category.id}`);
 		},
 
 		onAction: async (actionId, category) => {
 			switch (actionId) {
 				case 'view':
-					console.log("View Action was called by the user in the dropdown")
-					await goto(`/admin/faq-categories/${category.id}`);
-					break;
-				case 'edit':
-					await goto(`/admin/faq-categories/${category.id}/edit`);
+					await goto(`${ROUTES.ADMIN.FAQ_CATEGORIES}/${category.id}`);
 					break;
 				case 'duplicate':
 					// Use the store's create method
@@ -57,7 +68,7 @@
 							name: `${category.name} (Copy)`,
 							displayOrder: category.displayOrder + 1,
 							colorCode: category.colorCode,
-							// Add other required fields
+							// Add other required Fields
 						} as any; // Replace with proper CreateFAQCategoryRequest type
 
 						await faqCategoryStore.create(duplicateData);
@@ -67,12 +78,16 @@
 					}
 					break;
 				case 'delete':
-					if (confirm(`Are you sure you want to delete "${category.name}"?`)) {
+
+					const confirmed = await confirmationModal.delete(`Delete FAQ Category?`,`Are you sure you want to delete this category?`)
+
+					if (confirmed) {
 						try {
-							await faqCategoryStore.delete(category.id || category.uuid);
+							await faqCategoryStore.delete(category.uuid);
 							console.log('Category deleted successfully');
 						} catch (error) {
 							console.error('Failed to delete category:', error);
+							toastService.error('Failed to delete category:',`Operation failed with error: ${error}`);
 						}
 					}
 					break;
@@ -91,11 +106,7 @@
 
 		onCreate: () => {
 			console.log('Create triggered');
-			openCreateModal();
-		},
-
-		onExport: (data) => {
-			exportToCSV(data, 'faq-categories.csv');
+			createModal();
 		},
 
 		onBulkEdit: (selectedIds) => {
@@ -117,10 +128,13 @@
 		}
 	};
 
-
-
-	// Modal functions
-	function openCreateModal() {
+	/*
+	* MODAL ACTION HANDLING
+	*/
+	async function createModal() {
+		//await loadAllFAQs();
+		// Small delay to ensure reactivity has processed
+		//await new Promise(resolve => setTimeout(resolve, 10));
 		isCreateModalOpen = true;
 	}
 
@@ -129,27 +143,14 @@
 		formRef?.reset();
 	}
 
-	// Form handlers
-	function handleFormValidation(result: { isValid: boolean }) {
-		formIsValid = result.isValid;
-	}
-
-	async function handleCreateSubmit(event: Event) {
-		event.preventDefault();
-
-		if (!formRef?.validateFormExternal()) {
-			return;
-		}
-
-		const formData = formRef.getFormData();
-		const requestData = transformToCreateRequest(formData);
-
+	// Called when form validation passes
+	async function handleValidFormSubmit(data: FAQCategoryFormData) {
 		try {
-			// Use the store's create method
-			const newCategory = await faqCategoryStore.create(requestData);
-			if (newCategory) {
+			const newCategory = await faqCategoryStore.create(data);
+			if (newCategory && newCategory?.id) {
 				closeCreateModal();
-				// No need to refresh - the store automatically updates the data array
+				toastService.success(`FAQ Category Created`,`Lipsum`)
+				// TODO: Add notifications notification
 			}
 		} catch (error) {
 			console.error('Failed to create category:', error);
@@ -158,51 +159,18 @@
 
 	// Form callbacks
 	const formCallbacks = {
-		onValidate: handleFormValidation,
-		onChange: (field: string, value: any, formState: any) => {
-			console.log(`Field ${field} changed to:`, value);
+		onSubmit: handleValidFormSubmit,
+		onChange: (field: string, value: any) => {
+
 		}
 	};
 
-	// Export utility
-	function exportToCSV(data: FAQCategory[], filename: string): void {
-		if (data.length === 0) return;
-
-		const csvData = data.map(item => ({
-			ID: item.id,
-			Name: item.name,
-			'Display Order': item.displayOrder,
-			'Color Code': item.colorCode,
-			'FAQ Count': item.faqCount,
-			Created: item.createdAt
-		}));
-
-		const headers = Object.keys(csvData[0]);
-		const csvRows = [
-			headers.join(','),
-			...csvData.map(row =>
-				headers.map(header => {
-					const value = (row as any)[header] ?? '';
-					return `"${String(value).replace(/"/g, '""')}"`;
-				}).join(',')
-			)
-		];
-
-		const csv = csvRows.join('\n');
-		const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-		const link = document.createElement('a');
-		const url = URL.createObjectURL(blob);
-
-		link.setAttribute('href', url);
-		link.setAttribute('download', filename);
-		link.style.visibility = 'hidden';
-
-		document.body.appendChild(link);
-		link.click();
-		document.body.removeChild(link);
-
-		URL.revokeObjectURL(url);
+	// Modal submit
+	function handleModalSubmit(event: Event) {
+		event.preventDefault()
+		formRef?.submit();
 	}
+
 </script>
 
 <!-- Main Container -->
@@ -219,19 +187,12 @@
 		data={faqCategoryStore.data}
 		loading={faqCategoryStore.loading}
 		error={faqCategoryStore.error}
-		config={faqCategoryTableConfig}
-		columns={faqCategoryTableColumns}
+		config={tableConfig.config}
+		columns={tableConfig.columns}
 		callbacks={tableCallbacks}
 		bind:selectedItems={selectedItems}
-		getActions={getFAQCategoryActions}
-		searchable={true}
-		filterable={true}
-		selectable={true}
-		exportable={true}
-		searchPlaceholder="Search categories..."
-		emptyTitle="No FAQ Categories Yet"
-		emptyDescription="Get started by creating your first FAQ category. Categories help organize your frequently asked questions for better user experience."
-		emptyActionLabel="Create Your First Category"
+		getActions={tableConfig.getActions}
+		{...tableConfig.props}
 	/>
 
 </section>
@@ -246,14 +207,13 @@
 	loading={faqCategoryStore.creating}
 	error={faqCategoryStore.createError}
 	submitLabel="Create Category"
-	submitDisabled={!formIsValid}
 	onclose={closeCreateModal}
-	onsubmit={handleCreateSubmit}
+	onsubmit={handleModalSubmit}
 >
 	{#snippet children()}
 		<UniversalForm
 			bind:this={formRef}
-			schema={formSchema}
+			schema={createFormSchema}
 			callbacks={formCallbacks}
 			className="space-y-6"
 		/>

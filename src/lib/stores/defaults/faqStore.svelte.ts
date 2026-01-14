@@ -1,5 +1,5 @@
 import { BaseStoreSvelte } from '$lib/stores/BaseStore.svelte';
-import { faqAdminApiService, type FAQAdminApiService } from '$lib/api/admin/faqAdminApi';
+import { faqAdminApiService, type FAQAdminApiService } from '$lib/API/Admin/FAQAdminAPI';
 import type {	FAQ,FAQPaginationParams } from '$lib/types/entities/faq';
 import type { PaginatedResult, PaginationParams } from '$lib/types';
 
@@ -86,35 +86,27 @@ export class FaqStoreSvelte extends BaseStoreSvelte<
 		return await this.apiService.updateFAQ(id, updateRequest);
 	}
 
-	protected async deleteItem(id: string): Promise<void> {
-		return await this.apiService.deleteFAQ(id);
+	protected async deleteItem(uuid: string): Promise<void> {
+		return await this.apiService.deleteFAQ(uuid);
 	}
 
 	// Publish FAQ
 	async publishFAQ(uuid: string): Promise<FAQ> {
-		// Set Loading state
 		this._actionLoading[uuid] = true;
 		delete this._actionErrors[uuid];
 
 		try {
-			console.log('FAQ Store: Publishing FAQ with UUID:', uuid);
-			const updatedFAQ = await this.apiService.publishFAQ(uuid);
 
-			// Update local data if the item exists in the current page
-			const index = this._data.findIndex(item => item.uuid === uuid);
-			if (index !== -1) {
-				this._data = [
-					...this._data.slice(0, index),
-					updatedFAQ,
-					...this._data.slice(index + 1)
-				];
-			}
-
-			// If this is the selected item, update it as well
-			if (this._selectedItem?.uuid === uuid) {
-				this._selectedItem = updatedFAQ;
-			}
-			return updatedFAQ;
+			return await this.optimisticUpdate(
+				uuid,
+				(faq) => ({...faq, isPublished: true}),
+				async () => {
+					const updated = await this.apiService.publishFAQ(uuid);
+					// Update with actual API response data
+					this.updateItemInStore(uuid, updated);
+					return updated;
+				}
+			);
 		} catch (error) {
 			const errorMessage = error instanceof Error ? error.message : 'Failed to publish FAQ';
 			console.error('FAQ Store: Error publishing FAQ:', error);
@@ -163,7 +155,23 @@ export class FaqStoreSvelte extends BaseStoreSvelte<
 		}
 	}
 
-	// UTILITY METHODS USED BY THE STORE
+
+	async feature(uuid: string): Promise<FAQ> {
+		const faq: FAQ = await this.apiService.feature(uuid);
+		console.log('🔄 Featured FAQ received from API:', faq);
+		console.log('📅 Updated at:', faq.updatedAt);
+		this.updateItemInStore(faq.id, faq);
+		console.log('✅ Store updated, new data:', this._data.find(f => f.id === faq.id));
+		return faq;
+	}
+
+	async unfeature(uuid: string): Promise<FAQ> {
+		const faq: FAQ = await this.apiService.unfeature(uuid);
+		this.updateItemInStore(faq.id, faq);
+return faq;
+
+	}
+		// UTILITY METHODS USED BY THE STORE
 
 	/**
 	 * Get available FAQs for linking to a category
@@ -176,9 +184,10 @@ export class FaqStoreSvelte extends BaseStoreSvelte<
 	}
 
 
-get allFaqsLoaded(): boolean {
-		return this._allFaqsLoaded;
-}
+	get allFaqsLoaded(): boolean {
+			return this._allFaqsLoaded;
+	}
+
 
 
 }

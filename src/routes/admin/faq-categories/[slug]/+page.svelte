@@ -1,4 +1,4 @@
-<!-- src/routes/admin/faq-categories/[id]/+page.svelte -->
+<!-- src/routes/Admin/faq-categories/[id]/+page.svelte -->
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
@@ -6,15 +6,17 @@
 	import AdminHeaderSection from '$lib/components/Sections/Admin/AdminHeaderSection.svelte';
 	import AdminSubHeadingSection from '$lib/components/Sections/Admin/AdminSubHeadingSection.svelte';
 	import { goto } from '$app/navigation';
-	import UniversalDataTable from '$lib/components/UI/UniversalDataTable.svelte';
-	import { FAQCategoryFAQTableConfigs } from './faqCategoryFAQTableConfig';
+	import UniversalDataTable from '$lib/components/Data Table/UniversalDataTable.svelte';
 	import type { TableCallbacks } from '$lib/types/ui/table';
 	import type { FAQ } from '$lib/types';
 	import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
 	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
-	import { createFAQCategoryLinkFormSchema } from '$lib/components/Forms/FAQCategoryLinkFormSchema';
 	import { faqStore } from '$lib/stores/defaults/faqStore.svelte';
-	import type { FAQLinkFormData } from '$lib/types/entities/faq';
+	import { createFAQLinkFormSchema } from '$lib/components/Forms/Schemas/FAQ/FAQLinkFormSchema';
+	import { toastService } from '$lib/Services/ToastService.svelte';
+	import { FAQListTablePreset } from '$lib/components/Data Table/Configurations/FAQCategoryFAQsConfiguration';
+	import { ROUTES } from '$lib/Config/routes.config';
+
 	// Get category ID from URL params
 	const categoryId = page.params.slug as string;
 
@@ -26,16 +28,43 @@
 	// Modal and Link Form State
 	let isLinkModalOpen = $state(false); // Renamed for clarity
 	let formRef: any;
-	let linkFormData = $state<Partial<FAQLinkFormData>>({});
-	let availableFAQs = $state<FAQ[]>([]);
 
 	// Derived FAQs from category - this automatically updates when category changes
 	const category = $derived(faqCategoryStore.data.find(c => c.id === categoryId) || null);
-	const faqs = $derived(category?.faqs || []);
+	const faqs = $derived.by(() => {
+		if (!category?.faqs) return [];
+
+		return category.faqs.map(faq => ({
+			...faq,
+			category: {
+				id: category.id,
+				uuid: category.uuid,
+				name: category.name,
+				slug: category.slug
+			}
+		}));
+	});
+
+	const availableFAQs = $derived.by(() => {
+		if (faqStore.data.length === 0) {
+			return [];
+		}
+
+		const linkedUuids = new Set(faqs.map(f => f.uuid));
+		const filtered = faqStore.data.filter(faq =>
+			!faq.isPublished &&
+			!faq.category &&
+			!linkedUuids.has(faq.uuid)
+		);
+
+		return filtered;
+	});
 
 	// Form schema
-	const linkFormSchema = $derived(createFAQCategoryLinkFormSchema(availableFAQs));
+	const linkFormSchema = $derived(createFAQLinkFormSchema(faqs));
 
+	// Data table configuration
+	const tableConfig = FAQListTablePreset.all();
 
 	onMount(async () => {
 		if (!categoryId) {
@@ -47,6 +76,7 @@
 			loadAllFAQs()
 		]);
 	});
+
 
 	async function loadCategoryData(): Promise<void> {
 		loading = true
@@ -79,17 +109,14 @@
 	}
 
 	const tableActionCallbacks: TableCallbacks<FAQ> = {
-			onRowClick: (faq) => {
-				goto(`/admin/faq/${faq.id}`);
+			onRowClick: async (faq) => {
+				await goto(`${ROUTES.ADMIN.FAQ}/${faq.id}`);
 			},
 
 			onAction: async (actionId, faq) => {
 				switch (actionId) {
 					case 'view':
-						await goto(`/admin/faq/${faq.id}`);
-						break;
-					case 'edit':
-						await goto(`/admin/faq/${faq.id}`);
+						await goto(`${ROUTES.ADMIN.FAQ}/${faq.id}`);
 						break;
 					case 'unlink-faq':
 						await handleUnlinkFAQFromCategory(faq.uuid)
@@ -104,66 +131,66 @@
 		if (!category || loading) return;
 
 		try {
-			await faqCategoryStore.unlinkFAQFromFAQCategory(categoryId, faqUuid);
+			const unlinkedFaq = await faqCategoryStore.unlinkFAQFromFAQCategory(categoryId, faqUuid);
 
+			// Update the FAQ in the main store to reflect it's now available to link again
+			faqStore.updateItemInStore(faqUuid, unlinkedFaq);
+			// Fetch the single category to refresh the store data
+			await faqCategoryStore.fetchItem(categoryId);
 			// Remove from local selection if selected
 			if (selectedItems.has(faqUuid)) {
 				selectedItems = new Set([...selectedItems].filter(id => id !== faqUuid));
 			}
 
+			toastService.success('Success', 'FAQ unlinked from category');
 		} catch (error) {
-			// Store already handled rollback, just show user feedback
 			console.error('Failed to unlink FAQ:', error);
+			toastService.error('Error', 'Failed to unlink FAQ');
 		}
 	}
+
 
 	// Modal Handling
 
 	async function openLinkModal() {
-		//await loadAllFAQs();
-		// Small delay to ensure reactivity has processed
-		//await new Promise(resolve => setTimeout(resolve, 10));
 		isLinkModalOpen = true;
 	}
 
 	function closeLinkModal() {
 		isLinkModalOpen = false;
 		formRef?.reset();
-		linkFormData = {};
 	}
 
-	async function handleLinkSubmit(event: Event) {
-		event.preventDefault();
-		// Get form data using the exported function
-		const formData = formRef?.getFormData();
-		const selectedFaqUuid = formData?.faqUuid;
-
-		if (!selectedFaqUuid || !category) 	return;
+	async function handleValidLinkSubmit(data: { faqUuid: string }) {
+		if (!data.faqUuid || !category) return;
 
 		try {
-			await faqCategoryStore.linkFAQToFAQCategory(selectedFaqUuid, category.uuid);
-			closeLinkModal();
+			const linkedFaq = await faqCategoryStore.linkFAQToFAQCategory(data.faqUuid, category.uuid);
+
+			if (linkedFaq && linkedFaq.id) {
+				// Update the FAQ in the main store - optimistic update handled by BaseStore
+				faqStore.updateItemInStore(data.faqUuid, linkedFaq);
+				// Fetch the single category to refresh the store data
+				await faqCategoryStore.fetchItem(categoryId);
+				closeLinkModal();
+				toastService.success('Success', `FAQ"${linkedFaq.question}" was linked successfully`);
+			}
 		} catch (error) {
-			console.error('Failed to link FAQ:', error);
+			console.error('Error linking FAQ:', error);
+			toastService.error('Error', 'Failed to link FAQ to category');
 		}
 	}
 
 	// Form callbacks
 	const formCallbacks = {
-		onChange: (field: string, value: any) => {
-			linkFormData = { ...linkFormData, [field]: value };
-		}
+		onSubmit: handleValidLinkSubmit
 	};
 
-	// Reactive effect to update availableFAQs when dependencies change
-	$effect(() => {
-		if (faqStore.allFaqsLoaded && faqStore.data.length > 0) {
-			const linkedUuids = new Set(faqs.map(f => f.uuid));
-			availableFAQs = faqStore.data.filter(f => !linkedUuids.has(f.uuid));
-		} else {
-			availableFAQs = [];
-		}
-	});
+	// Modal submit handler
+	function handleLinkSubmit(event: Event) {
+		event.preventDefault();
+		formRef?.submit();
+	}
 
 </script>
 
@@ -239,19 +266,13 @@
 			data={faqs}
 			loading={loading}
 			error={error}
-			config={FAQCategoryFAQTableConfigs.FAQTableConfig()}
-			columns={FAQCategoryFAQTableConfigs.FAQTableColumnsConfig()}
+			config={tableConfig.config}
+			columns={tableConfig.columns}
 			callbacks={tableActionCallbacks}
 			bind:selectedItems={selectedItems}
-			getActions={FAQCategoryFAQTableConfigs.FAQTableActionsConfig}
-			searchable={false}
-			filterable={true}
-			selectable={true}
-			exportable={true}
-			searchPlaceholder="Search FAQs..."
-			emptyTitle="No FAQs yet!"
-			emptyDescription="Get started by creating your first FAQ category. Categories help organize your frequently asked questions for better user experience."
-			emptyActionLabel="Link Your First FAQ to this category"
+			getActions={tableConfig.getActions}
+			{...tableConfig.props}
+
 		/>
 	{/if}
 

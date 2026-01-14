@@ -9,8 +9,8 @@
 
 	const faqs: FaqItem[] = [
 		{
-			q: 'How do I reset my password?',
-			a: 'Click “Forgot password” on the login screen and follow the instructions sent to your e-mail.',
+			q: 'How do I reset my forgot-password?',
+			a: 'Click “Forgot forgot-password” on the login screen and follow the instructions sent to your e-mail.',
 		},
 		{
 			q: 'Can I download lessons for offline access?',
