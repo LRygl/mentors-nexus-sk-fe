@@ -87,7 +87,8 @@ export function createLessonFields(): EntityFieldConfig[] {
 		{
 			name: 'imageUrl',
 			label: 'Terminal Cover Image',
-			type: 'image',
+			type: 'upload',
+			uploadType: 'image',
 			group: 'terminal',
 			variants: { embedded: true },
 			required: false,
@@ -95,19 +96,22 @@ export function createLessonFields(): EntityFieldConfig[] {
 			helpText: 'A featured image for your course (JPEG, PNG, WebP, or GIF)',
 			maxFileSize: 5 * 1024 * 1024, // 5MB
 			acceptedFileTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
-			colSpan: 3
+			preview: true,
+			colSpan: 1
 		},
 		{
 			name: 'videoUrl',
 			label: 'Terminal Content',
-			type: 'image',
+			type: 'upload',
+			uploadType: 'video',
 			group: 'content',
 			variants: { embedded: true },
 			required: false,
 			placeholder: 'Upload a terminal thumbnail...',
-			helpText: 'A featured image for your course (JPEG, PNG, WebP, or GIF)',
-			maxFileSize: 5 * 1024 * 1024, // 5MB
-			acceptedFileTypes: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+			helpText: 'Lesson video content',
+			maxFileSize: 500 * 1024 * 1024, // 500MB
+			acceptedFileTypes: ['video/x-msvideo', 'video/avi', 'video/mp4', 'video/webm', 'video/quicktime'],
+			preview: false,
 			colSpan: 3
 		}
 	];
@@ -128,6 +132,7 @@ const lessonGroup: EntityGroupConfig[] = [
 		description: 'Terminal content based on the category',
 		icon: '📝',
 		variant: 'default',
+		collapsible: true,
 		variants: { standard: true, embedded: true }
 	}
 ]

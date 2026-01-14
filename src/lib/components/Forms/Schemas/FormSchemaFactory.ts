@@ -21,9 +21,15 @@ export interface EntityFieldConfig {
 		| 'select'
 		| 'date'
 		| 'image'
+		| 'upload'
 		| 'tags'
 		| 'multiselect'
 		| 'stringList';
+
+	// Upload-specific configuration
+	uploadType?: 'image' | 'video' | 'document' | 'any';
+	preview?: boolean;
+	dragDrop?: boolean;
 
 	// Visibility in different form variants
 	variants: {
@@ -299,6 +305,7 @@ export class FormSchemaFactory<T = any> {
 					maxTags: field.maxLength
 				});
 				break;
+
 			case 'multiselect':
 				builder.multiselect(field.name, field.label, field.options || [], {
 					...baseOptions,
@@ -307,6 +314,7 @@ export class FormSchemaFactory<T = any> {
 					searchable: field.searchable
 				});
 				break;
+
 			case 'image':
 				builder.image(field.name, field.label, {
 					...baseOptions,
@@ -314,6 +322,22 @@ export class FormSchemaFactory<T = any> {
 					acceptedFileTypes: field.acceptedFileTypes
 				});
 				break;
+
+			case 'upload':
+				builder.upload(
+					field.name,
+					field.label,
+					field.uploadType || 'image', // Default to image if not specified
+					{
+						...baseOptions,
+						maxFileSize: field.maxFileSize,
+						acceptedFileTypes: field.acceptedFileTypes,
+						preview: field.preview,
+						dragDrop: field.dragDrop
+					}
+				);
+				break;
+
 			case 'stringList':
 				builder.stringlist(field.name, field.label, {
 					...baseOptions,

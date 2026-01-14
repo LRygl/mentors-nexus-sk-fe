@@ -28,6 +28,7 @@ export type FormFieldType =
 	| 'radio'
 	| 'file'
 	| 'image'
+	| 'upload'
 	| 'icon-selector'
 	| 'slider'
 	| 'toggle'
@@ -40,7 +41,7 @@ export type FormVariant = 'default' | 'bordered' | 'floating' | 'minimal';
 export type FieldSize = 'sm' | 'md' | 'lg';
 export type FormFieldColSpan = 1 | 2 | 3 | 4;
 export type FormFieldGroupVariant = 'default' | 'card' | 'minimal';
-
+export type UploadFieldType = 'image' | 'video' | 'document' | 'any';
 export type FormFieldDependencyCondition =
 	| 'equals'
 	| 'not-equals'
@@ -97,6 +98,16 @@ export interface FieldOption {
 	group?: string;
 }
 
+export interface UploadConfig {
+	type: UploadFieldType;
+	maxFileSize?: number; // in bytes
+	acceptedFileTypes?: string[];
+	maxFiles?: number; // for multi-upload
+	preview?: boolean; // show preview
+	dragDrop?: boolean; // enable drag & drop
+	showProgress?: boolean; // show upload progress
+}
+
 // Extend the existing FieldOption type
 interface SelectOption extends FieldOption {
 	description?: string;  // Add our optional property
@@ -149,10 +160,8 @@ export interface FormField {
 	tagMaxLength?: number; // Maximum length for individual tags
 	tagValidator?: (tag: string) => boolean;
 
-	minItems?: number;
-	maxItems?: number;
-
 	// File upload
+	uploadConfig?: UploadConfig;
 	maxFileSize?: number;
 	acceptedFileTypes?: string[];
 

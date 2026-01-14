@@ -30,8 +30,12 @@
 	let contentElement = $state<HTMLDivElement>();
 
 	$effect(() => {
-		if (contentElement) {
+		if (contentElement && !isCollapsed) {
+			// Depend on visibleFields and formState to trigger recalculation
 			const _ = visibleFields.length;
+			const __ = formState.data;
+
+			// Use a small delay to ensure DOM has updated
 			requestAnimationFrame(() => {
 				if (contentElement) {
 					contentHeight = contentElement.scrollHeight;
@@ -39,7 +43,6 @@
 			});
 		}
 	});
-
 	const hasVisibleFields = $derived(() => {
 		return group.fields.some(field => visibleFields.includes(field.name));
 	});
@@ -79,7 +82,7 @@
 
 {#if hasVisibleFields()}
 	{#if variant === 'embedded'}
-		<!-- EMBEDDED VARIANT: Clean style with just headings, no borders or backgrounds -->
+		<!-- EMBEDDED VARIANT: No overflow issues here -->
 		<div class="mb-8 {group.className || ''}">
 			{#if group.title || group.description}
 				<div class="mb-4">
@@ -111,6 +114,7 @@
 								{disabled}
 								{onChange}
 								{shouldShowError}
+								{imageBaseUrl}
 							/>
 						</div>
 					{/if}
@@ -119,7 +123,7 @@
 		</div>
 
 	{:else if variant === 'default'}
-		<!-- DEFAULT VARIANT: Rounded background cards with separation between groups -->
+		<!-- DEFAULT VARIANT: Fixed overflow -->
 		<div class="mb-6 {group.className || ''}">
 			<div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
 				{#if group.title || group.description}
@@ -159,9 +163,10 @@
 					</button>
 				{/if}
 
+				<!-- ✅ Fixed: Removed overflow-hidden, use overflow-visible instead -->
 				<div
-					class="overflow-hidden transition-all duration-300 ease-in-out"
-					style="max-height: {isCollapsed ? '0' : `${contentHeight}px`}"
+					class="transition-all duration-300 ease-in-out"
+					style="max-height: {isCollapsed ? '0' : `${contentHeight}px`}; overflow: {isCollapsed ? 'hidden' : 'visible'};"
 				>
 					<div bind:this={contentElement}>
 						<div class="px-6 pb-6 {group.title || group.description ? 'pt-2' : 'pt-6'}">
@@ -175,6 +180,7 @@
 												{disabled}
 												{onChange}
 												{shouldShowError}
+												{imageBaseUrl}
 											/>
 										</div>
 									{/if}
@@ -187,7 +193,7 @@
 		</div>
 
 	{:else if variant === 'card'}
-		<!-- CARD VARIANT: Premium modern card with gradients, shadows, and accent colors -->
+		<!-- CARD VARIANT: Fixed overflow -->
 		<div class="mb-6 {group.className || ''}">
 			<div class="h-1 bg-gradient-to-r from-{accentColor()}-500 to-{accentColor()}-600 rounded-t-lg shadow-sm"></div>
 
@@ -231,9 +237,10 @@
 					</button>
 				{/if}
 
+				<!-- ✅ Fixed: Conditional overflow -->
 				<div
-					class="overflow-hidden transition-all duration-300 ease-in-out"
-					style="max-height: {isCollapsed ? '0' : `${contentHeight}px`}"
+					class="transition-all duration-300 ease-in-out"
+					style="max-height: {isCollapsed ? '0' : `${contentHeight}px`}; overflow: {isCollapsed ? 'hidden' : 'visible'};"
 				>
 					<div bind:this={contentElement}>
 						<div class="p-6 bg-gradient-to-b from-white to-slate-50/30">
@@ -260,7 +267,7 @@
 		</div>
 
 	{:else if variant === 'minimal'}
-		<!-- MINIMAL VARIANT: Clean, subtle card with minimal styling -->
+		<!-- MINIMAL VARIANT: Fixed overflow -->
 		<div class="mb-6 {group.className || ''}">
 			<div class="bg-white border border-slate-200 rounded-lg overflow-hidden">
 				{#if group.title || group.description}
@@ -298,9 +305,10 @@
 					</button>
 				{/if}
 
+				<!-- ✅ Fixed: Conditional overflow -->
 				<div
-					class="overflow-hidden transition-all duration-300 ease-in-out"
-					style="max-height: {isCollapsed ? '0' : `${contentHeight}px`}"
+					class="transition-all duration-300 ease-in-out"
+					style="max-height: {isCollapsed ? '0' : `${contentHeight}px`}; overflow: {isCollapsed ? 'hidden' : 'visible'};"
 				>
 					<div bind:this={contentElement}>
 						<div class="px-5 py-4 {group.title || group.description ? 'border-t border-slate-100' : ''}">
