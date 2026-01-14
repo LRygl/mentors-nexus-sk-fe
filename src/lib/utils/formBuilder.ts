@@ -483,6 +483,88 @@ export class FormBuilder<T = Record<string, any>> {
 	}
 
 	/**
+	 * Add a universal upload field
+	 */
+	upload(
+		name: string,
+		label: string,
+		uploadType: 'image' | 'video' | 'document' | 'any',
+		options: {
+			placeholder?: string;
+			required?: boolean;
+			colSpan?: 1 | 2 | 3 | 4;
+			helpText?: string;
+			defaultValue?: string;
+			maxFileSize?: number;
+			acceptedFileTypes?: string[];
+			preview?: boolean;
+			dragDrop?: boolean;
+			dependencies?: FormFieldDependency[];
+			conditionalValidation?: ConditionalValidation[];
+		} = {}
+	): FormBuilder<T> {
+		const validationRules = [];
+
+		if (options.required) {
+			validationRules.push(FormValidator.rules.required());
+		}
+
+		// Add file size validation
+		if (options.maxFileSize) {
+			validationRules.push({
+				type: 'custom' as const,
+				validator: (value: any) => {
+					if (value instanceof File && value.size > options.maxFileSize!) {
+						const maxSizeMB = (options.maxFileSize! / (1024 * 1024)).toFixed(1);
+						return `File size exceeds ${maxSizeMB}MB limit`;
+					}
+					return null;
+				}
+			});
+		}
+
+		// Add file type validation
+		if (options.acceptedFileTypes && options.acceptedFileTypes.length > 0) {
+			validationRules.push({
+				type: 'custom' as const,
+				validator: (value: any) => {
+					if (value instanceof File && !options.acceptedFileTypes!.includes(value.type)) {
+						const types = options
+							.acceptedFileTypes!.map((t) => t.split('/')[1].toUpperCase())
+							.join(', ');
+						return `Invalid file type. Accepted: ${types}`;
+					}
+					return null;
+				}
+			});
+		}
+
+		return this.addField({
+			name,
+			label,
+			type: 'upload',
+			placeholder: options.placeholder,
+			required: options.required,
+			colSpan: options.colSpan || 2,
+			helpText: options.helpText,
+			defaultValue: options.defaultValue || '',
+			uploadConfig: {
+				type: uploadType,
+				maxFileSize: options.maxFileSize, // ← Pass through
+				acceptedFileTypes: options.acceptedFileTypes, // ← Pass through
+				preview: options.preview ?? true,
+				dragDrop: options.dragDrop ?? true
+			},
+			// IMPORTANT: Also store at field level for backward compatibility
+			maxFileSize: options.maxFileSize, // ← Add this
+			acceptedFileTypes: options.acceptedFileTypes, // ← Add this
+			dependencies: options.dependencies,
+			conditionalValidation: options.conditionalValidation,
+			validationRules
+		});
+	}
+
+	/**
 	 * Add new field types
 	 */
 	email(

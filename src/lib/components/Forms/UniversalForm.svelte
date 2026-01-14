@@ -169,6 +169,8 @@
 				return [];
 			case 'image':
 				return '';
+			case 'upload':
+				return '';
 			case 'stringList':
 				return [];
 			default:
@@ -240,11 +242,19 @@
 	}
 
 	function handleFieldChange(fieldName: string, value: any) {
+		console.log('🔵 [UniversalForm] handleFieldChange called:', {
+			fieldName,
+			valueType: typeof value,
+			isFile: value instanceof File,
+			fileName: value instanceof File ? value.name : 'not a file',
+			currentValue: formState.data[fieldName]
+		});
 		// Defensive parameter check
 		let actualFieldName: string;
 		let actualValue: any;
 
 		if (Array.isArray(fieldName) && typeof value === 'string') {
+			console.log('⚠️ [UniversalForm] Detected swapped parameters, fixing...');
 			actualFieldName = value;
 			actualValue = fieldName;
 		} else {
@@ -252,8 +262,16 @@
 			actualValue = value;
 		}
 
+		console.log('🟢 [UniversalForm] Setting field:', actualFieldName, 'to:', actualValue);
+
 		formState.data[actualFieldName] = actualValue;
 		formState.touched[actualFieldName] = true;
+
+		console.log('📊 [UniversalForm] Form state updated:', {
+			touched: formState.touched[actualFieldName],
+			isDirty: formState.isDirty,
+			hasChanges: hasChanges()
+		});
 
 		// Don't set isDirty here in embedded mode - let the effect handle it
 		if (mode !== 'embedded') {

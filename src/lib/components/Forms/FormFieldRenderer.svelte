@@ -23,6 +23,11 @@
 		imageBaseUrl,
 	}: Props = $props();
 
+	// Cache field data reference for better performance
+	const fieldValue = $derived(formState.data[field.name]);
+	const fieldError = $derived(formState.errors[field.name]);
+	const showError = $derived(shouldShowError(field.name));
+
 	/**
 	 * Determine if field is required (either always or conditionally)
 	 * Memoized to avoid recalculation on every render
@@ -31,9 +36,10 @@
 		// If field is always required, return true immediately
 		if (field.required) return true;
 
-		// Check for conditional requirements
-		if (!field.conditionalValidation) return false;
+		// Fast path: no conditional validation
+		if (!field.conditionalValidation?.length) return false;
 
+		// Check conditional requirements
 		return field.conditionalValidation.some(cv =>
 			FormDependencyHandler.evaluateDependency(cv.when, formState.data)
 		);
@@ -43,7 +49,7 @@
 	 * Check if field has conditional dependencies for badge display
 	 */
 	const hasConditionalRules = $derived(
-		field.conditionalValidation && field.conditionalValidation.length > 0
+		!!field.conditionalValidation?.length
 	);
 
 	/**
@@ -51,7 +57,7 @@
 	 * Only apply animation to conditionally visible fields
 	 */
 	const animationClasses = $derived(
-		field.dependencies && field.dependencies.length > 0
+		field.dependencies?.length
 			? 'animate-in slide-in-from-top-2 duration-200'
 			: ''
 	);
@@ -68,10 +74,10 @@
 	<!-- Field Input -->
 	<FormInput
 		{field}
-		value={formState.data[field.name]}
-		error={formState.errors[field.name]}
-		showError={shouldShowError(field.name)}
-		checked={formState.data[field.name]}
+		value={fieldValue}
+		error={fieldError}
+		{showError}
+		checked={fieldValue}
 		{disabled}
 		{onChange}
 		{imageBaseUrl}
