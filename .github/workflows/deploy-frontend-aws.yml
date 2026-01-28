@@ -65,11 +65,12 @@ jobs:
       - name: Invalidate CloudFront cache
         run: |
           aws cloudfront create-invalidation \
-            --distribution-id E27QCSEU3CX7BI \
+            --distribution-id E39WY2O34V9FDA \
             --paths "/*"
 
       - name: Deployment Summary
         run: |
           echo "✅ Frontend deployed successfully!"
           echo "🌐 S3 Bucket: s3://mentors-frontend-test"
-          echo "☁️ CloudFront Distribution: E27QCSEU3CX7BI"
+          echo "☁️ CloudFront Distribution: E39WY2O34V9FDA"
+          echo "🔗 CloudFront URL: https://d[your-subdomain].cloudfront.net"
