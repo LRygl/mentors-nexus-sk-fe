@@ -22,6 +22,7 @@
 	import { formatDuration } from '$lib/utils/DurationUtils';
 	import DificultyIndicator from '$lib/components/DificultyIndicator.svelte';
 	import { goto } from '$app/navigation';
+	import { authStore } from '$lib/stores/Auth.svelte';
 
 	let { data }: { data: PageData } = $props();
 	let course = $derived(data.course);
@@ -29,11 +30,17 @@
 
 	// Reactive state from stores
 	let isEnrolled = $derived(enrollmentStore.isEnrolledIn(course.id));
+	let isAdmin = $derived(authStore.isAdmin);
 
 	// Track expanded sections
-	let expandedSections = $state<Set<number>>(new Set());
+	let expandedSections = $state<Set<string>>(
+		new Set(course.sections?.map(section => section.id) || [])
+	);
 
-	const toggleSection = (sectionId: number) => {
+	let imageUrl = $derived(`/api/v1/files${course.imageUrl}`);
+
+
+	const toggleSection = (sectionId: string) => {
 		const newExpanded = new Set(expandedSections);
 		if (newExpanded.has(sectionId)) {
 			newExpanded.delete(sectionId);
@@ -66,8 +73,8 @@
 		}
 
 		// Paid lessons - check enrollment
-		if (isEnrolled) {
-			// User is enrolled - go to lesson
+		if (isEnrolled || isAdmin ) {
+			// User is enrolled or admin - go to lesson
 			goto(`/store/course/${course.id}/lesson/${lesson.id}`);
 		} else {
 			// User is not enrolled - go to purchase page
@@ -152,7 +159,7 @@
 						<!-- Course Image -->
 						{#if course.imageUrl}
 							<img
-								src={course.imageUrl}
+								src={imageUrl}
 								alt={course.name}
 								class="w-full h-40 object-cover rounded-xl mb-4"
 							/>

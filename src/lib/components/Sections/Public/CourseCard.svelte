@@ -14,7 +14,7 @@
 
 console.log("Course IMAGE URL: ", course.imageUrl)
 
-	let imageUrl = API_CONFIG.FULL_BASE_URL+API_CONFIG.ENDPOINTS.FILES.COURSE+course.imageUrl;
+	let imageUrl = $derived(`/api/v1/files${course.imageUrl}`);
 
 	// Formatters
 	const formatPrice = (price: number) =>

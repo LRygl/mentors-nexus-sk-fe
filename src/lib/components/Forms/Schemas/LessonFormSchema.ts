@@ -110,7 +110,14 @@ export function createLessonFields(): EntityFieldConfig[] {
 			placeholder: 'Upload a terminal thumbnail...',
 			helpText: 'Lesson video content',
 			maxFileSize: 500 * 1024 * 1024, // 500MB
-			acceptedFileTypes: ['video/x-msvideo', 'video/avi', 'video/mp4', 'video/webm', 'video/quicktime'],
+			acceptedFileTypes: [
+				'video/x-msvideo',
+				'video/avi',
+				'video/mp4',
+				'video/webm',
+				'video/x-matroska',
+				'video/quicktime'
+			],
 			preview: false,
 			colSpan: 3
 		}

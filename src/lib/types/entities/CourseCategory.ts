@@ -2,9 +2,6 @@ import type { BaseEntity } from '$lib/types';
 import type { Course } from '$lib/types/entities/Course';
 
 export interface CourseCategory extends BaseEntity {
-
-	id: string;
-	uuid?: string;
 	name?: string;
 	description?: string;
 	created?: Date;

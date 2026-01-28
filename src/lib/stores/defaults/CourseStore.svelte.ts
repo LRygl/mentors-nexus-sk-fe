@@ -3,6 +3,9 @@ import type { Course } from '$lib/types/entities/Course';
 import { courseAdminApiService, type CourseAdminApiService } from '$lib/API/Admin/CourseAdminAPI';
 import type { CourseSection } from '$lib/types/entities/CourseSection';
 import { lessonStore } from '$lib/stores/defaults/LessonStore';
+import type { PaginatedResult, PaginationParams } from '$lib/types';
+import type { CourseEnrollment } from '$lib/types/entities/CourseEnrollment';
+import type { Lesson } from '$lib/types/entities/Lesson';
 
 // TODO Move to separate file
 // Define the section creation request type
@@ -18,12 +21,22 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 	Partial<Course>,
 	CourseAdminApiService
 > {
+	constructor() {
+		super(courseAdminApiService);
+	}
 
-	protected _featured = $state<Course[]>([])
-	protected _loadingFeatured = $state(false)
+	// =========================================================================
+	// REACTIVE STATE
+	// =========================================================================
+
+	protected _featured = $state<Course[]>([]);
+	protected _loadingFeatured = $state(false);
 	protected _featuredError = $state<string | null>(null);
 
-// Featured course getters
+	// =========================================================================
+	// GETTERS
+	// =========================================================================
+
 	get featured(): Course[] {
 		return this._featured;
 	}
@@ -40,15 +53,13 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 		return this._featured.length > 0;
 	}
 
+	// =========================================================================
+	// REQUIRED ABSTRACT METHODS
+	// =========================================================================
 
-
-	constructor() {
-		super(courseAdminApiService);
+	async fetchPage(params: PaginationParams): Promise<PaginatedResult<Course>> {
+		throw new Error('fetchPage not implemented');
 	}
-
-	// ============================================================================
-	// BASIC DATA FETCHING
-	// ============================================================================
 
 	async fetchAll(): Promise<Course[]> {
 		this._loading = true;
@@ -56,7 +67,7 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 		try {
 			this._data = await this.apiService.getAllCourses();
 			return this._data;
-		} catch (error)  {
+		} catch (error) {
 			console.error('[STORE] Error fetching all Courses');
 			throw error;
 		} finally {
@@ -70,7 +81,7 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 
 		try {
 			const course = await this.apiService.getCourseById(courseId);
-			this._selectedItem = course;  // ← Store in selectedItem, not data array
+			this._selectedItem = course; // ← Store in selectedItem, not data array
 			return course;
 		} catch (error) {
 			this._itemError = error instanceof Error ? error.message : 'Failed to load course';
@@ -80,27 +91,6 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 			this._loadingItem = false;
 		}
 	}
-
-
-	async fetchFeatured(): Promise<Course[]> {
-		this._loadingItem = true;
-		this._itemError = null;
-
-		try {
-			this._featured = await this.apiService.getFeaturedCourses();
-			return this._featured;
-
-		} catch (error) {
-			console.error('[STORE] Error fetching featured featured:', error);
-			throw error;
-		} finally {
-			this._loadingItem = false;
-		}
-	}
-
-	// ============================================================================
-	// BASIC CRUD - These are the low-level API calls
-	// ============================================================================
 
 	async createItem(createData: Partial<Course>, imageFile?: File): Promise<Course> {
 		return await this.apiService.createCourse(createData, imageFile);
@@ -117,6 +107,21 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 	// ============================================================================
 	// ENHANCED CRUD - These wrap the basic CRUD with state management
 	// ============================================================================
+
+	async fetchFeatured(): Promise<Course[]> {
+		this._loadingItem = true;
+		this._itemError = null;
+
+		try {
+			this._featured = await this.apiService.getFeaturedCourses();
+			return this._featured;
+		} catch (error) {
+			console.error('[STORE] Error fetching featured featured:', error);
+			throw error;
+		} finally {
+			this._loadingItem = false;
+		}
+	}
 
 	/**
 	 * Wrapper for create that includes image handling and state management
@@ -155,8 +160,7 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 	 */
 	async update(id: string, updateData: Partial<Course>, imageFile?: File): Promise<Course | null> {
 		if (this._updating) {
-			console.warn('[CourseStoreSvelte] Update already in progress');
-			return null;
+			throw new Error('Update operation already in progress. Please wait.');
 		}
 
 		this._updating = true;
@@ -225,7 +229,7 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 			// Optimistic update function: remove section immediately
 			(currentCourse) => ({
 				...currentCourse,
-				sections: currentCourse.sections.filter(s => {
+				sections: currentCourse.sections.filter((s) => {
 					const sId = s.id?.toString() || s.uuid;
 					return sId !== sectionId;
 				})
@@ -241,6 +245,12 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 	// FEATURED STATUS MANAGEMENT
 	// ============================================================================
 
+	/**
+	 * Mark course as featured - this will promote the
+	 * course on the main page and also in the courses menu and
+	 * shows it in special category in course store
+	 * @param courseId
+	 */
 	async featureCourse(courseId: string): Promise<Course> {
 		return this.optimisticUpdate(
 			courseId,
@@ -254,6 +264,11 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 		);
 	}
 
+	/**
+	 * Remove course as featured removes it from all promoted
+	 * locations in application
+	 * @param courseId
+	 */
 	async unfeatureCourse(courseId: string): Promise<Course> {
 		return this.optimisticUpdate(
 			courseId,
@@ -264,13 +279,14 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 				this.updateItemInStore(courseId, updatedCourse);
 				return updatedCourse;
 			}
-
 		);
 	}
 
 	/**
-	 * Reorder course sections
-	 * Uses optimistic update for instant UI feedback
+	 * Reorder section Ids in the course object, this allows users to
+	 * move sections and their lessons within the course
+	 * @param courseId
+	 * @param sectionIds
 	 */
 	async reorderSections(courseId: string, sectionIds: number[]): Promise<Course> {
 		if (!this._selectedItem) {
@@ -281,9 +297,7 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 			courseId,
 			// Optimistic update: reorder sections in memory
 			(currentCourse) => {
-				const sectionMap = new Map(
-					currentCourse.sections.map(s => [parseInt(s.id, 10), s])
-				);
+				const sectionMap = new Map(currentCourse.sections.map((s) => [parseInt(s.id, 10), s]));
 
 				const reorderedSections = sectionIds
 					.map((id, index) => {
@@ -327,7 +341,7 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 			courseId,
 			(currentCourse) => {
 				// Find the lesson to add from lessonStore
-				const lessonToAdd = lessonStore.data.find(l => l.id.toString() === lessonId.toString());
+				const lessonToAdd = lessonStore.data.find((l) => l.id.toString() === lessonId.toString());
 
 				if (!lessonToAdd) {
 					throw new Error(`Lesson with id ${lessonId} not found in lesson store`);
@@ -338,7 +352,7 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 
 				// Find and update the target section
 				const targetSectionIndex = updatedCourse.sections?.findIndex(
-					s => s.id.toString() === sectionId.toString()
+					(s: { id: { toString: () => string } }) => s.id.toString() === sectionId.toString()
 				);
 
 				if (targetSectionIndex === -1 || targetSectionIndex === undefined) {
@@ -347,7 +361,7 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 
 				// Check if lesson is already in this section
 				const alreadyExists = updatedCourse.sections[targetSectionIndex].lessons?.some(
-					l => l.id.toString() === lessonId.toString()
+					(l:Lesson) => l.id.toString() === lessonId.toString()
 				);
 
 				if (alreadyExists) {
@@ -362,7 +376,6 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 
 				updatedCourse.sections[targetSectionIndex].lessons.push(lessonToAdd);
 
-				console.log('[CourseStoreSvelte] Optimistically added lesson to section');
 				return updatedCourse;
 			},
 			// API call
@@ -384,13 +397,11 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 			throw new Error('Course ID not found');
 		}
 
-		console.log('[CourseStoreSvelte] Unlinking lesson:', lessonId, 'from section:', sectionId);
-
 		await this.optimisticUpdate(
 			courseId,
 			// Optimistic update: remove lesson from section immediately
 			(currentCourse) => {
-				const sectionIndex = currentCourse.sections.findIndex(s => {
+				const sectionIndex = currentCourse.sections.findIndex((s) => {
 					const sId = s.id?.toString() || s.uuid;
 					return sId === sectionId;
 				});
@@ -404,7 +415,7 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 				const targetSection = { ...updatedSections[sectionIndex] };
 
 				// Remove the lesson
-				targetSection.lessons = (targetSection.lessons || []).filter(lesson => {
+				targetSection.lessons = (targetSection.lessons || []).filter((lesson) => {
 					const lId = lesson.id?.toString() || lesson.uuid;
 					return lId !== lessonId;
 				});
@@ -431,7 +442,6 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 
 		return this._selectedItem as Course;
 	}
-
 }
 
 export const courseStore = new CourseStoreSvelte();

@@ -9,16 +9,16 @@
 - [x] Create lesson management view
   - [x] CRUD
   - [x] Specify lesson type to be displayed on course screen
-- [ ] Create public courses view 
+- [x] Create public courses view 
   - [ ] Sort/Filter courses
-  - [ ] Allow users to preview free lessons in course
-  - [ ] For protected lessons redirect to purchase page
-  - [ ] List enrolled courses on the USer DEtail Page
+  - [x] Allow users to preview free lessons in course
+  - [x] For protected lessons redirect to purchase page
+  - [x] List enrolled courses on the USer DEtail Page
   - [ ] Allow users to enroll on course page in public view
   - [ ] Handle user status and enrolment status on course scree
-  - [ ] allow access to course lessons based on enrollment status
+  - [x] allow access to course lessons based on enrollment status
   - [ ] Add addition views for user - ADMIN ...
-  - [ ] Unenroll users Enroll users
+  - [x] Unenroll users Enroll users
   - [ ] Finish the course screen
 
 

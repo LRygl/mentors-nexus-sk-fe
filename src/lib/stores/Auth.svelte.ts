@@ -11,6 +11,7 @@ import { ROUTES } from '$lib/Config/routes.config';
 import { tick } from 'svelte';
 import { enrollmentService } from '$lib/Services/EnrollmentService.svelte';
 import type { AuthUser } from '$lib/types/entities/Auth';
+import { Role } from '$lib/types/enums/Role';
 
 class AuthStore {
 	user = $state<AuthUser | null>(null);
@@ -42,6 +43,10 @@ class AuthStore {
 	 */
 	get isAuthenticated(): boolean {
 		return this.user !== null;
+	}
+
+	get isAdmin(): boolean {
+		return this.user?.role == Role.ROLE_ADMIN;
 	}
 
 	/**

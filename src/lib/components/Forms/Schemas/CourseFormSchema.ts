@@ -125,7 +125,8 @@ export function createCourseFields(
 		{
 			name: 'imageUrl',
 			label: 'Course Image',
-			type: 'image',
+			type: 'upload',
+			uploadType: 'image',
 			group: 'basic',
 			variants: { standard: true, detailed: true, edit: true, embedded: true },
 			required: false,

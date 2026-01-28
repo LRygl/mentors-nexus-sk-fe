@@ -3,16 +3,26 @@ import type { Lesson } from '$lib/types/entities/Lesson';
 import { lessonAdminApiService, type LessonAdminApiService } from '$lib/API/Admin/LessonAdminAPI';
 import type { Course } from '$lib/types/entities/Course';
 import { courseAdminApiService } from '$lib/API/Admin/CourseAdminAPI';
+import type { PaginatedResult, PaginationParams } from '$lib/types';
+import type { CourseEnrollment } from '$lib/types/entities/CourseEnrollment';
 
 
 export class LessonStoreSvelte extends BaseStoreSvelte<
 	Lesson,
 	Partial<Lesson>,
 	Partial<Lesson>,
-	LessonAdminApiService> {
-
+	LessonAdminApiService
+> {
 	constructor() {
 		super(lessonAdminApiService);
+	}
+
+	// =========================================================================
+	// REQUIRED ABSTRACT METHODS (unused, but required by BaseStoreSvelte)
+	// =========================================================================
+
+	async fetchPage(params: PaginationParams): Promise<PaginatedResult<Lesson>> {
+		throw new Error('fetchPage not implemented - use getEnrolledCourses instead');
 	}
 
 	async fetchAll(): Promise<Lesson[]> {
@@ -30,12 +40,12 @@ export class LessonStoreSvelte extends BaseStoreSvelte<
 	}
 
 	async fetchItem(lessonId: string): Promise<Lesson> {
-		this._loadingItem = true;  // Use item loading state
+		this._loadingItem = true; // Use item loading state
 		this._itemError = null;
 
 		try {
 			const course = await this.apiService.getLessonById(lessonId);
-			this._selectedItem = course;  // ← Store in selectedItem, not data array
+			this._selectedItem = course; // ← Store in selectedItem, not data array
 			return course;
 		} catch (error) {
 			this._itemError = error instanceof Error ? error.message : 'Failed to load lesson';
@@ -54,10 +64,12 @@ export class LessonStoreSvelte extends BaseStoreSvelte<
 		return await this.apiService.createLesson(createData);
 	}
 
-	async updateItem(lessonId: string, updateData: Partial<Lesson>, imageFile?: File): Promise<Lesson> {
-		return await this.apiService.updateLesson(lessonId, updateData, imageFile);
+	async updateItem(
+		lessonId: string,
+		updateData: Partial<Lesson>,
+	): Promise<Lesson> {
+		return await this.apiService.updateLesson(lessonId, updateData);
 	}
-
 
 	async deleteItem(id: string): Promise<void> {
 		return await this.apiService.deleteLesson(id);
@@ -140,7 +152,6 @@ export class LessonStoreSvelte extends BaseStoreSvelte<
 			throw error;
 		}
 	}
-
 }
 
 export const lessonStore = new LessonStoreSvelte();

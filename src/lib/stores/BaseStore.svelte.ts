@@ -80,6 +80,10 @@ export abstract class BaseStoreSvelte<
 		return this._data.length === 0 && !this._loading;
 	}
 
+	get hasData(): boolean {
+		return this._data.length > 0;
+	}
+
 	// ============================================================
 	// GETTERS - Single Item State
 	// ============================================================
@@ -273,7 +277,7 @@ export abstract class BaseStoreSvelte<
 		}
 	}
 
-	async delete(id: string): Promise<boolean> {
+	async delete(id: string | number): Promise<boolean> {
 		console.log('Base Store DELETE Called', id);
 		if (this._deleting) return false;
 
@@ -570,5 +574,5 @@ export abstract class BaseStoreSvelte<
 	protected abstract fetchItem(id: string): Promise<TEntity>;
 	abstract createItem(createRequest: TCreateRequest): Promise<TEntity>;
 	protected abstract updateItem(id: string, updateRequest: TUpdateRequest): Promise<TEntity>;
-	protected abstract deleteItem(id: string): Promise<void>;
+	protected abstract deleteItem(id: string | number): Promise<void>;
 }

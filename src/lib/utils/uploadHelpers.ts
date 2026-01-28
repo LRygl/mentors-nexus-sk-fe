@@ -18,7 +18,7 @@ export const UPLOAD_PRESETS: Record<UploadFieldType, UploadPreset> = {
 	},
 	video: {
 		label: 'Video',
-		accepts: ['video/mp4', 'video/webm', 'video/ogg', 'video/quicktime'],
+		accepts: ['video/mp4', 'video/x-matroska', 'video/webm', 'video/ogg', 'video/quicktime'],
 		maxSize: 500 * 1024 * 1024, // 100MB
 		icon: 'Video',
 		description: 'MP4, WebM, or MOV up to 100MB'

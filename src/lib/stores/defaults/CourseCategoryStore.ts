@@ -1,22 +1,26 @@
 import { BaseStoreSvelte } from '$lib/stores/BaseStore.svelte';
 import type { CourseCategory } from '$lib/types/entities/CourseCategory';
 import  { courseCategoryAdminApiService, type CourseCategoryAdminApiService } from '$lib/API/Admin/CourseCategoryAdminAPI';
+import type { PaginatedResult, PaginationParams } from '$lib/types';
+import type { CourseEnrollment } from '$lib/types/entities/CourseEnrollment';
 
 export class CourseCategoryStore extends BaseStoreSvelte<
 	CourseCategory,
 	Partial<CourseCategory>,
 	Partial<CourseCategory>,
-	CourseCategoryAdminApiService> {
-
+	CourseCategoryAdminApiService
+> {
 	constructor() {
 		super(courseCategoryAdminApiService);
-	};
+	}
 
+	// =========================================================================
+	// REQUIRED ABSTRACT METHODS
+	// =========================================================================
 
-	// ============================================================================
-	// BASIC DATA FETCHING
-	// ============================================================================
-
+	async fetchPage(params: PaginationParams): Promise<PaginatedResult<CourseCategory>> {
+		throw new Error('fetchPage not implemented - use getEnrolledCourses instead');
+	}
 
 	async fetchAll(): Promise<CourseCategory[]> {
 		this._loading = true;
@@ -30,7 +34,7 @@ export class CourseCategoryStore extends BaseStoreSvelte<
 		} finally {
 			this._loading = false;
 		}
-	};
+	}
 
 	async fetchItem(courseCategoryId: string): Promise<CourseCategory> {
 		this._loadingItem = true;
@@ -48,10 +52,6 @@ export class CourseCategoryStore extends BaseStoreSvelte<
 		}
 	}
 
-	// ============================================================================
-	// BASIC CRUD - These are the low-level API calls
-	// ============================================================================
-
 	async createItem(createData: Partial<CourseCategory>): Promise<CourseCategory> {
 		return await this.apiService.createCourseCategory(createData);
 	}
@@ -63,7 +63,6 @@ export class CourseCategoryStore extends BaseStoreSvelte<
 	async deleteItem(id: string): Promise<void> {
 		return await this.apiService.deleteCourseCategory(id);
 	}
-
 }
 
 export const courseCategoryStore = new CourseCategoryStore();

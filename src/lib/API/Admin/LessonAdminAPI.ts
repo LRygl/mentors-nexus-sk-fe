@@ -42,8 +42,6 @@ export class LessonAdminApiService extends BaseApiService {
 	}
 
 	async updateLesson(lessonId: string, updateData: Partial<Course>): Promise<Lesson> {
-		console.log('🔵 [LessonAPI] updateLesson:', { lessonId, updateData });
-
 		const hasFiles = FormDataUtils.hasFiles(updateData);
 
 		if (hasFiles) {
