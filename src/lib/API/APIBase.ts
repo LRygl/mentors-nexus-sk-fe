@@ -10,12 +10,13 @@ export abstract class BaseApiService {
 	protected readonly baseUrl: string;
 	private readonly defaultTimeout = 30000;
 	private readonly defaultRetries = 3;
-	private cache = new Map<string, { data: any; timestamp: number; ttl: number}>();
+	private cache = new Map<string, { data: any; timestamp: number; ttl: number }>();
 
-	private readonly API_PATH = API_CONFIG.PATH + "/" + API_CONFIG.VERSION;
+	private readonly API_PATH = API_CONFIG.PATH + '/' + API_CONFIG.VERSION;
 
-	constructor(baseUrl: string) {
-		this.baseUrl = baseUrl;
+	constructor(baseUrl?: string) {
+		// Handle empty or undefined baseUrl (production same-origin)
+		this.baseUrl = baseUrl || '';
 	}
 
 	// Common HTTP methods with error handling and interceptors
@@ -35,12 +36,13 @@ export abstract class BaseApiService {
 		// Prepare headers for the request
 		const headers = await this.getHeaders(config);
 
-		const response = await this.executeRequest(() =>
+		const response = await this.executeRequest(
+			() =>
 				fetch(url, {
 					method: 'GET',
 					headers,
 					credentials: 'include',
-					signal: this.createAbortSignal(config?.timeout),
+					signal: this.createAbortSignal(config?.timeout)
 				}),
 			config
 		);
@@ -56,13 +58,9 @@ export abstract class BaseApiService {
 	}
 
 	/*
-	* Base HTTP POST method for partial updates
-	*/
-	protected async post<T>(
-		endpoint: string,
-		body?: any,
-		config?: RequestConfig
-	): Promise<T> {
+	 * Base HTTP POST method for partial updates
+	 */
+	protected async post<T>(endpoint: string, body?: any, config?: RequestConfig): Promise<T> {
 		const url = this.buildUrl(endpoint);
 		const headers = await this.getHeaders(config);
 
@@ -89,9 +87,9 @@ export abstract class BaseApiService {
 	}
 
 	/*
-	* Base HTTP POST method for multipart/form-data (file uploads with JSON)
-	* This method does NOT set Content-Type header - browser sets it automatically with boundary
-	*/
+	 * Base HTTP POST method for multipart/form-data (file uploads with JSON)
+	 * This method does NOT set Content-Type header - browser sets it automatically with boundary
+	 */
 	protected async postMultipart<T>(
 		endpoint: string,
 		formData: FormData,
@@ -120,19 +118,14 @@ export abstract class BaseApiService {
 	}
 
 	/*
-	* Base HTTP PUT method for partial updates
-	*/
-	protected async put<T>(
-		endpoint: string,
-		body?: any,
-		config?: RequestConfig
-	): Promise<T> {
+	 * Base HTTP PUT method for partial updates
+	 */
+	protected async put<T>(endpoint: string, body?: any, config?: RequestConfig): Promise<T> {
 		const url = this.buildUrl(endpoint);
 		const headers = await this.getHeaders(config);
 
 		// Transform dates before sending
 		const transformedBody = body ? DateFormatter.transformForApi(body) : undefined;
-
 
 		const response = await this.executeRequest(
 			() =>
@@ -155,8 +148,8 @@ export abstract class BaseApiService {
 	}
 
 	/*
-	* Base HTTP PUT method for multipart/form-data (file uploads with JSON)
-	*/
+	 * Base HTTP PUT method for multipart/form-data (file uploads with JSON)
+	 */
 	protected async putMultipart<T>(
 		endpoint: string,
 		formData: FormData,
@@ -188,8 +181,8 @@ export abstract class BaseApiService {
 	}
 
 	/*
-	* Base HTTP PATCH method for partial updates
-	*/
+	 * Base HTTP PATCH method for partial updates
+	 */
 	protected async patch<T>(
 		endpoint: string,
 		params?: Record<string, any>,
@@ -216,16 +209,12 @@ export abstract class BaseApiService {
 		// Invalidate related Cache entries
 		this.invalidateCache('GET');
 		return data;
-
 	}
 
 	/*
-	* Base HTTP DELETE method for partial updates
-	*/
-	protected async delete<T = void>(
-		endpoint: string,
-		config?: RequestConfig
-	): Promise<T> {
+	 * Base HTTP DELETE method for partial updates
+	 */
+	protected async delete<T = void>(endpoint: string, config?: RequestConfig): Promise<T> {
 		const url = this.buildUrl(endpoint);
 		const headers = await this.getHeaders(config);
 		const response = await this.executeRequest(
@@ -234,7 +223,7 @@ export abstract class BaseApiService {
 					method: 'DELETE',
 					headers,
 					credentials: 'include',
-					signal: this.createAbortSignal(config?.timeout),
+					signal: this.createAbortSignal(config?.timeout)
 				}),
 			config
 		);
@@ -247,23 +236,20 @@ export abstract class BaseApiService {
 		return data;
 	}
 
-
 	///////////////////////////////////////////////
 	/// UTILITY METHODS
 	///////////////////////////////////////////////
 
-
 	private async getHeaders(config?: RequestConfig): Promise<HeadersInit> {
 		const headers: HeadersInit = {
 			'Content-Type': 'application/json',
-			'Accept': 'application/json',
+			Accept: 'application/json'
 		};
 
 		// Add correlation ID for distributed tracing
 		headers['X-Correlation-ID'] = this.generateCorrelationId();
 
 		return headers;
-
 	}
 
 	/**
@@ -279,16 +265,30 @@ export abstract class BaseApiService {
 	}
 
 	private buildUrl(endpoint: string, params?: Record<string, any>): string {
-		const url = new URL(this.API_PATH + endpoint, this.baseUrl);
+		// Build the full path
+		let path = `${this.API_PATH}${endpoint}`;
 
+		// Add query parameters if they exist
 		if (params) {
+			const queryParams = new URLSearchParams();
 			Object.entries(params).forEach(([key, value]) => {
 				if (value !== undefined && value !== null) {
-					url.searchParams.append(key, value.toString());
+					queryParams.append(key, value.toString());
 				}
 			});
+			const queryString = queryParams.toString();
+			if (queryString) {
+				path += `?${queryString}`;
+			}
 		}
-		return url.toString();
+
+		// Production: use relative URLs (empty baseUrl)
+		// Development: prepend baseUrl
+		if (!this.baseUrl || this.baseUrl === '') {
+			return path; // '/api/v1/auth/login'
+		}
+
+		return `${this.baseUrl}${path}`; // 'http://localhost:8080/api/v1/auth/login'
 	}
 
 	private async executeRequest(
@@ -299,7 +299,7 @@ export abstract class BaseApiService {
 		let lastError: Error;
 
 		for (let attempt = 0; attempt <= maxRetries; attempt++) {
-			console.log("[API] Retry attempt", attempt);
+			console.log('[API] Retry attempt', attempt);
 			try {
 				const response = await requestFn();
 
@@ -314,7 +314,6 @@ export abstract class BaseApiService {
 
 				// 5xx errors - retry
 				throw new Error(`Server error: ${response.status}`);
-
 			} catch (error) {
 				lastError = error as Error;
 
@@ -339,11 +338,8 @@ export abstract class BaseApiService {
 		if (!response.ok) {
 			if (contentType?.includes('application/json')) {
 				const errorData: APIErrorResponse = await response.json();
-				console.log("[API] Error Log Notification trigger test");
-				toastService.warning(
-					errorData?.applicationErrorCode,
-					errorData?.applicationErrorMessage
-				)
+				console.log('[API] Error Log Notification trigger test');
+				toastService.warning(errorData?.applicationErrorCode, errorData?.applicationErrorMessage);
 			}
 		}
 
@@ -375,11 +371,11 @@ export abstract class BaseApiService {
 	 */
 	private normalizeIds(obj: unknown): unknown {
 		if (Array.isArray(obj)) {
-			return obj.map(item => this.normalizeIds(item));
-		} else if (obj !== null && typeof obj === "object") {
+			return obj.map((item) => this.normalizeIds(item));
+		} else if (obj !== null && typeof obj === 'object') {
 			const normalized: Record<string, any> = {};
 			for (const [key, value] of Object.entries(obj)) {
-				if (key === "id" && (typeof value === "number" || typeof value === "bigint")) {
+				if (key === 'id' && (typeof value === 'number' || typeof value === 'bigint')) {
 					normalized[key] = String(value);
 				} else {
 					normalized[key] = this.normalizeIds(value);
@@ -395,9 +391,9 @@ export abstract class BaseApiService {
 			const errorData = await response.json();
 
 			toastService.warning(
-				("Error - " + errorData?.applicationErrorCode),
+				'Error - ' + errorData?.applicationErrorCode,
 				errorData?.applicationErrorMessage
-			)
+			);
 
 			return new ApiError(
 				errorData.message || `HTTP ${response.status}: ${response.statusText}`,
@@ -406,10 +402,7 @@ export abstract class BaseApiService {
 				errorData.field
 			);
 		} catch {
-			return new ApiError(
-				`HTTP ${response.status}: ${response.statusText}`,
-				response.status
-			);
+			return new ApiError(`HTTP ${response.status}: ${response.statusText}`, response.status);
 		}
 	}
 
@@ -419,7 +412,7 @@ export abstract class BaseApiService {
 			return error.status >= 400 && error.status < 500;
 		}
 
-		if (error instanceof  Error) {
+		if (error instanceof Error) {
 			return error.name === 'AbortError';
 		}
 
@@ -427,7 +420,7 @@ export abstract class BaseApiService {
 	}
 
 	private wait(ms: number): Promise<void> {
-		return new Promise(resolve => setTimeout(resolve, ms));
+		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 
 	private createAbortSignal(timeout?: number): AbortSignal {
@@ -440,7 +433,7 @@ export abstract class BaseApiService {
 	}
 
 	private generateCorrelationId(): string {
-		return crypto.randomUUID()
+		return crypto.randomUUID();
 	}
 
 	// Cache management
@@ -467,7 +460,7 @@ export abstract class BaseApiService {
 					keysToDelete.push(key);
 				}
 			}
-			keysToDelete.forEach(key => this.cache.delete(key));
+			keysToDelete.forEach((key) => this.cache.delete(key));
 		} else {
 			this.cache.clear();
 		}
@@ -487,7 +480,6 @@ export abstract class BaseApiService {
 			};
 		}
 	}
-
 }
 
 // Custom API Error class

@@ -2,7 +2,7 @@
 // API endpoint configuration for Backend API Calls
 // ============================================
 
-import {dev} from '$app/environment';
+import { dev } from '$app/environment';
 
 // Build-time environment variable (local/staging override)
 const explicitBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -92,5 +92,17 @@ export const API_CONFIG = {
 
 // Helper function with proper typing
 export function buildApiUrl(endpoint: string): string {
-	return `${API_CONFIG.FULL_BASE_URL}${endpoint}`;
+	const fullUrl = `${API_CONFIG.FULL_BASE_URL}${endpoint}`;
+
+	// Debug log
+	if (typeof window !== 'undefined') {
+		console.log('[buildApiUrl]', {
+			endpoint,
+			BASE_URL: API_CONFIG.BASE_URL,
+			FULL_BASE_URL: API_CONFIG.FULL_BASE_URL,
+			result: fullUrl
+		});
+	}
+
+	return fullUrl;
 }
