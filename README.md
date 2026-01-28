@@ -1,6 +1,9 @@
 # sv
 
+Updated application
+
 ## TODO
+- [ ] Handle secrets
 - [ ] Create course management view
   - [x] CRUD
   - [x] Assign lesson to course
