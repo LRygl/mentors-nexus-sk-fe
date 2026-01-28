@@ -10,10 +10,8 @@ import { ROUTES } from '$lib/Config/routes.config';
 import { goto } from '$app/navigation';
 import { legalTopicStore } from '$lib/stores/defaults/LegalTopicStore.svelte';
 import UniversalForm from '$lib/components/Forms/UniversalForm.svelte';
-import UniversalCreateModal from '$lib/components/ui/UniversalCreateModal.svelte';
-import type { LegalTopic } from '$lib/types/entities/LegalTopic';
+import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
 import { toastService } from '$lib/Services/ToastService.svelte';
-import { LegalTopicFormPresets } from '$lib/components/Forms/Schemas/Legal/LegalTopicFormSchema';
 import { UserFormPresets } from '$lib/components/Forms/Schemas/User/UserFormSchema';
 
 let selectedItems = $state<Set<string>>(new Set());
