@@ -78,7 +78,15 @@ export const API_CONFIG = {
 	},
 
 	get FULL_BASE_URL() {
-		return `${this.BASE_URL}/${this.PATH}/${this.VERSION}`;
+		const base = this.BASE_URL;
+
+		// If no base URL (production same-origin), start with /
+		if (!base) {
+			return `/${this.PATH}/${this.VERSION}`;
+		}
+
+		// Otherwise include the base URL
+		return `${base}/${this.PATH}/${this.VERSION}`;
 	}
 } as const;
 
