@@ -265,8 +265,8 @@ export abstract class BaseApiService {
 	}
 
 	private buildUrl(endpoint: string, params?: Record<string, any>): string {
-		// Build the full path
-		let path = `${this.API_PATH}${endpoint}`;
+		// IMPORTANT: Always start with / to make it root-relative
+		let path = `/${this.API_PATH}${endpoint}`;
 
 		// Add query parameters if they exist
 		if (params) {
@@ -282,13 +282,14 @@ export abstract class BaseApiService {
 			}
 		}
 
-		// Production: use relative URLs (empty baseUrl)
+		// Production: use root-relative URLs (empty baseUrl)
 		// Development: prepend baseUrl
 		if (!this.baseUrl || this.baseUrl === '') {
-			return path; // '/api/v1/auth/login'
+			return path; // '/api/v1/auth/login' - starts with / so it's from root
 		}
 
-		return `${this.baseUrl}${path}`; // 'http://localhost:8080/api/v1/auth/login'
+		// Development with full URL
+		return `${this.baseUrl}${path}`;
 	}
 
 	private async executeRequest(
