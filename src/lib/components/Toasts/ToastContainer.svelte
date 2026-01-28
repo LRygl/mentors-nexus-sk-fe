@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { toastService } from '$lib/services/ToastService.svelte';
+	import { toastService } from '$lib/Services/ToastService.svelte';
 	import ToastItem from './ToastItem.svelte';
 	import type { ToastPosition } from '$lib/types/entities/ToastTypes';
 
