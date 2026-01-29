@@ -28,13 +28,27 @@ export abstract class BaseApiService {
 		const url = this.buildUrl(endpoint, params);
 		const cacheKey = `GET:${url}`;
 
-		// Check cache first
-		if (config?.cache && this.isCacheValid(cacheKey)) {
+		// CRITICAL: Never cache auth endpoints
+		const isAuthEndpoint = endpoint.includes('/auth/');
+
+		// Check cache first (skip for auth endpoints)
+		if (config?.cache && !isAuthEndpoint && this.isCacheValid(cacheKey)) {
+			console.log('[API] Returning cached data for:', cacheKey);
 			return this.cache.get(cacheKey)!.data;
 		}
 
 		// Prepare headers for the request
 		const headers = await this.getHeaders(config);
+
+		// Add cache-busting headers for auth endpoints
+		if (isAuthEndpoint) {
+			(headers as Record<string, string>)['Cache-Control'] = 'no-cache, no-store, must-revalidate';
+			(headers as Record<string, string>)['Pragma'] = 'no-cache';
+			(headers as Record<string, string>)['Expires'] = '0';
+			console.log('[API] Cache-busting headers added for auth endpoint');
+		}
+
+		console.log('[API] 📡 Fetching:', url);
 
 		const response = await this.executeRequest(
 			() =>
@@ -47,11 +61,15 @@ export abstract class BaseApiService {
 			config
 		);
 
+		console.log('[API] Response status:', response.status);
+
 		const data = await this.parseResponse<T>(response);
 
-		// Cache successful GET requests
-		if (config?.cache) {
-			this.setCacheEntry(cacheKey, data, 5 * 60 * 1000); // 5 minutes TTL
+		console.log('[API] Parsed data:', data);
+
+		// Cache successful GET requests (but NEVER auth endpoints)
+		if (config?.cache && !isAuthEndpoint) {
+			this.setCacheEntry(cacheKey, data, 5 * 60 * 1000);
 		}
 
 		return data;
