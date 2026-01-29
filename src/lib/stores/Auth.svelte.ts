@@ -23,7 +23,6 @@ class AuthStore {
 	private refreshTimer: number | null = null;
 	private activityTimer: number | null = null;
 
-
 	// Cache validity (5 minutes)
 	private readonly CACHE_DURATION = 5 * 60 * 1000;
 	// Token refresh interval (4 minutes - before expiry)
@@ -87,38 +86,48 @@ class AuthStore {
 	/**
 	 * Login user
 	 */
-	async login(
-		email: string,
-		password: string,
-		rememberMe: boolean = false,
-		redirectPath?: string
-	) {
+	async login(email: string, password: string): Promise<void> {
+		console.log('[Auth] 🔐 Attempting login:', email);
+
 		this.isLoading = true;
+		this.error = null;
 
 		try {
-			const response = await authService.login({ email, password, rememberMe });
-			this.user = response;
-			this.lastCheck = Date.now();
-
-			console.log('[Auth] Login successful:', {
-				user: this.user.email,
-				role: this.user.role,
-				timestamp: new Date().toISOString()
+			// ✅ Get full response with user and expiresIn
+			const response = await authService.login({
+				email,
+				password,
+				rememberMe: false
 			});
 
-			console.log('[Auth] List Enrolled courses: ', response.enrolledCourseIds);
-			// Initialize enrollments from login response
-			await enrollmentService.initialize(response.enrolledCourseIds);
-			// Start session management
-			this.startSessionManagement();
+			console.log('[Auth] ===== LOGIN RESPONSE =====');
+			console.log('[Auth] Full response:', response);
+			console.log('[Auth] User:', response.user);
+			console.log('[Auth] ExpiresIn:', response.expiresIn);
+			console.log('[Auth] ============================');
 
-			// Determine redirect path
-			const targetPath = redirectPath || '/';
-			// TODO Redirect based on role
-			//const targetPath = redirectPath || getLoginRedirectPath(this.user.role);
-			await goto(targetPath);
+			// ✅ Validate we got user data
+			if (!response.user || !response.user.email) {
+				throw new Error('Invalid login response: missing user data');
+			}
 
-			return response;
+			// ✅ Set the user from the response
+			this.user = response.user;
+			this.lastCheck = Date.now();
+
+			// Store enrolled course IDs
+			if (response.user.enrolledCourseIds) {
+				this.enrolledCourseIds = response.user.enrolledCourseIds;
+			}
+
+			console.log('[Auth] ✅ Login successful! User:', this.user.email);
+			console.log('[Auth] Token expires in:', response.expiresIn, 'seconds');
+		} catch (error) {
+			console.error('[Auth] ❌ Login failed:', error);
+			this.error = error instanceof Error ? error.message : 'Login failed';
+			this.user = null;
+			this.enrolledCourseIds = [];
+			throw error;
 		} finally {
 			this.isLoading = false;
 		}
@@ -149,7 +158,6 @@ class AuthStore {
 			// 1. Call backend logout first
 			await authService.logout();
 			console.log('[Auth] Backend logout successful');
-
 		} catch (error) {
 			console.error('[Auth] Backend logout error:', error);
 			// Continue with local cleanup even if backend fails
@@ -172,7 +180,7 @@ class AuthStore {
 			await tick();
 
 			// 5. Small delay to ensure reactivity propagates
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise((resolve) => setTimeout(resolve, 100));
 
 			console.log('[Auth] Logout complete, redirecting...');
 
@@ -183,10 +191,8 @@ class AuthStore {
 			await goto(ROUTES.PUBLIC.LOGIN, {
 				replaceState: true,
 				invalidateAll: true,
-				state: undefined,
-
+				state: undefined
 			});
-
 		} catch (error) {
 			console.error('[Auth] Logout cleanup error:', error);
 
@@ -285,7 +291,6 @@ class AuthStore {
 
 			this.lastCheck = Date.now();
 			console.log('[Auth] Token refreshed successfully');
-
 		} catch (error) {
 			console.error('[Auth] Token refresh failed:', error);
 
@@ -327,7 +332,7 @@ class AuthStore {
 		};
 
 		// Add event listeners
-		activityEvents.forEach(event => {
+		activityEvents.forEach((event) => {
 			window.addEventListener(event, handleActivity, { passive: true });
 		});
 
@@ -368,7 +373,6 @@ class AuthStore {
 			this.logout();
 		}
 	}
-
 }
 
 // Export singleton instance

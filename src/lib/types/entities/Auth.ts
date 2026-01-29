@@ -1,7 +1,7 @@
 import type { User } from '$lib/types/entities/User';
 
 export interface AuthUser {
-	id: number;
+	id: string;
 	uuid: string;
 	firstName: string;
 	lastName: string;

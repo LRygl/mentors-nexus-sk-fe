@@ -1,12 +1,8 @@
 console.log('Loading AuthService');
-import { BaseApiService } from '$lib/API/APIBase';
+import { ApiError, BaseApiService } from '$lib/API/APIBase';
 import { API_CONFIG } from '$lib/API/APIConfiguration';
-import type {
-	AuthUser,
-	LoginApiResponse,
-	LoginRequest,
-	RegisterRequest
-} from '$lib/types/entities/Auth';
+import type { AuthUser, LoginApiResponse, LoginRequest, RegisterRequest } from '$lib/types/entities/Auth';
+
 
 /**
  * AuthService for cookie-based authentication
@@ -41,16 +37,31 @@ class AuthService extends BaseApiService {
 		).user;
 	}*/
 
-	async login(credentials: LoginRequest): Promise<AuthUser> {
+	async login(credentials: LoginRequest): Promise<LoginApiResponse> {
 		console.log('[AuthService] 🔐 Logging in:', credentials.email);
 
-		const response = await this.post<LoginApiResponse>(
-			API_CONFIG.ENDPOINTS.AUTH.LOGIN,
-			credentials
-		);
+		try {
+			const response = await this.post<LoginApiResponse>(
+				API_CONFIG.ENDPOINTS.AUTH.LOGIN,
+				credentials
+			);
 
-		console.log('[AuthService] ✅ Login successful');
-		return response;
+			console.log('[AuthService] ===== LOGIN API RESPONSE =====');
+			console.log('[AuthService] Full response:', response);
+			console.log('[AuthService] User:', response.user);
+			console.log('[AuthService] ExpiresIn:', response.expiresIn);
+			console.log('[AuthService] ===================================');
+
+			if (!response.user || !response.user.email) {
+				throw new Error('Invalid login response');
+			}
+
+			console.log('[AuthService] ✅ Login successful:', response.user.email);
+			return response;
+		} catch (error) {
+			console.error('[AuthService] ❌ Login failed:', error);
+			throw error;
+		}
 	}
 
 	/**
@@ -82,17 +93,14 @@ class AuthService extends BaseApiService {
 	 * Refresh token - Spring Boot reads refresh_token cookie
 	 * and sets new access_token cookie
 	 */
-	/*
-	async refreshToken(): Promise<void> {
+	/*	async refreshToken(): Promise<void> {
 		await this.post(API_CONFIG.ENDPOINTS.AUTH.REFRESH, {}, { skipAuth: true });
-	}
-*/
+	}*/
 
 	async refreshToken(): Promise<void> {
 		console.log('[AuthService] 🔄 Refreshing token');
-		const response = await this.post(API_CONFIG.ENDPOINTS.AUTH.REFRESH, {});
+		await this.post(API_CONFIG.ENDPOINTS.AUTH.REFRESH, {});
 		console.log('[AuthService] ✅ Token refreshed');
-		return response;
 	}
 
 	/**
@@ -103,36 +111,30 @@ class AuthService extends BaseApiService {
 		console.log('[AuthService] 🚀 Getting current user');
 
 		try {
-			// Add timestamp to params to force unique URL
 			const user = await this.get<AuthUser>(
 				API_CONFIG.ENDPOINTS.AUTH.ME,
-				{ _t: Date.now() }, // Cache-buster query param
-				{ cache: false } // Disable frontend cache
+				{ _t: Date.now() },
+				{ cache: false }
 			);
 
 			console.log('[AuthService] ===== USER RESPONSE =====');
-			console.log('[AuthService] Full user:', user);
+			console.log('[AuthService] User:', user);
 			console.log('[AuthService] Email:', user?.email);
-			console.log('[AuthService] FirstName:', user?.firstName);
-			console.log('[AuthService] LastName:', user?.lastName);
-			console.log('[AuthService] Role:', user?.role);
 			console.log('[AuthService] ===========================');
 
-			// Validate response
-			if (!user) {
-				console.error('[AuthService] No user data received!');
-				throw new Error('No user data received from API');
-			}
-
-			if (!user.email) {
-				console.error('[AuthService] User missing email field!');
-				console.error('[AuthService] Received:', JSON.stringify(user, null, 2));
-				throw new Error('Invalid user data: missing email');
+			if (!user || !user.email) {
+				throw new Error('Invalid user data');
 			}
 
 			return user;
 		} catch (error) {
-			console.error('[AuthService] getCurrentUser failed:', error);
+			// ✅ 401 is expected when not logged in - don't log as error
+			if (error instanceof ApiError && error.status === 401) {
+				console.log('[AuthService] 💁 No active session');
+				throw error;
+			}
+
+			console.error('[AuthService] ❌ Unexpected error:', error);
 			throw error;
 		}
 	}
@@ -170,6 +172,4 @@ class AuthService extends BaseApiService {
 }
 
 // Export singleton instance
-//export const authService = new AuthService();
-
-export const authService = AuthService.getInstance();
+export const authService = new AuthService();
