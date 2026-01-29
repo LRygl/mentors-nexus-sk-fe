@@ -2,7 +2,9 @@ name: Deploy Svelte Frontend
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
+      - feature/**
   workflow_dispatch:
 
 env:

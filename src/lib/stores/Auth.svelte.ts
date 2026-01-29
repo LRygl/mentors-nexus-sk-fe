@@ -90,7 +90,6 @@ class AuthStore {
 		console.log('[Auth] 🔐 Attempting login:', email);
 
 		this.isLoading = true;
-		this.error = null;
 
 		try {
 			// ✅ Get full response with user and expiresIn
@@ -115,18 +114,24 @@ class AuthStore {
 			this.user = response.user;
 			this.lastCheck = Date.now();
 
-			// Store enrolled course IDs
+			// ✅ Initialize enrolled courses via enrollment service
 			if (response.user.enrolledCourseIds) {
-				this.enrolledCourseIds = response.user.enrolledCourseIds;
+				await enrollmentService.initialize(response.user.enrolledCourseIds);
 			}
 
 			console.log('[Auth] ✅ Login successful! User:', this.user.email);
 			console.log('[Auth] Token expires in:', response.expiresIn, 'seconds');
+
+			// ✅ Start session management after successful login
+			this.startSessionManagement();
+
 		} catch (error) {
 			console.error('[Auth] ❌ Login failed:', error);
-			this.error = error instanceof Error ? error.message : 'Login failed';
 			this.user = null;
-			this.enrolledCourseIds = [];
+
+			// Clear enrollments on failure
+			enrollmentService.clear();
+
 			throw error;
 		} finally {
 			this.isLoading = false;

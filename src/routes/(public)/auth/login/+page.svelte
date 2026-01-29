@@ -83,8 +83,22 @@
 		errorMessage = '';
 
 		try {
-			// Login via auth store (backend doesn't receive returnUrl)
-			const response = await authStore.login(email, password, rememberMe, returnUrl);
+			console.log('[LOGIN] Attempting login...');
+
+			// ✅ Login returns void - user is set in authStore.user
+			await authStore.login(email, password);
+
+			console.log('[LOGIN] Login successful!');
+
+			// ✅ Get user from store after successful login
+			const user = authStore.user;
+
+			if (!user) {
+				throw new Error('Login succeeded but user not set in store');
+			}
+
+			console.log('[LOGIN] User role:', user.role);
+
 			let redirectPath: string;
 
 			if (returnUrl && getSafeReturnUrl(returnUrl, '') !== '') {
@@ -93,8 +107,7 @@
 				console.log('[LOGIN] Redirecting to return URL:', redirectPath);
 			} else {
 				// Option 2: Use role-based redirect
-				//redirectPath = getLoginRedirectPath(response.user.role);
-				redirectPath = getLoginRedirectPath(response.role)
+				redirectPath = getLoginRedirectPath(user.role);
 				console.log('[LOGIN] Redirecting based on role:', redirectPath);
 			}
 
