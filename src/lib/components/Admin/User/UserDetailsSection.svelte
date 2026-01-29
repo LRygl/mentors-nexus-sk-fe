@@ -28,17 +28,39 @@
 	import UniversalCreateModal from '$lib/components/UI/UniversalCreateModal.svelte';
 	import { EnrollUserToCoursePresets } from '$lib/components/Forms/Schemas/CourseEnrollUserSchema';
 	import { courseStore } from '$lib/stores/defaults/CourseStore.svelte';
+	import { onMount, untrack } from 'svelte';
 
 	interface Props {
 		topic: User;
 		onUpdate: (formData: Partial<User>) => Promise<void>;
 	}
+	// Check if we have valid data
 
 	let { topic, onUpdate }: Props = $props();
 	let selectedItems = $state<Set<string>>(new Set());
 	let data = $derived(enrollmentAdminAPI.getEnrolledCourseIds(topic.id))
 	let statusColors = $derived(getCourseStatusColors('DRAFT'));
+	let isInitialized = $state(false);
+	let hasData = $derived(topic && topic.id !== undefined);
+	// =========================================================================
+	// INITIALIZATION - Runs once on mount
+	// =========================================================================
+	onMount(async () => {
+		if (!isInitialized) {
+			isInitialized = true;
 
+			// Load all courses once
+			if (courseStore.data.length === 0) {
+				await courseStore.fetchAll();
+			}
+			allCourses = courseStore.data;
+
+			// Load user enrollments
+			if (topic.id) {
+				enrolledCourses = await enrollmentStore.getEnrolledCourses(topic.id);
+			}
+		}
+	});
 	// =========================================================================
 	// FORM SCHEMA DEFINITION
 	// =========================================================================
@@ -59,19 +81,13 @@
 	let availableCourses = $derived.by(() => {
 		if (allCourses.length === 0) return [];
 
-		// ✅ Use courseId from the DTO
 		const enrolledCourseIds = new Set(
 			enrolledCourses.map(e => String(e.courseId))
 		);
 
-		console.log('[UserEdit] Enrolled IDs:', Array.from(enrolledCourseIds));
-		console.log('[UserEdit] All course IDs:', allCourses.map(c => c.id));
-
-		return allCourses.filter(course => {
-			const isEnrolled = enrolledCourseIds.has(String(course.id));
-			console.log(`  Course ${course.id}: ${isEnrolled ? '❌ ENROLLED' : '✅ AVAILABLE'}`);
-			return !isEnrolled;
-		});
+		return allCourses.filter(course =>
+			!enrolledCourseIds.has(String(course.id))
+		);
 	});
 
 	// Dynamically create enrollment schema with available courses
@@ -80,29 +96,17 @@
 		return EnrollUserToCoursePresets.link(availableCourses);
 	});
 
-	// Effect 1: Load all courses (runs once on mount)
+	// Effect 2: Load user's enrolled courses (runs when topic.id changes)
 	$effect(() => {
-		if (courseStore.data.length === 0 && !courseStore.loading) {
-			courseStore.fetchAll()
-				.then(() => {
-					allCourses = courseStore.data;
-				})
-				.catch(err => console.error('[UserEdit] Failed to load courses:', err));
-		} else if (courseStore.data.length > 0) {
-			allCourses = courseStore.data;
+		// Only track topic.id changes
+		if (topic.id && isInitialized) {
+			untrack(async () => {
+				// Reload enrollments when user changes
+				enrolledCourses = await enrollmentStore.getEnrolledCourses(topic.id);
+			});
 		}
 	});
 
-	// Effect 2: Load user's enrolled courses (runs when topic.id changes)
-	$effect(() => {
-		if (topic.id) {
-			enrollmentStore.getEnrolledCourses(topic.id)
-				.then(courses => {
-					enrolledCourses = courses;
-				})
-				.catch(err => console.error('[UserEdit] Failed to load enrollments:', err));
-		}
-	});
 	// =========================================================================
 	// METADATA
 	// =========================================================================
@@ -272,7 +276,7 @@
 	}
 
 </script>
-
+{#if hasData}
 <EntityDetailsSection
 	entity={topic}
 	entityName="Enrollment"
@@ -285,7 +289,11 @@
 	{onUpdate}
 	imageBaseUrl={API_CONFIG.FULL_BASE_URL+API_CONFIG.ENDPOINTS.ADMIN.USER}
 />
-
+{:else}
+	<div class="flex items-center justify-center py-12">
+		<div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+	</div>
+{/if}
 <CollapsibleSection
 	title="Enrolled Courses"
 	description="Courses this user is currently enrolled in"
