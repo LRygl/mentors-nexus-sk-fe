@@ -43,7 +43,7 @@ interface GuardResult {
  */
 export async function checkAccess(config: GuardConfig): Promise<GuardResult> {
 	// Ensure auth is initialized
-	if (!authStore.isInitialized) {
+	if (!authStore.isInitialized || authStore.needsRefresh) {
 		await authStore.initialize();
 	}
 
