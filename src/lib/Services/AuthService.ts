@@ -84,8 +84,13 @@ class AuthService extends BaseApiService {
 			await this.post(API_CONFIG.ENDPOINTS.AUTH.LOGOUT, {});
 			console.log('[AuthService] Logout successful');
 		} catch (error) {
-			console.error('[AuthService] Logout failed:', error);
+			if (error instanceof ApiError && error.status === 403) {
+				// 403 Unauthenticated is expected if user logs out from protected section
+				console.log('[AuthService] Logout completed with 403 (expected):');
+				return;
+			}
 			// Don't throw - logout should always succeed locally
+			console.error('[AuthService] Logout failed:', error);
 		}
 	}
 
@@ -117,19 +122,14 @@ class AuthService extends BaseApiService {
 				{ cache: false }
 			);
 
-			console.log('[AuthService] ===== USER RESPONSE =====');
-			console.log('[AuthService] User:', user);
-			console.log('[AuthService] Email:', user?.email);
-			console.log('[AuthService] ===========================');
-
 			if (!user || !user.email) {
 				throw new Error('Invalid user data');
 			}
 
 			return user;
 		} catch (error) {
-			// ✅ 401 is expected when not logged in - don't log as error
-			if (error instanceof ApiError && error.status === 401) {
+			// 401 is expected when not logged in - don't log as error
+			if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
 				console.log('[AuthService] 💁 No active session');
 				throw error;
 			}
