@@ -8,7 +8,7 @@
 	import type { Course } from '$lib/types/entities/Course';
 	import { ROUTES } from '$lib/Config/routes.config';
 	import { getEntityImageUrl } from '$lib/utils/ImageUtils';
-	import type { CourseStatus } from '$lib/types/enums/CourseStatus';
+	import { CourseStatus } from '$lib/types/enums/CourseStatus';
 	import { getCourseStatusColors } from '$lib/Config/UIConstants';
 	import { BookIcon, User } from '@lucide/svelte';
 	import { API_CONFIG } from '$lib/API/APIConfiguration';
