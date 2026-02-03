@@ -167,6 +167,7 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 		this._updateError = null;
 
 		try {
+			console.log('[STORE] Calling API for Course Update:', id);
 			const updatedItem = await this.updateItem(id, updateData, imageFile);
 
 			// Update in data array using the base store utility

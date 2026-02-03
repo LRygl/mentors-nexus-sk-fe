@@ -60,12 +60,15 @@ export class CourseAdminApiService extends BaseApiService {
 		updateData: Partial<Course>,
 		imageFile?: File | undefined
 	): Promise<Course> {
-console.log("[API] updateCourse")
+		console.log("[API] Updating course with id ", courseId);
 		if (imageFile) {
 			const formData = this.buildCourseFormData(updateData, imageFile);
+			console.log("[API] Form JSON Data", updateData);
+			console.log("[API] Multipart call with preprocessed FORM Data", formData);
 			return await this.putMultipart<Course>(`${this.ENDPOINT}/${courseId}`, formData);
 		} else {
 			// Use regular JSON request when no image
+			console.log('[API] Non-Multipart call with preprocessed data', updateData);
 			return await this.put<Course>(`${this.ENDPOINT}/${courseId}`, updateData);
 		}
 	}
