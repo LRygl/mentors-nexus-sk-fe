@@ -171,7 +171,7 @@ export class CourseStoreSvelte extends BaseStoreSvelte<
 
 			// Update in data array using the base store utility
 			this.updateItemInStore(id, updatedItem);
-
+			console.log('[STORE] Updating course:', updatedItem);
 			return updatedItem;
 		} catch (error) {
 			this._updateError = error instanceof Error ? error.message : 'Failed to update course';

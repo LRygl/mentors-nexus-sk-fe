@@ -53,6 +53,7 @@ let availableLessons = $derived.by(() => {
 
 // Event handlers that delegate to store
 	async function handleCourseUpdate(formData: Partial<Course>, imageFile?: File) {
+		console.log("Update course", formData, imageFile);
 		await courseStore.update(courseId, formData, imageFile);
 	}
 

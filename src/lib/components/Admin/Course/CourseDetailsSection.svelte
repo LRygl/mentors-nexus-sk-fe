@@ -61,7 +61,6 @@
 	}));
 
 
-
 	// ============================================================
 	// METADATA BUILDER
 	// Converts entity data into displayable metadata items

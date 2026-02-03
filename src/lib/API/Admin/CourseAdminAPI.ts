@@ -60,7 +60,7 @@ export class CourseAdminApiService extends BaseApiService {
 		updateData: Partial<Course>,
 		imageFile?: File | undefined
 	): Promise<Course> {
-
+console.log("[API] updateCourse")
 		if (imageFile) {
 			const formData = this.buildCourseFormData(updateData, imageFile);
 			return await this.putMultipart<Course>(`${this.ENDPOINT}/${courseId}`, formData);
