@@ -4,6 +4,7 @@
 	import { onMount } from 'svelte';
 	import { CheckCircle, XCircle, RefreshCw, ArrowRight } from 'lucide-svelte';
 	import { ROUTES } from '$lib/Config/routes.config';
+	import { API_CONFIG } from '$lib/API/APIConfiguration';
 
 	type Status = 'loading' | 'success' | 'error';
 
@@ -13,8 +14,21 @@
 	let countdownInterval: ReturnType<typeof setInterval> | null = null;
 	let contentVisible = $state(false);
 
+	// Detect if the user has an active checkout session (cart items in localStorage).
+	// If so, we show a "return to your checkout tab" hint instead of auto-redirecting.
+	let hasCheckoutSession = $state(false);
+
 	onMount(async () => {
 		const token = page.url.searchParams.get('token');
+
+		// Check if there's an active cart (user might be mid-checkout)
+		try {
+			const cartData = localStorage.getItem('mentors_cart');
+			if (cartData) {
+				const cart = JSON.parse(cartData);
+				hasCheckoutSession = Array.isArray(cart) && cart.length > 0;
+			}
+		} catch { /* ignore parse errors */ }
 
 		// Trigger animations
 		setTimeout(() => {
@@ -40,12 +54,10 @@
 	});
 
 
-	//TODO Move to separate API CALL with parametrized URL
 	async function verifyAccount(token: string) {
 		try {
-			// Replace with your actual API endpoint
 			const response = await fetch(
-				`http://localhost:8080/api/v1/auth/activate?token=${encodeURIComponent(token)}`,
+				`${API_CONFIG.FULL_BASE_URL}${API_CONFIG.ENDPOINTS.AUTH.ACTIVATE}?token=${encodeURIComponent(token)}`,
 				{
 					method: 'GET',
 					headers: {
@@ -62,7 +74,11 @@
 
 			status = 'success';
 			message = data.message || 'Your account has been successfully activated!';
-			startCountdown();
+			// Only auto-redirect to login if the user is NOT mid-checkout.
+			// During checkout, they should return to their checkout tab instead.
+			if (!hasCheckoutSession) {
+				startCountdown();
+			}
 
 		} catch (err) {
 			status = 'error';
@@ -150,32 +166,45 @@
 					</h1>
 					<p class="subtitle">{message}</p>
 
-					<div class="redirect-box">
-						<div class="countdown-container">
-							<svg class="countdown-svg" viewBox="0 0 40 40">
-								<circle
-									class="countdown-bg"
-									cx="20"
-									cy="20"
-									r="18"
-								/>
-								<circle
-									class="countdown-progress"
-									cx="20"
-									cy="20"
-									r="18"
-									style="stroke-dashoffset: {113 - (countdown / 5) * 113}"
-								/>
-							</svg>
-							<span class="countdown-number">{countdown}</span>
+					{#if hasCheckoutSession}
+						<!-- User is mid-checkout: tell them to go back to the checkout tab -->
+						<div class="redirect-box">
+							<span class="redirect-text">You can now close this tab and return to your checkout to complete your purchase.</span>
 						</div>
-						<span class="redirect-text">Redirecting to login...</span>
-					</div>
 
-					<button class="btn btn-primary" onclick={navigateToLogin}>
-						<span>Go to Login Now</span>
-						<ArrowRight size={18} />
-					</button>
+						<button class="btn btn-primary" onclick={navigateToLogin}>
+							<span>Or go to Login</span>
+							<ArrowRight size={18} />
+						</button>
+					{:else}
+						<!-- Normal flow: auto-redirect to login -->
+						<div class="redirect-box">
+							<div class="countdown-container">
+								<svg class="countdown-svg" viewBox="0 0 40 40">
+									<circle
+										class="countdown-bg"
+										cx="20"
+										cy="20"
+										r="18"
+									/>
+									<circle
+										class="countdown-progress"
+										cx="20"
+										cy="20"
+										r="18"
+										style="stroke-dashoffset: {113 - (countdown / 5) * 113}"
+									/>
+								</svg>
+								<span class="countdown-number">{countdown}</span>
+							</div>
+							<span class="redirect-text">Redirecting to login...</span>
+						</div>
+
+						<button class="btn btn-primary" onclick={navigateToLogin}>
+							<span>Go to Login Now</span>
+							<ArrowRight size={18} />
+						</button>
+					{/if}
 				</div>
 
 			{:else}

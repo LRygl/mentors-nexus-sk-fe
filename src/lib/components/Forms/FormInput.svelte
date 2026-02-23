@@ -17,6 +17,9 @@
 	import ImageUpload from '$lib/components/Forms/Fields/ImageUpload.svelte';
 	import StringListInput from '$lib/components/Forms/Fields/StringListInput.svelte';
 	import UniversalUpload from '$lib/components/Forms/Fields/UniversalUpload.svelte';
+	import PhoneInput from '$lib/components/Forms/Fields/PhoneInput.svelte';
+	import CountryInput from '$lib/components/Forms/Fields/CountryInput.svelte';
+	import AddressInput from '$lib/components/Forms/Fields/AddressInput.svelte';
 
 	interface Props {
 		field: FormField;
@@ -58,7 +61,9 @@
 		multiselect: MultiSelect as any,
 		upload: UniversalUpload as any,
 		stringList: StringListInput as any,
-
+		tel: PhoneInput as any,
+		country: CountryInput as any,
+		address: AddressInput as any,
 	};
 
 	/**

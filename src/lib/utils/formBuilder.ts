@@ -831,6 +831,151 @@ export class FormBuilder<T = Record<string, any>> {
 	}
 
 	/**
+	 * Add a phone number field (flag + dial-code picker + local number).
+	 * Maps to FormFieldType 'tel' → PhoneInput.svelte.
+	 * Emits combined value as "<dialCode> <localNumber>" e.g. "+420 123456789".
+	 */
+	phone(
+		name: string,
+		label: string,
+		options: {
+			placeholder?: string;
+			required?: boolean;
+			maxLength?: number;
+			colSpan?: 1 | 2 | 3 | 4;
+			helpText?: string;
+			defaultValue?: string;
+			dependencies?: FormFieldDependency[];
+			conditionalValidation?: ConditionalValidation[];
+		} = {}
+	): FormBuilder<T> {
+		const validationRules = [];
+
+		if (options.required) {
+			validationRules.push(FormValidator.rules.required());
+		}
+
+		return this.addField({
+			name,
+			label,
+			type: 'tel',
+			placeholder: options.placeholder,
+			required: options.required,
+			maxLength: options.maxLength ?? 30,
+			colSpan: options.colSpan,
+			helpText: options.helpText,
+			defaultValue: options.defaultValue ?? '',
+			dependencies: options.dependencies,
+			conditionalValidation: options.conditionalValidation,
+			validationRules
+		});
+	}
+
+	/**
+	 * Add a country selector field (flag emoji + country name dropdown).
+	 * Maps to FormFieldType 'country' → CountryInput.svelte.
+	 * Emits ISO 3166-1 alpha-2 code as value (e.g. "CZ", "DE").
+	 * The optionsArray should use ISO alpha-2 codes as values.
+	 */
+	country(
+		name: string,
+		label: string,
+		optionsArray: Array<{ label: string; value: any; disabled?: boolean }>,
+		options: {
+			placeholder?: string;
+			required?: boolean;
+			colSpan?: 1 | 2 | 3 | 4;
+			helpText?: string;
+			defaultValue?: string;
+			dependencies?: FormFieldDependency[];
+			conditionalValidation?: ConditionalValidation[];
+		} = {}
+	): FormBuilder<T> {
+		const validationRules = [];
+
+		if (options.required) {
+			validationRules.push(FormValidator.rules.required());
+		}
+
+		return this.addField({
+			name,
+			label,
+			type: 'country',
+			placeholder: options.placeholder,
+			required: options.required,
+			options: optionsArray,
+			colSpan: options.colSpan,
+			helpText: options.helpText,
+			defaultValue: options.defaultValue ?? '',
+			dependencies: options.dependencies,
+			conditionalValidation: options.conditionalValidation,
+			validationRules
+		});
+	}
+
+	/**
+	 * Add an address autocomplete field powered by Mapy.cz.
+	 * Maps to FormFieldType 'address' → AddressInput.svelte.
+	 *
+	 * When the user picks a suggestion the component will also fill the sibling
+	 * fields listed in `siblingFields` by calling onChange with those field names.
+	 *
+	 * Example:
+	 *   .address('billingStreet', 'Street & Number', {
+	 *     siblingFields: {
+	 *       city:       'billingCity',
+	 *       postalCode: 'billingPostalCode',
+	 *       country:    'billingCountry',
+	 *     },
+	 *     colSpan: 2,
+	 *   })
+	 */
+	address(
+		name: string,
+		label: string,
+		options: {
+			placeholder?: string;
+			required?: boolean;
+			maxLength?: number;
+			colSpan?: 1 | 2 | 3 | 4;
+			helpText?: string;
+			defaultValue?: string;
+			siblingFields?: {
+				city?: string;
+				postalCode?: string;
+				country?: string;
+			};
+			dependencies?: FormFieldDependency[];
+			conditionalValidation?: ConditionalValidation[];
+		} = {}
+	): FormBuilder<T> {
+		const validationRules = [];
+
+		if (options.required) {
+			validationRules.push(FormValidator.rules.required());
+		}
+		if (options.maxLength) {
+			validationRules.push(FormValidator.rules.maxLength(options.maxLength));
+		}
+
+		return this.addField({
+			name,
+			label,
+			type: 'address',
+			placeholder: options.placeholder ?? 'Start typing an address…',
+			required: options.required,
+			maxLength: options.maxLength ?? 255,
+			colSpan: options.colSpan,
+			helpText: options.helpText,
+			defaultValue: options.defaultValue ?? '',
+			addressSiblings: options.siblingFields,
+			dependencies: options.dependencies,
+			conditionalValidation: options.conditionalValidation,
+			validationRules,
+		});
+	}
+
+	/**
 	 * Add a custom field
 	 */
 	custom(

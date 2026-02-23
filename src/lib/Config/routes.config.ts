@@ -19,6 +19,7 @@ export const ROUTES = {
 		STORE: '/store',
 		COURSE: '/store/course',
 		LESSON: 'store/course/lesson',
+		CHECKOUT: '/store/checkout',
 		SUPPORT: '/support'
 	},
 
@@ -26,13 +27,15 @@ export const ROUTES = {
 	// USER ROUTES (Authenticated users)
 	// ============================================
 	USER: {
-		MY_COURSES: '/my-learning',
-		PROFILE: '/profile',
-		SETTINGS: '/settings',
-		ORDERS: '/orders',
-		INVOICES: '/invoices',
-		SUBSCRIPTIONS: '/subscriptions',
-		COURSES: '/course'
+		DASHBOARD: '/account/dashboard',
+		MY_COURSES: '/account/my-learning',
+		PROFILE: '/account/profile',
+		SETTINGS: '/account/settings',
+		ORDERS: '/account/orders',
+		INVOICES: '/account/invoices',
+		INVOICE_DETAIL: (id: string | number) => `/account/invoices/${id}`,
+		SUBSCRIPTIONS: '/account/subscriptions',
+		COURSES: '/account/courses'
 	},
 
 	// ============================================

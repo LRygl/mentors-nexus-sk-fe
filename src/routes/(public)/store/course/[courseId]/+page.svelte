@@ -23,6 +23,8 @@
 	import DificultyIndicator from '$lib/components/DificultyIndicator.svelte';
 	import { goto } from '$app/navigation';
 	import { authStore } from '$lib/stores/Auth.svelte';
+	import { cartService } from '$lib/Services/CartService.svelte';
+	import { cartStore } from '$lib/stores/Cart.svelte';
 
 	let { data }: { data: PageData } = $props();
 	let course = $derived(data.course);
@@ -37,8 +39,21 @@
 		new Set(course.sections?.map(section => section.id) || [])
 	);
 
+	let isInCart = $derived(cartStore.isInCart(String(course.id)));
 	let imageUrl = $derived(`/api/v1/files${course.imageUrl}`);
 
+
+	const handleAddToCart = () => {
+		cartService.addToCart({
+			courseId: String(course.id),
+			courseName: course.name,
+			courseImageUrl: course.imageUrl ?? null,
+			price: course.price,
+		},
+		{
+			redirectToCheckout: true
+		});
+	}
 
 	const toggleSection = (sectionId: string) => {
 		const newExpanded = new Set(expandedSections);
@@ -180,9 +195,22 @@
 						<!-- CTA Buttons -->
 						<div class="space-y-3">
 
-								<Button class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-6 rounded-xl shadow-lg">
+							<!-- PURCHASE / CHECKOUT BUTTON FOR PAYMENT -->
+							{#if isInCart}
+								<Button
+									onclick={() => cartService.goToCheckout()}
+									class="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-6 rounded-xl shadow-lg"
+								>
+									Go to Checkout
+								</Button>
+							{:else}
+								<Button
+									onclick={handleAddToCart}
+									class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-6 rounded-xl shadow-lg"
+								>
 									Purchase Now
 								</Button>
+							{/if}
 
 							<Button variant="outline" class="w-full py-6 rounded-xl">
 								Add to Wishlist

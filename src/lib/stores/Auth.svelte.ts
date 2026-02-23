@@ -4,6 +4,7 @@
  */
 
 import { authService } from '$lib/Services/AuthService';
+import { ApiError } from '$lib/API/APIBase';
 import type { User } from '$lib/types/entities/User';
 import { goto, invalidateAll } from '$app/navigation';
 import { browser } from '$app/environment';
@@ -22,6 +23,16 @@ class AuthStore {
 	// Session management
 	private refreshTimer: number | null = null;
 	private activityTimer: number | null = null;
+
+	// Initialization lock — prevents concurrent initialize() calls from each
+	// racing to hit the backend. All concurrent callers share the same promise.
+	private initializationPromise: Promise<void> | null = null;
+
+	// localStorage keys for persisting non-sensitive user metadata across refreshes.
+	// The actual security token lives in the HttpOnly cookie; we only cache the
+	// user object (name, email, role) so the UI can restore without an /auth/me call.
+	private readonly STORAGE_USER_KEY = 'auth:user';
+	private readonly STORAGE_EXPIRY_KEY = 'auth:expiry';
 
 	// Cache validity (5 minutes)
 	private readonly CACHE_DURATION = 5 * 60 * 1000;
@@ -49,38 +60,117 @@ class AuthStore {
 	}
 
 	/**
-	 * Initialize auth state on app load
-	 * Checks if user has valid cookie session
+	 * Initialize auth state on app load.
+	 * Checks if user has a valid cookie session.
+	 *
+	 * Multiple concurrent callers (e.g. root layout + account guard running in
+	 * parallel) all receive the same in-flight Promise so only one HTTP request
+	 * is ever made.
 	 */
-	async initialize() {
+	async initialize(): Promise<void> {
 		if (this.isInitialized && !this.needsRefresh) {
 			return;
 		}
 
+		// If already in progress, piggyback on the existing call
+		if (this.initializationPromise) {
+			return this.initializationPromise;
+		}
+
+		this.initializationPromise = this._doInitialize();
+		return this.initializationPromise;
+	}
+
+	private async _doInitialize(): Promise<void> {
 		this.isLoading = true;
 
 		try {
+			// Primary: validate with the server — this is the authoritative source
 			const user = await authService.getCurrentUser();
 			this.user = user;
 			this.lastCheck = Date.now();
+			this.saveUserToStorage(user); // keep cache fresh
 
 			console.log('[Auth] User authenticated:', user.email);
-			// Initialize user enrolled courses
 
 			await enrollmentService.initialize(user.enrolledCourseIds);
-			// Start session management after successful auth
 			this.startSessionManagement();
 		} catch (error) {
-			this.user = null;
-			console.log('[Auth] No active session');
-			// Clear enrollments on auth failure
-			enrollmentService.clear();
-			// Stop any running timers
-			this.stopSessionManagement();
+			const isAuthError =
+				error instanceof ApiError && error.status === 401;
+
+			if (isAuthError) {
+				// Cookie is genuinely expired / invalid — treat as logged out
+				console.log('[Auth] Session expired (401)');
+				this.user = null;
+				this.clearUserStorage();
+				enrollmentService.clear();
+				this.stopSessionManagement();
+			} else {
+				// /auth/me not yet implemented, network error, 500, etc.
+				// Fall back to the user we persisted after the last successful login.
+				const storedUser = this.loadUserFromStorage();
+				if (storedUser) {
+					console.log('[Auth] /auth/me unavailable — restoring from localStorage:', storedUser.email);
+					this.user = storedUser;
+					this.lastCheck = Date.now();
+					await enrollmentService.initialize(storedUser.enrolledCourseIds);
+					this.startSessionManagement();
+				} else {
+					console.log('[Auth] No stored session, treating as unauthenticated');
+					this.user = null;
+					enrollmentService.clear();
+					this.stopSessionManagement();
+				}
+			}
 		} finally {
 			this.isLoading = false;
 			this.isInitialized = true;
+			this.initializationPromise = null;
 		}
+	}
+
+	// ── localStorage helpers ──────────────────────────────────────────────────
+
+	/** Persist user metadata (NOT the token) so the UI survives a page refresh. */
+	private saveUserToStorage(user: AuthUser, expiresInSeconds?: number): void {
+		if (!browser) return;
+		try {
+			localStorage.setItem(this.STORAGE_USER_KEY, JSON.stringify(user));
+			if (expiresInSeconds) {
+				localStorage.setItem(
+					this.STORAGE_EXPIRY_KEY,
+					String(Date.now() + expiresInSeconds * 1000)
+				);
+			}
+		} catch {
+			// localStorage unavailable (private browsing quota, etc.) — silently ignore
+		}
+	}
+
+	/** Read the cached user. Returns null if absent or expired. */
+	private loadUserFromStorage(): AuthUser | null {
+		if (!browser) return null;
+		try {
+			const expiryStr = localStorage.getItem(this.STORAGE_EXPIRY_KEY);
+			if (expiryStr && Date.now() > parseInt(expiryStr, 10)) {
+				this.clearUserStorage();
+				return null;
+			}
+			const raw = localStorage.getItem(this.STORAGE_USER_KEY);
+			return raw ? (JSON.parse(raw) as AuthUser) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	/** Remove all stored auth data (called on logout or confirmed session expiry). */
+	private clearUserStorage(): void {
+		if (!browser) return;
+		try {
+			localStorage.removeItem(this.STORAGE_USER_KEY);
+			localStorage.removeItem(this.STORAGE_EXPIRY_KEY);
+		} catch {}
 	}
 
 	/**
@@ -113,6 +203,9 @@ class AuthStore {
 			// ✅ Set the user from the response
 			this.user = response.user;
 			this.lastCheck = Date.now();
+
+			// Persist user metadata so a page refresh can restore without /auth/me
+			this.saveUserToStorage(response.user, response.expiresIn);
 
 			// ✅ Initialize enrolled courses via enrollment service
 			if (response.user.enrolledCourseIds) {
@@ -176,6 +269,7 @@ class AuthStore {
 			this.user = null;
 			this.lastCheck = 0;
 			this.isInitialized = false;
+			this.clearUserStorage();
 
 			console.log('[Auth] Local state cleared');
 			console.log('[Auth] isAuthenticated:', this.isAuthenticated);
@@ -232,6 +326,7 @@ class AuthStore {
 		this.user = null;
 		this.isInitialized = false;
 		this.lastCheck = 0;
+		this.clearUserStorage();
 	}
 
 	// ============================================

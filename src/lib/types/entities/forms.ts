@@ -34,7 +34,9 @@ export type FormFieldType =
 	| 'toggle'
 	| 'tags'
 	| 'custom'
-	| 'stringList';
+	| 'stringList'
+	| 'country'
+	| 'address';
 
 export type FormLayout = 'single' | 'two-column' | 'three-column' | 'grid' | 'compact';
 export type FormVariant = 'default' | 'bordered' | 'floating' | 'minimal';
@@ -210,6 +212,17 @@ export interface FormField {
 	maxItemLength?: number;
 	numbered?: boolean;
 	addButtonText?: string;
+
+	// Address autocomplete (type: 'address') — names of sibling fields to fill
+	// when the user picks a suggestion from the Mapy.cz dropdown.
+	addressSiblings?: {
+		/** Field name that receives the city value */
+		city?: string;
+		/** Field name that receives the postal / ZIP code */
+		postalCode?: string;
+		/** Field name that receives the ISO 3166-1 alpha-2 country code */
+		country?: string;
+	};
 }
 
 // ============================================================================

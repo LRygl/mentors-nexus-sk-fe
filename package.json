@@ -46,6 +46,7 @@
 	},
 	"dependencies": {
 		"@tailwindcss/vite": "^4.1.11",
+		"flag-icons": "^7.5.0",
 		"mode-watcher": "^1.0.8",
 		"svelte-headlessui": "^0.0.46",
 		"svelte-portal": "^2.2.1",

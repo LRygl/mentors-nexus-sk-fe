@@ -25,7 +25,8 @@
 		Target,
 		TrendingUp,
 		Award,
-		Zap
+		Zap,
+		ShoppingCart
 	} from 'lucide-svelte';
 
 	import { onMount } from 'svelte';
@@ -37,6 +38,9 @@
 	import { legalTopicStore } from '$lib/stores/defaults/LegalTopicStore.svelte';
 	import { fly } from 'svelte/transition';
 	import { quintOut } from 'svelte/easing';
+	import CartIcon from '$lib/components/UI/CartIcon.svelte';
+	import { cartStore } from '$lib/stores/Cart.svelte';
+	import { cartService } from '$lib/Services/CartService.svelte';
 
 	let currentMode = mode.current;
 
@@ -183,6 +187,7 @@
 		};
 
 		initializeAuth();
+		cartStore.initialize();
 		document.addEventListener('click', handleClickOutside);
 
 		return () => {
@@ -427,6 +432,11 @@
 
 			<!-- Right Section -->
 			<div class="flex items-center gap-3">
+				<!-- Cart Icon -->
+				<div class="hidden lg:block">
+					<CartIcon />
+				</div>
+
 				<!-- Theme Toggle -->
 				<button
 					onclick={handleToggle}
@@ -590,6 +600,20 @@
 							{/each}
 						</div>
 					{/if}
+
+					<!-- Cart (mobile) -->
+					<button
+						onclick={() => { closeMobileMenu(); cartService.goToCheckout(); }}
+						class="flex items-center gap-3 w-full px-4 py-3 rounded-xl hover:bg-gray-50 dark:hover:bg-slate-800 transition-all duration-200 text-left"
+					>
+						<ShoppingCart class="w-5 h-5 text-gray-600 dark:text-gray-400" />
+						<span class="font-medium text-gray-900 dark:text-white">
+							Cart
+							{#if cartStore.itemCount > 0}
+								<span class="ml-1 text-xs font-bold text-blue-500">({cartStore.itemCount})</span>
+							{/if}
+						</span>
+					</button>
 
 					<!-- Support -->
 					<button

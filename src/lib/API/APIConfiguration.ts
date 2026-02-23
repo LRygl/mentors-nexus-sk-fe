@@ -23,6 +23,7 @@ export const API_CONFIG = {
 		AUTH: {
 			LOGIN: '/auth/login',
 			REGISTER: '/auth/register',
+			ACTIVATE: '/auth/activate',
 			LOGOUT: '/auth/logout',
 			REFRESH: '/auth/refresh',
 			ME: '/auth/me',
@@ -41,6 +42,11 @@ export const API_CONFIG = {
 		LEGAL: {
 			TOPIC: '/legal/topic'
 		},
+
+		// Order, Invoice & Enrollment (authenticated user)
+		ORDER: '/order',
+		INVOICE: '/invoice',
+		ENROLLMENT: '/user/enrollments',
 
 		// Admin endpoints
 		ADMIN: {
@@ -68,9 +74,10 @@ export const API_CONFIG = {
 			return explicitBaseUrl.replace(/\/$/, '');
 		}
 
-		// 2️⃣ Local development fallback
+		// 2️⃣ Local development — use empty string (same-origin)
+		// All /api/* requests are proxied to localhost:8080 via vite.config.ts
 		if (dev) {
-			return 'http://localhost:8080';
+			return '';
 		}
 
 		// 3️⃣ Production: same-origin (CloudFront routes /api/*)

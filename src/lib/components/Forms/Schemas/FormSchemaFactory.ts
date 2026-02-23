@@ -86,7 +86,7 @@ export interface EntityGroupConfig {
 	title: string;
 	description?: string;
 	icon?: string;
-	variant?: 'default' | 'card' | 'minimal' | 'embedded';
+	variant?: 'card' | 'embedded';
 	collapsible?: boolean;
 	collapsed?: boolean;
 

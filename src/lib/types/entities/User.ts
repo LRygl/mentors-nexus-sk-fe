@@ -19,6 +19,17 @@ export interface User extends BaseEntity {
 	// Password is write-only in backend, not included in responses
 	// forgot-password?: string; // Only for registration/update requests
 
+	// Billing address – saved on the user profile and pre-filled at checkout
+	// Backend: add nullable columns to the User entity and expose them in the profile DTO
+	// Endpoint:  PUT /api/v1/user/profile   (save)
+	//            GET /api/v1/user/me         (returns these fields together with the rest of the user)
+	billingFirstName?: string;
+	billingLastName?: string;
+	billingStreet?: string;
+	billingCity?: string;
+	billingPostalCode?: string;
+	billingCountry?: string;
+
 	// Subject details
 	lastLoginDate?: string; // ISO date string
 	lastLoginDateDisplay?: string; // ISO date string
@@ -49,6 +60,37 @@ export interface User extends BaseEntity {
 
 	// Computed field from backend
 	roleName?: string;
+}
+
+/**
+ * Request DTOs for profile mutations
+ * Backend: POST /api/v1/user/change-password
+ */
+export interface PasswordChangeRequest {
+	currentPassword: string;
+	newPassword: string;
+}
+
+/**
+ * Request DTO for profile update
+ * Backend: PUT /api/v1/user/profile
+ * Returns the updated User object.
+ */
+export interface UserProfileUpdateRequest {
+	firstName?: string;
+	lastName?: string;
+	telephoneNumber?: string;
+	// Billing address fields
+	billingFirstName?: string;
+	billingLastName?: string;
+	billingStreet?: string;
+	billingCity?: string;
+	billingPostalCode?: string;
+	billingCountry?: string;
+	// Consent flags
+	personalDataProcessing?: boolean;
+	personalDataPublishing?: boolean;
+	marketing?: boolean;
 }
 
 /**

@@ -85,12 +85,12 @@
 		try {
 			console.log('[LOGIN] Attempting login...');
 
-			// ✅ Login returns void - user is set in authStore.user
+			// Login returns void - user is set in authStore.user
 			await authStore.login(email, password);
 
 			console.log('[LOGIN] Login successful!');
 
-			// ✅ Get user from store after successful login
+			// Get user from store after successful login
 			const user = authStore.user;
 
 			if (!user) {

@@ -13,12 +13,9 @@ export default defineConfig({
 	],
 	server: {
 		proxy: {
-			'/api/v1/video': {
-				target: 'http://localhost:8080',
-				changeOrigin: true,
-				secure: false
-			},
-			'/api/v1/files': {
+			// Proxy ALL API requests to Spring Boot backend
+			// This makes cookies same-origin so they persist across page refreshes
+			'/api': {
 				target: 'http://localhost:8080',
 				changeOrigin: true,
 				secure: false

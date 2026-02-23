@@ -61,6 +61,13 @@ export const userMenuConfigs: Record<string, UserMenuConfig> = {
 				id: 'dashboard',
 				label: 'Dashboard',
 				icon: 'LayoutDashboard',
+				href: ROUTES.USER.DASHBOARD,
+				roles: [Role.USER]
+			},
+			{
+				id: 'my-learning',
+				label: 'My Learning',
+				icon: 'GraduationCap',
 				href: ROUTES.USER.MY_COURSES,
 				roles: [Role.USER]
 			},
@@ -68,7 +75,7 @@ export const userMenuConfigs: Record<string, UserMenuConfig> = {
 				id: 'profile',
 				label: 'My Profile',
 				icon: 'User',
-				href: '/profile',
+				href: ROUTES.USER.PROFILE,
 				roles: []
 			},
 			{
@@ -76,57 +83,15 @@ export const userMenuConfigs: Record<string, UserMenuConfig> = {
 				type: 'divider',
 				roles: []
 			},
-			// Member/Customer specific items
-			{
-				id: 'orders',
-				label: 'Orders',
-				icon: 'ShoppingBag',
-				href: '/orders',
-				roles: []
-			},
 			{
 				id: 'invoices',
 				label: 'Invoices',
 				icon: 'FileText',
-				href: '/invoices',
+				href: ROUTES.USER.INVOICES,
 				roles: []
-			},
-			{
-				id: 'subscriptions',
-				label: 'Subscriptions',
-				icon: 'CreditCard',
-				href: '/subscriptions',
-				roles: [],
-				badge: 2 // Example: 2 active subscriptions
-			},
-			{
-				id: 'courses',
-				label: 'My Courses',
-				icon: 'GraduationCap',
-				href: '/course',
-				roles: [Role.USER]
 			},
 			{
 				id: 'divider2',
-				type: 'divider',
-				roles: []
-			},
-			{
-				id: 'settings',
-				label: 'Settings',
-				icon: 'Settings',
-				href: '/settings',
-				roles: []
-			},
-			{
-				id: 'help',
-				label: 'Help Center',
-				icon: 'HelpCircle',
-				href: '/help',
-				roles: []
-			},
-			{
-				id: 'divider3',
 				type: 'divider',
 				roles: []
 			},

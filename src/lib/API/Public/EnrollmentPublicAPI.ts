@@ -18,7 +18,7 @@ export interface EnrolledCourseDTO {
 // ============================================================================
 
 export class EnrollmentPublicAPI extends BaseApiService {
-	private readonly ENDPOINT = `${API_CONFIG.ENDPOINTS.PUBLIC}/enrollments`;
+	private readonly ENDPOINT = API_CONFIG.ENDPOINTS.ENROLLMENT;
 
 	constructor() {
 		super(API_CONFIG.BASE_URL);

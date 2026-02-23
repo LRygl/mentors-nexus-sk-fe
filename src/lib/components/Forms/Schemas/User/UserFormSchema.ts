@@ -196,7 +196,7 @@ const userFormGroup: EntityGroupConfig[] = [
 		title: 'Basic Information',
 		description: 'Basic user account information',
 		icon: '📝',
-		variant: 'default',
+		variant: 'card',
 		variants: { standard: true, embedded: true }
 	},
 	{
@@ -214,7 +214,7 @@ const userFormGroup: EntityGroupConfig[] = [
 		title: 'Billing Address Information',
 		description: 'Basic user account information',
 		icon: '📝',
-		variant: 'default',
+		variant: 'card',
 		collapsed: true,
 		collapsible: true,
 		variants: { embedded: true }
