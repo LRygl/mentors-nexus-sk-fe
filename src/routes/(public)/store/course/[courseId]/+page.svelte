@@ -1,22 +1,24 @@
 <script lang="ts">
 	import type { PageData } from './$types';
 	import {
-		CheckCircle2,
-		Target,
-		ClipboardList,
+		Check,
 		BookOpen,
-		User,
-		Mail,
 		Star,
 		Clock,
 		Users,
 		ChevronDown,
+		ChevronRight,
 		Play,
 		Lock,
 		BadgeCheck,
-		Sparkles
+		Sparkles,
+		GraduationCap,
+		ShoppingCart,
+		Tag,
+		Calendar,
+		BarChart3,
+		Award
 	} from 'lucide-svelte';
-	import { Button } from '$lib/components/ui/button';
 	import { enrollmentStore } from '$lib/stores/defaults/EnrollmentStore.svelte.js';
 	import { LessonType } from '$lib/types/enums/LessonType';
 	import { formatDuration } from '$lib/utils/DurationUtils';
@@ -25,45 +27,27 @@
 	import { authStore } from '$lib/stores/Auth.svelte';
 	import { cartService } from '$lib/Services/CartService.svelte';
 	import { cartStore } from '$lib/stores/Cart.svelte';
+	import { ROUTES } from '$lib/Config/routes.config';
 
 	let { data }: { data: PageData } = $props();
 	let course = $derived(data.course);
 	let courseDuration = $derived(formatDuration(course.duration));
 
-	// Reactive state from stores
 	let isEnrolled = $derived(enrollmentStore.isEnrolledIn(course.id));
 	let isAdmin = $derived(authStore.isAdmin);
-
-	// Track expanded sections
-	let expandedSections = $state<Set<string>>(
-		new Set(course.sections?.map(section => section.id) || [])
-	);
-
 	let isInCart = $derived(cartStore.isInCart(String(course.id)));
 	let imageUrl = $derived(`/api/v1/files${course.imageUrl}`);
+	let hasHeroImage = $derived(!!course.imageUrl);
 
+	let expandedSections = $state<Set<string>>(
+		new Set(course.sections?.map((s) => s.id) || [])
+	);
 
-	const handleAddToCart = () => {
-		cartService.addToCart({
-			courseId: String(course.id),
-			courseName: course.name,
-			courseImageUrl: course.imageUrl ?? null,
-			price: course.price,
-		},
-		{
-			redirectToCheckout: true
-		});
-	}
-
-	const toggleSection = (sectionId: string) => {
-		const newExpanded = new Set(expandedSections);
-		if (newExpanded.has(sectionId)) {
-			newExpanded.delete(sectionId);
-		} else {
-			newExpanded.add(sectionId);
-		}
-		expandedSections = newExpanded;
-	};
+	let totalLessons = $derived(
+		course.sections?.reduce((acc, s) => acc + (s.lessons?.length || 0), 0) || 0
+	);
+	let ratingFloor = $derived(Math.floor(course.rating ?? 0));
+	let firstLesson = $derived(course.sections?.[0]?.lessons?.[0]);
 
 	const formatPrice = (price: number) =>
 		new Intl.NumberFormat('cs-CZ', {
@@ -72,394 +56,429 @@
 			minimumFractionDigits: 0
 		}).format(price);
 
-	const totalLessons = $derived(
-		course.sections?.reduce((acc, section) => acc + (section.lessons?.length || 0), 0) || 0
-	);
+	const formatCount = (count: number) =>
+		count >= 1000 ? `${(count / 1000).toFixed(1)}k` : String(count);
 
+	const toggleSection = (sectionId: string) => {
+		const next = new Set(expandedSections);
+		if (next.has(sectionId)) next.delete(sectionId);
+		else next.add(sectionId);
+		expandedSections = next;
+	};
 
-	/**
-	 * Handle lesson click based on enrollment status and lesson type
-	 */
+	const handleAddToCart = () => {
+		cartService.addToCart(
+			{ courseId: String(course.id), courseName: course.name, courseImageUrl: course.imageUrl ?? null, price: course.price },
+			{ redirectToCheckout: true }
+		);
+	};
+
+	const handleStartLearning = () => {
+		if (firstLesson) goto(`/store/course/${course.id}/lesson/${firstLesson.id}`);
+	};
+
 	const handleLessonClick = (lesson: { id: number | string; type: LessonType }) => {
-		// Free lessons - always accessible
-		if (lesson.type === LessonType.FREE) {
-			goto(`/store/course/${course.id}/lesson/${lesson.id}`);
-			return;
-		}
-
-		// Paid lessons - check enrollment
-		if (isEnrolled || isAdmin ) {
-			// User is enrolled or admin - go to lesson
+		if (lesson.type === LessonType.FREE || isEnrolled || isAdmin) {
 			goto(`/store/course/${course.id}/lesson/${lesson.id}`);
 		} else {
-			// User is not enrolled - go to purchase page
 			goto(`/courses/${course.id}/purchase`);
 		}
 	};
 
-	/**
-	 * Check if a lesson is accessible to the
-	 */
-	const isLessonAccessible = (lessonType: LessonType): boolean => {
-		return lessonType === LessonType.FREE || isEnrolled;
-	};
-
+	const isLessonAccessible = (lessonType: LessonType): boolean =>
+		lessonType === LessonType.FREE || isEnrolled || isAdmin;
 </script>
 
-<div class="min-h-screen w-full bg-gradient-to-b from-gray-50 to-white">
-	<!-- Hero Section -->
-	<div class="bg-gradient-to-r from-blue-600 to-purple-700 text-white">
-		<div class="w-full px-6 lg:px-12 py-12 lg:py-16">
-			<div class="grid lg:grid-cols-3 gap-8 items-start">
-				<!-- Course Info -->
-				<div class="lg:col-span-2 space-y-4">
+<div class="min-h-screen w-7xl bg-white dark:bg-slate-950">
+
+	<!-- ─── HERO ─────────────────────────────────────────────────────────────── -->
+	<div
+		class="relative overflow-hidden border-b {hasHeroImage ? 'border-transparent' : 'border-slate-100 dark:border-slate-800/60'}"
+		style={hasHeroImage ? `background-image: url('${imageUrl}'); background-size: cover; background-position: center;` : ''}
+	>
+
+		{#if hasHeroImage}
+			<!-- Gradient overlay: darker on left for text, lighter toward right, deepens at bottom for meta strip -->
+			<div class="absolute inset-0 bg-gradient-to-r from-black/85 via-black/65 to-black/25 pointer-events-none select-none" aria-hidden="true"></div>
+			<div class="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/55 to-transparent pointer-events-none select-none" aria-hidden="true"></div>
+		{:else}
+			<!-- Background decoration: soft blobs + subtle dot grid -->
+			<div class="absolute inset-0 pointer-events-none select-none" aria-hidden="true">
+				<div class="absolute -top-32 -right-32 w-[480px] h-[480px] bg-indigo-100/70 dark:bg-indigo-900/20 rounded-full blur-3xl"></div>
+				<div class="absolute top-1/2 right-24 w-64 h-64 bg-violet-100/50 dark:bg-violet-900/15 rounded-full blur-2xl"></div>
+				<div class="absolute bottom-0 left-0 w-80 h-40 bg-sky-50/80 dark:bg-sky-900/10 rounded-full blur-2xl"></div>
+				<!-- Dot grid -->
+				<div class="absolute inset-0 opacity-[0.035] dark:opacity-[0.04]"
+					style="background-image: radial-gradient(circle, #6366f1 1px, transparent 1px); background-size: 28px 28px;">
+				</div>
+			</div>
+		{/if}
+
+		<div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+			<!-- Hero text content (constrained width when image is background) -->
+			<div class="py-12 lg:py-16 {hasHeroImage ? 'max-w-3xl' : 'flex flex-col lg:flex-row items-start gap-10 lg:gap-16'}">
+
+				<!-- ── LEFT: Text content ── -->
+				<div class="{hasHeroImage ? 'w-full' : 'flex-1 min-w-0'} flex flex-col gap-5">
+
+					<!-- Breadcrumb -->
+					<nav class="flex items-center gap-1 text-xs font-medium flex-wrap {hasHeroImage ? 'text-white/60' : 'text-slate-400 dark:text-slate-500'}">
+						<a href={ROUTES.PUBLIC.STORE} class="transition-colors {hasHeroImage ? 'hover:text-white' : 'hover:text-indigo-600 dark:hover:text-indigo-400'}">Store</a>
+						<ChevronRight class="w-3 h-3 flex-shrink-0" />
+						{#if course.categories?.[0]}
+							<span>{course.categories[0]}</span>
+							<ChevronRight class="w-3 h-3 flex-shrink-0" />
+						{/if}
+						<span class="{hasHeroImage ? 'text-white/90' : 'text-slate-600 dark:text-slate-300'} truncate">{course.name}</span>
+					</nav>
+
 					<!-- Badges -->
 					<div class="flex flex-wrap gap-2">
 						{#if course.featured}
-              <span class="inline-flex items-center gap-1 px-3 py-1 bg-yellow-400 text-yellow-900 rounded-full text-xs font-bold">
-                <Sparkles class="w-3 h-3" />
-                Featured
-              </span>
+							<span class="inline-flex items-center gap-1 px-2.5 py-1 border rounded-full text-xs font-semibold
+								{hasHeroImage
+									? 'bg-amber-500/20 border-amber-400/40 text-amber-300'
+									: 'bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/40 text-amber-700 dark:text-amber-400'}">
+								<Sparkles class="w-3 h-3" />
+								Featured
+							</span>
 						{/if}
 						{#if course.level}
-              <span class="px-3 py-1 bg-white/20 backdrop-blur rounded-full text-xs font-medium">
-
-								<DificultyIndicator level={course.level} showLabel={false} />
-              </span>
+							<span class="inline-flex items-center gap-1.5 px-2.5 py-1 border rounded-full text-xs font-medium
+								{hasHeroImage
+									? 'bg-white/15 border-white/20 text-white'
+									: 'bg-slate-100 dark:bg-slate-800/80 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300'}">
+								<DificultyIndicator level={course.level} size="sm" showLabel={true} />
+							</span>
 						{/if}
+						{#each (course.categories ?? []).slice(0, 2) as cat}
+							<span class="inline-flex items-center gap-1 px-2.5 py-1 border rounded-full text-xs font-medium
+								{hasHeroImage
+									? 'bg-indigo-500/20 border-indigo-400/30 text-indigo-200'
+									: 'bg-indigo-50 dark:bg-indigo-900/30 border-indigo-100 dark:border-indigo-800/50 text-indigo-600 dark:text-indigo-400'}">
+								<Tag class="w-3 h-3" />
+								{cat}
+							</span>
+						{/each}
 					</div>
 
 					<!-- Title -->
-					<h1 class="text-3xl lg:text-4xl font-bold leading-tight">
+					<h1 class="text-3xl sm:text-4xl lg:text-[2.75rem] font-black leading-[1.1] tracking-tight
+						{hasHeroImage ? 'text-white' : 'text-gray-900 dark:text-white'}">
 						{course.name}
 					</h1>
 
 					<!-- Description -->
-					<p class="text-blue-100 text-lg leading-relaxed">
+					<p class="text-base leading-relaxed max-w-[52ch]
+						{hasHeroImage ? 'text-white/75' : 'text-slate-500 dark:text-slate-400'}">
 						{course.description}
 					</p>
 
-					<!-- Meta Stats -->
-					<div class="flex flex-wrap items-center gap-6 pt-4">
-						<div class="flex items-center gap-2">
-							<div class="flex">
-								{#each Array(5) as _, i}
-									<Star class="w-4 h-4 {i < Math.floor(course.rating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-white/30'}" />
-								{/each}
+					<!-- ── Inline Purchase / Enrolled ── -->
+					<div class="pt-5 border-t {hasHeroImage ? 'border-white/15' : 'border-slate-100 dark:border-slate-800'}">
+						{#if isEnrolled}
+							<!-- Enrolled state -->
+							<div class="flex items-center gap-2 mb-4">
+								<div class="w-5 h-5 rounded-full border flex items-center justify-center flex-shrink-0
+									{hasHeroImage
+										? 'bg-emerald-500/20 border-emerald-400/40'
+										: 'bg-emerald-50 dark:bg-emerald-900/30 border-emerald-200 dark:border-emerald-700/50'}">
+									<GraduationCap class="w-3 h-3 {hasHeroImage ? 'text-emerald-300' : 'text-emerald-600 dark:text-emerald-400'}" />
+								</div>
+								<p class="text-sm font-semibold {hasHeroImage ? 'text-emerald-300' : 'text-emerald-600 dark:text-emerald-400'}">
+									You're enrolled in this course
+								</p>
 							</div>
-							<span class="font-medium">{course.rating || 0}</span>
-						</div>
+							{#if firstLesson}
+								<button
+									onclick={handleStartLearning}
+									class="inline-flex items-center gap-2.5 px-7 py-3.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[.99] text-white font-semibold rounded-xl transition-all shadow-lg shadow-indigo-200/70 dark:shadow-indigo-900/40"
+								>
+									<Play class="w-4 h-4 fill-white" />
+									Start Learning
+								</button>
+							{/if}
+							<div class="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+								<span class="flex items-center gap-1.5 text-xs {hasHeroImage ? 'text-white/60' : 'text-slate-400'}">
+									<BadgeCheck class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" /> Lifetime access
+								</span>
+								<span class="flex items-center gap-1.5 text-xs {hasHeroImage ? 'text-white/60' : 'text-slate-400'}">
+									<Award class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" /> Certificate included
+								</span>
+							</div>
 
-						<div class="flex items-center gap-2 text-blue-100">
-							<Users class="w-4 h-4" />
-							<span>{course.students || 0} students</span>
-						</div>
-
-						<div class="flex items-center gap-2 text-blue-100">
-							<Clock class="w-4 h-4" />
-							<span>{courseDuration || 0}</span>
-						</div>
-
-						<div class="flex items-center gap-2 text-blue-100">
-							<BookOpen class="w-4 h-4" />
-							<span>{totalLessons} lessons</span>
-						</div>
-					</div>
-
-				</div>
-				{#if !isEnrolled}
-				<!-- Purchase Card -->
-				<div class="lg:col-span-1">
-					<div class="bg-white rounded-2xl shadow-2xl p-6 text-gray-900">
-						<!-- Course Image -->
-						{#if course.imageUrl}
-							<img
-								src={imageUrl}
-								alt={course.name}
-								class="w-full h-40 object-cover rounded-xl mb-4"
-							/>
 						{:else}
-							<div class="w-full h-40 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl mb-4 flex items-center justify-center">
-								<BookOpen class="w-12 h-12 text-blue-300" />
+							<!-- Price -->
+							<div class="flex items-baseline gap-3 mb-4">
+								<span class="text-4xl font-black tracking-tight {hasHeroImage ? 'text-white' : 'text-gray-900 dark:text-white'}">
+									{formatPrice(course.price)}
+								</span>
 							</div>
-						{/if}
 
-						<!-- Price -->
-						<div class="text-center mb-6">
-							<div class="text-4xl font-black text-gray-900">
-								{formatPrice(course.price)}
-							</div>
-							<p class="text-sm text-gray-500 mt-1">One-time payment</p>
-						</div>
-
-						<!-- CTA Buttons -->
-						<div class="space-y-3">
-
-							<!-- PURCHASE / CHECKOUT BUTTON FOR PAYMENT -->
+							<!-- CTA button -->
 							{#if isInCart}
-								<Button
+								<button
 									onclick={() => cartService.goToCheckout()}
-									class="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold py-6 rounded-xl shadow-lg"
+									class="inline-flex items-center gap-2.5 px-8 py-3.5 bg-emerald-600 hover:bg-emerald-500 active:scale-[.99] text-white font-semibold rounded-xl transition-all shadow-lg shadow-emerald-200/70 dark:shadow-emerald-900/40"
 								>
+									<ShoppingCart class="w-4 h-4" />
 									Go to Checkout
-								</Button>
+								</button>
 							{:else}
-								<Button
+								<button
 									onclick={handleAddToCart}
-									class="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold py-6 rounded-xl shadow-lg"
+									class="inline-flex items-center gap-2.5 px-8 py-3.5 bg-indigo-600 hover:bg-indigo-500 active:scale-[.99] text-white font-semibold rounded-xl transition-all shadow-lg shadow-indigo-200/70 dark:shadow-indigo-900/40"
 								>
+									<ShoppingCart class="w-4 h-4" />
 									Purchase Now
-								</Button>
+								</button>
 							{/if}
 
-							<Button variant="outline" class="w-full py-6 rounded-xl">
-								Add to Wishlist
-							</Button>
-						</div>
+							<!-- Includes chips -->
+							<div class="mt-4 flex flex-wrap gap-x-5 gap-y-2">
+								<span class="flex items-center gap-1.5 text-xs {hasHeroImage ? 'text-white/60' : 'text-slate-400'}">
+									<BadgeCheck class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" /> Lifetime access
+								</span>
+								<span class="flex items-center gap-1.5 text-xs {hasHeroImage ? 'text-white/60' : 'text-slate-400'}">
+									<Award class="w-3.5 h-3.5 text-emerald-500 flex-shrink-0" /> Certificate
+								</span>
+							</div>
+						{/if}
+					</div>
 
-						<!-- Includes -->
-						<div class="mt-6 pt-6 border-t border-gray-100 space-y-3">
-							<p class="text-sm font-semibold text-gray-700">This course includes:</p>
-							<div class="flex items-center gap-3 text-sm text-gray-600">
-								<BadgeCheck class="w-4 h-4 text-green-500" />
-								<span>Lifetime access</span>
-							</div>
-							<div class="flex items-center gap-3 text-sm text-gray-600">
-								<BadgeCheck class="w-4 h-4 text-green-500" />
-								<span>Certificate of completion</span>
-							</div>
-							<div class="flex items-center gap-3 text-sm text-gray-600">
-								<BadgeCheck class="w-4 h-4 text-green-500" />
-								<span>Access on all devices</span>
+				</div>
+
+				<!-- ── RIGHT: Course image card – shown only when NOT used as hero background ── -->
+				{#if course.imageUrl && !hasHeroImage}
+					<div class="w-full lg:w-[400px] flex-shrink-0 self-center">
+						<div class="relative group">
+							<!-- Glow effect behind the card -->
+							<div class="absolute -inset-2 bg-gradient-to-br from-indigo-200/60 to-violet-200/40 dark:from-indigo-800/30 dark:to-violet-800/20 rounded-2xl blur-xl opacity-70 group-hover:opacity-100 transition-opacity duration-300"></div>
+							<!-- Image card -->
+							<div class="relative rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5 dark:ring-white/8">
+								<img
+									src={imageUrl}
+									alt={course.name}
+									class="w-full aspect-video object-cover object-center scale-[1.01] group-hover:scale-[1.04] transition-transform duration-500"
+								/>
+								<!-- Play button overlay on hover -->
+								<div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
+									<div class="w-16 h-16 rounded-full bg-white/95 shadow-xl flex items-center justify-center opacity-0 group-hover:opacity-100 scale-75 group-hover:scale-100 transition-all duration-300">
+										<Play class="w-6 h-6 text-indigo-600 fill-indigo-600 ml-1" />
+									</div>
+								</div>
 							</div>
 						</div>
 					</div>
-				</div>
 				{/if}
 
 			</div>
-		</div>
-	</div>
 
-	<!-- Main Content -->
-	<div class="w-full px-6 lg:px-12 py-12">
-		<div class="grid lg:grid-cols-3 gap-8">
-			<!-- Left Column - Main Content -->
-			<div class="lg:col-span-2 space-y-8">
+			<!-- ── Meta strip ── -->
+			<div class="border-t py-4 {hasHeroImage ? 'border-white/15' : 'border-slate-100 dark:border-slate-800/70'}">
+				<div class="flex items-center">
 
-				<!-- Goals Section -->
-				{#if course.goals && course.goals.length > 0}
-					<section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
-						<div class="flex items-center gap-3 mb-6">
-							<div class="w-10 h-10 rounded-xl bg-green-100 flex items-center justify-center">
-								<Target class="w-5 h-5 text-green-600" />
-							</div>
-							<h2 class="text-xl font-bold text-gray-900">What you'll learn</h2>
-						</div>
-
-						<div class="grid md:grid-cols-2 xl:grid-cols-3 gap-4">
-							{#each course.goals as goal}
-								<div class="flex items-start gap-3 p-3 rounded-lg bg-green-50/50">
-									<CheckCircle2 class="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-									<span class="text-sm text-gray-700">{goal}</span>
-								</div>
-							{/each}
-						</div>
-					</section>
-				{/if}
-
-				<!-- Requirements Section -->
-				{#if course.requirements && course.requirements.length > 0}
-					<section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
-						<div class="flex items-center gap-3 mb-6">
-							<div class="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
-								<ClipboardList class="w-5 h-5 text-orange-600" />
-							</div>
-							<h2 class="text-xl font-bold text-gray-900">Requirements</h2>
-						</div>
-
-						<ul class="grid md:grid-cols-2 gap-3">
-							{#each course.requirements as requirement}
-								<li class="flex items-start gap-3">
-									<div class="w-2 h-2 bg-orange-400 rounded-full mt-2 flex-shrink-0"></div>
-									<span class="text-gray-700">{requirement}</span>
-								</li>
-							{/each}
-						</ul>
-					</section>
-				{/if}
-
-				<!-- Course Content / Sections -->
-				<section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 lg:p-8">
-					<div class="flex items-center justify-between mb-6">
-						<div class="flex items-center gap-3">
-							<div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center">
-								<BookOpen class="w-5 h-5 text-blue-600" />
+					<!-- Instructor – anchored to the left -->
+					{#if course.owner}
+						<div class="flex items-center gap-2.5 flex-shrink-0">
+							<div class="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ring-1 {hasHeroImage ? 'ring-white/20' : 'ring-indigo-200 dark:ring-white/10'}">
+								{course.owner.firstName?.[0] ?? '?'}{course.owner.lastName?.[0] ?? ''}
 							</div>
 							<div>
-								<h2 class="text-xl font-bold text-gray-900">Course Content</h2>
-								<p class="text-sm text-gray-500">
-									{course.sections?.length || 0} sections • {totalLessons} lessons
+								<p class="text-[10px] uppercase tracking-widest {hasHeroImage ? 'text-white/50' : 'text-slate-400 dark:text-slate-500'}">Instructor</p>
+								<p class="text-sm font-semibold leading-tight {hasHeroImage ? 'text-white' : 'text-slate-700 dark:text-slate-200'}">
+									{course.owner.firstName} {course.owner.lastName}
 								</p>
 							</div>
 						</div>
-					</div>
+						<div class="w-px h-7 flex-shrink-0 mx-7 hidden sm:block {hasHeroImage ? 'bg-white/20' : 'bg-slate-200 dark:bg-slate-700'}"></div>
+					{/if}
 
-					{#if course.sections && course.sections.length > 0}
-						<div class="space-y-3">
-							{#each course.sections as section, index}
-								<div class="border border-gray-200 rounded-xl overflow-hidden">
-									<!-- Section Header -->
-									<button
-										onclick={() => toggleSection(section.id)}
-										class="w-full flex items-center justify-between p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+					<!-- Remaining metadata fills the available space -->
+					<div class="flex flex-1 flex-wrap items-center justify-between gap-x-6 gap-y-3">
+
+						{#if course.level}
+							<div>
+								<p class="text-[10px] uppercase tracking-widest {hasHeroImage ? 'text-white/50' : 'text-slate-400 dark:text-slate-500'}">Level</p>
+								<p class="text-sm font-semibold {hasHeroImage ? 'text-white' : 'text-slate-700 dark:text-slate-200'}">{course.level}</p>
+							</div>
+						{/if}
+
+						<div>
+							<p class="text-[10px] uppercase tracking-widest {hasHeroImage ? 'text-white/50' : 'text-slate-400 dark:text-slate-500'}">Duration</p>
+							<p class="text-sm font-semibold {hasHeroImage ? 'text-white' : 'text-slate-700 dark:text-slate-200'}">{courseDuration}</p>
+						</div>
+
+						<div>
+							<p class="text-[10px] uppercase tracking-widest {hasHeroImage ? 'text-white/50' : 'text-slate-400 dark:text-slate-500'}">Lessons</p>
+							<p class="text-sm font-semibold {hasHeroImage ? 'text-white' : 'text-slate-700 dark:text-slate-200'}">{totalLessons}</p>
+						</div>
+
+						{#if course.students !== undefined}
+							<div>
+								<p class="text-[10px] uppercase tracking-widest {hasHeroImage ? 'text-white/50' : 'text-slate-400 dark:text-slate-500'}">Students</p>
+								<p class="text-sm font-semibold {hasHeroImage ? 'text-white' : 'text-slate-700 dark:text-slate-200'}">{formatCount(course.students)}</p>
+							</div>
+						{/if}
+
+						{#if course.updatedAt}
+							<div>
+								<p class="text-[10px] uppercase tracking-widest {hasHeroImage ? 'text-white/50' : 'text-slate-400 dark:text-slate-500'}">Last Updated</p>
+								<p class="text-sm font-semibold {hasHeroImage ? 'text-white' : 'text-slate-700 dark:text-slate-200'}">{new Date(course.updatedAt).toLocaleDateString('cs-CZ')}</p>
+							</div>
+						{/if}
+
+						{#if course.categories && course.categories.length > 0}
+							<div class="flex flex-wrap gap-1.5">
+								{#each course.categories as cat}
+									<a
+										href="{ROUTES.PUBLIC.STORE}?category={encodeURIComponent(cat)}"
+										class="px-2.5 py-1 border text-xs font-medium rounded-lg transition-colors
+											{hasHeroImage
+												? 'bg-white/10 border-white/20 hover:bg-white/20 hover:border-white/40 text-white/80 hover:text-white'
+												: 'bg-slate-100 dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 hover:border-indigo-300 dark:hover:border-indigo-500/50 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 text-slate-500 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-300'}"
 									>
-										<div class="flex items-center gap-3">
-                      <span class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center text-sm font-bold">
-                        {index + 1}
-                      </span>
-											<div class="text-left">
-												<h3 class="font-semibold text-gray-900">{section.title}</h3>
-												<p class="text-xs text-gray-500">
-													{section.lessons?.length || 0} lessons
-												</p>
-											</div>
-										</div>
-										<ChevronDown
-											class="w-5 h-5 text-gray-400 transition-transform duration-200 {expandedSections.has(section.id) ? 'rotate-180' : ''}"
-										/>
-									</button>
+										{cat}
+									</a>
+								{/each}
+							</div>
+						{/if}
 
-									<!-- Lessons -->
-									<!-- Inside the Lessons section, replace the lesson rendering: -->
-									{#if expandedSections.has(section.id)}
-										<div class="divide-y divide-gray-100">
-											{#if section.lessons && section.lessons.length > 0}
-												{#each section.lessons as lesson}
-													{@const accessible = isLessonAccessible(lesson.type)}
-													<button
-														onclick={() => handleLessonClick(lesson)}
-														class="w-full flex items-center gap-4 p-4 hover:bg-gray-50 transition-colors text-left cursor-pointer"
-													>
-														<!-- Icon -->
-														<div class="w-8 h-8 rounded-lg flex items-center justify-center {accessible ? 'bg-green-100' : 'bg-gray-100'}">
-															{#if accessible}
-																<Play class="w-4 h-4 text-green-600" />
-															{:else}
-																<Lock class="w-4 h-4 text-gray-400" />
-															{/if}
-														</div>
+					</div>
+				</div>
+			</div>
 
-														<!-- Lesson Info -->
-														<div class="flex-1">
-															<p class="font-medium text-gray-900">{lesson.title}</p>
-															<p class="text-xs text-gray-500">{formatDuration(lesson.duration)}</p>
-														</div>
+		</div>
+	</div>
 
-														<!-- Badge -->
-														{#if lesson.type === LessonType.FREE}
-						<span class="px-2 py-1 bg-green-100 text-green-700 text-xs font-medium rounded">
-							Free
-						</span>
-														{:else if !isEnrolled}
-						<span class="px-2 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded">
-							Locked
-						</span>
-														{/if}
-													</button>
-												{/each}
-											{:else}
-												<div class="p-4 text-center text-gray-500 text-sm">
-													No lessons yet
+	<!-- ─── CONTENT ───────────────────────────────────────────────────────────── -->
+	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
+		<!-- What you'll learn -->
+		{#if course.goals && course.goals.length > 0}
+			<section class="py-12 border-b border-gray-100 dark:border-slate-800/60">
+				<p class="text-[10px] font-bold text-indigo-600 dark:text-indigo-500 uppercase tracking-[0.16em] mb-2">In this course</p>
+				<h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-8">What you'll learn</h2>
+				<div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-x-8 gap-y-3.5">
+					{#each course.goals as goal}
+						<div class="flex items-start gap-3">
+							<div class="w-5 h-5 rounded-full bg-indigo-50 dark:bg-indigo-900/30 border border-indigo-100 dark:border-indigo-800/50 flex items-center justify-center flex-shrink-0 mt-0.5">
+								<Check class="w-2.5 h-2.5 text-indigo-600 dark:text-indigo-400" />
+							</div>
+							<span class="text-sm text-gray-700 dark:text-slate-300 leading-relaxed">{goal}</span>
+						</div>
+					{/each}
+				</div>
+			</section>
+		{/if}
+
+		<!-- Requirements -->
+		{#if course.requirements && course.requirements.length > 0}
+			<section class="py-12 border-b border-gray-100 dark:border-slate-800/60">
+				<p class="text-[10px] font-bold text-indigo-600 dark:text-indigo-500 uppercase tracking-[0.16em] mb-2">Prerequisites</p>
+				<h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Requirements</h2>
+				<ul class="grid sm:grid-cols-2 gap-x-16 gap-y-2.5 max-w-4xl">
+					{#each course.requirements as req}
+						<li class="flex items-baseline gap-3 text-sm text-gray-600 dark:text-slate-400 leading-relaxed">
+							<span class="w-1 h-1 rounded-full bg-gray-400 dark:bg-slate-500 flex-shrink-0 mt-[0.45rem]"></span>
+							{req}
+						</li>
+					{/each}
+				</ul>
+			</section>
+		{/if}
+
+		<!-- Course Content / Curriculum -->
+		<section class="py-12">
+			<p class="text-[10px] font-bold text-indigo-600 dark:text-indigo-500 uppercase tracking-[0.16em] mb-2">Curriculum</p>
+			<div class="flex items-end justify-between mb-1">
+				<h2 class="text-2xl font-bold text-gray-900 dark:text-white">Course Content</h2>
+			</div>
+			<p class="text-sm text-gray-400 dark:text-slate-500 mb-8">
+				{course.sections?.length || 0} sections · {totalLessons} lessons · {courseDuration} total
+			</p>
+
+			{#if course.sections && course.sections.length > 0}
+				<div class="space-y-2 max-w-4xl">
+					{#each course.sections as section, index}
+						<div class="rounded-xl border border-gray-100 dark:border-slate-800 overflow-hidden">
+
+							<!-- Section header button -->
+							<button
+								onclick={() => toggleSection(section.id)}
+								class="w-full flex items-center justify-between px-4 py-3.5 bg-gray-50/80 dark:bg-slate-900/60 hover:bg-gray-100 dark:hover:bg-slate-800/70 transition-colors text-left"
+							>
+								<div class="flex items-center gap-3">
+									<span class="w-6 h-6 rounded-md bg-indigo-600 text-white flex items-center justify-center text-xs font-bold flex-shrink-0 tabular-nums">
+										{index + 1}
+									</span>
+									<div>
+										<p class="text-sm font-semibold text-gray-900 dark:text-white">{section.title}</p>
+										<p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{section.lessons?.length || 0} lessons</p>
+									</div>
+								</div>
+								<ChevronDown class="w-4 h-4 text-gray-400 dark:text-slate-500 transition-transform duration-200 flex-shrink-0 {expandedSections.has(section.id) ? 'rotate-180' : ''}" />
+							</button>
+
+							<!-- Lessons list -->
+							{#if expandedSections.has(section.id)}
+								<div class="divide-y divide-gray-50 dark:divide-slate-800/70">
+									{#if section.lessons && section.lessons.length > 0}
+										{#each section.lessons as lesson}
+											{@const accessible = isLessonAccessible(lesson.type)}
+											<button
+												onclick={() => handleLessonClick(lesson)}
+												class="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50/60 dark:hover:bg-slate-800/40 transition-colors text-left group/lesson"
+											>
+												<!-- Play / Lock icon -->
+												<div class="w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 {accessible ? 'bg-emerald-50 dark:bg-emerald-900/30' : 'bg-gray-100 dark:bg-slate-800'}">
+													{#if accessible}
+														<Play class="w-3 h-3 text-emerald-600 dark:text-emerald-400" />
+													{:else}
+														<Lock class="w-3 h-3 text-gray-400 dark:text-slate-500" />
+													{/if}
 												</div>
-											{/if}
+
+												<!-- Title + duration -->
+												<div class="flex-1 min-w-0">
+													<p class="text-sm font-medium text-gray-700 dark:text-slate-300 truncate group-hover/lesson:text-indigo-600 dark:group-hover/lesson:text-indigo-400 transition-colors">
+														{lesson.title}
+													</p>
+													{#if lesson.duration}
+														<p class="text-xs text-gray-400 dark:text-slate-500 mt-0.5">{formatDuration(lesson.duration)}</p>
+													{/if}
+												</div>
+
+												<!-- Type badge -->
+												{#if lesson.type === LessonType.FREE}
+													<span class="flex-shrink-0 px-2 py-0.5 bg-emerald-50 dark:bg-emerald-900/30 border border-emerald-100 dark:border-emerald-800/50 text-emerald-700 dark:text-emerald-400 text-xs font-medium rounded-md">
+														Free
+													</span>
+												{:else if !isEnrolled && !isAdmin}
+													<span class="flex-shrink-0 px-2 py-0.5 bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-slate-500 text-xs font-medium rounded-md">
+														Locked
+													</span>
+												{/if}
+											</button>
+										{/each}
+									{:else}
+										<div class="px-4 py-8 text-center text-sm text-gray-400 dark:text-slate-500 italic">
+											No lessons yet
 										</div>
 									{/if}
 								</div>
-							{/each}
+							{/if}
 						</div>
-					{:else}
-						<div class="text-center py-12 text-gray-500">
-							<BookOpen class="w-12 h-12 mx-auto mb-3 text-gray-300" />
-							<p>No content available yet</p>
-						</div>
-					{/if}
-				</section>
-			</div>
+					{/each}
+				</div>
+			{:else}
+				<div class="py-16 text-center max-w-4xl">
+					<BookOpen class="w-10 h-10 mx-auto mb-3 text-gray-200 dark:text-slate-700" />
+					<p class="text-sm text-gray-400 dark:text-slate-500">No content available yet</p>
+				</div>
+			{/if}
+		</section>
 
-			<!-- Right Column - Sidebar -->
-			<div class="lg:col-span-1 space-y-6">
-				<!-- Instructor Card -->
-				<section class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-					<div class="flex items-center gap-3 mb-6">
-						<div class="w-10 h-10 rounded-xl bg-purple-100 flex items-center justify-center">
-							<User class="w-5 h-5 text-purple-600" />
-						</div>
-						<h2 class="text-xl font-bold text-gray-900">Instructor</h2>
-					</div>
-
-					<div class="text-center">
-						<!-- Avatar -->
-						<div class="w-20 h-20 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 mx-auto mb-4 flex items-center justify-center text-white text-2xl font-bold">
-							{course.owner?.firstName?.charAt(0)}{course.owner?.lastName?.charAt(0)}
-						</div>
-
-						<!-- Name -->
-						<h3 class="text-lg font-bold text-gray-900">
-							{course.owner?.firstName} {course.owner?.lastName}
-						</h3>
-
-						<!-- Email -->
-						<div class="flex items-center justify-center gap-2 mt-2 text-gray-500">
-							<Mail class="w-4 h-4" />
-							<span class="text-sm">{course.owner?.email}</span>
-						</div>
-
-						<!-- Stats -->
-						<div class="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-gray-100">
-							<div class="text-center">
-								<p class="text-2xl font-bold text-gray-900">4.8</p>
-								<p class="text-xs text-gray-500">Rating</p>
-							</div>
-							<div class="text-center">
-								<p class="text-2xl font-bold text-gray-900">12</p>
-								<p class="text-xs text-gray-500">Courses</p>
-							</div>
-						</div>
-					</div>
-				</section>
-
-				<!-- Course Info Card -->
-				<section class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl border border-blue-100 p-6">
-					<h3 class="font-bold text-gray-900 mb-4">Course Details</h3>
-					<div class="space-y-3 text-sm">
-						<div class="flex justify-between">
-						<span class="text-gray-600">Date published</span>
-						<span class="font-medium text-gray-900">
-                {new Date(course.publishedAt).toLocaleDateString('cs-CZ')}
-              </span>
-					</div>
-						<div class="flex justify-between">
-							<span class="text-gray-600">Last updated</span>
-							<span class="font-medium text-gray-900">
-                {new Date(course.updatedAt).toLocaleDateString('cs-CZ')}
-              </span>
-						</div>
-						<div class="flex justify-between">
-							<span class="text-gray-600">Level</span>
-							<span class="font-medium text-gray-900">{course.level || 'All levels'}</span>
-						</div>
-						<div class="flex justify-between">
-							<span class="text-gray-600">Students</span>
-							<span class="font-medium text-gray-900">{course.students || 0}</span>
-						</div>
-						<div class="flex justify-between">
-							<span class="text-gray-600">Duration</span>
-							<span class="font-medium text-gray-900">{courseDuration || 0}</span>
-						</div>
-					</div>
-				</section>
-			</div>
-		</div>
 	</div>
 </div>

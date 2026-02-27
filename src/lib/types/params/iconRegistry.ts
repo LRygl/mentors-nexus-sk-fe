@@ -6,6 +6,7 @@ import {
 	Shield,
 	CreditCard,
 	Users,
+	User,
 	BookOpen,
 	Zap,
 	Heart,
@@ -16,6 +17,7 @@ import {
 	Mail,
 	Globe,
 	Lock,
+	Key,
 	Bell,
 	Calendar,
 	Camera,
@@ -36,7 +38,20 @@ import {
 	Trophy,
 	Flag,
 	Hash,
-	Eye, PencilLine
+	Eye,
+	PencilLine,
+	MapPin,
+	FileText,
+	Info,
+	CheckCircle,
+	AlertCircle,
+	Building2,
+	GraduationCap,
+	Layers,
+	LayoutDashboard,
+	Package,
+	Tag,
+	Wallet,
 } from '@lucide/svelte';
 import type { Component, ComponentType } from 'svelte';
 
@@ -56,23 +71,40 @@ export const availableIcons: IconData[] = [
 	{ name: 'Heart', displayName: 'Support', component: Heart, category: 'support' },
 	{ name: 'Phone', displayName: 'Contact', component: Phone, category: 'support' },
 	{ name: 'Mail', displayName: 'Email', component: Mail, category: 'support' },
+	{ name: 'Info', displayName: 'Info', component: Info, category: 'support' },
+	{ name: 'AlertCircle', displayName: 'Alert', component: AlertCircle, category: 'support' },
+	{ name: 'CheckCircle', displayName: 'Check', component: CheckCircle, category: 'support' },
+
+	// People & Identity
+	{ name: 'User', displayName: 'User', component: User, category: 'people' },
+	{ name: 'Users', displayName: 'Users', component: Users, category: 'people' },
+	{ name: 'GraduationCap', displayName: 'Education', component: GraduationCap, category: 'people' },
+	{ name: 'Building2', displayName: 'Organisation', component: Building2, category: 'people' },
 
 	// System & Settings
 	{ name: 'Settings', displayName: 'Settings', component: Settings, category: 'system' },
 	{ name: 'Shield', displayName: 'Security', component: Shield, category: 'system' },
 	{ name: 'Lock', displayName: 'Privacy', component: Lock, category: 'system' },
+	{ name: 'Key', displayName: 'Password', component: Key, category: 'system' },
 	{ name: 'Bell', displayName: 'Notifications', component: Bell, category: 'system' },
 	{ name: 'Cog', displayName: 'Configuration', component: Cog, category: 'system' },
+	{ name: 'LayoutDashboard', displayName: 'Dashboard', component: LayoutDashboard, category: 'system' },
+	{ name: 'Layers', displayName: 'Layers', component: Layers, category: 'system' },
 
 	// Business & Commerce
 	{ name: 'CreditCard', displayName: 'Payment', component: CreditCard, category: 'business' },
-	{ name: 'Users', displayName: 'Users', component: Users, category: 'business' },
+	{ name: 'Wallet', displayName: 'Wallet', component: Wallet, category: 'business' },
+	{ name: 'Package', displayName: 'Package', component: Package, category: 'business' },
+	{ name: 'Tag', displayName: 'Tag', component: Tag, category: 'business' },
 	{ name: 'Truck', displayName: 'Shipping', component: Truck, category: 'business' },
 	{ name: 'Gift', displayName: 'Rewards', component: Gift, category: 'business' },
 	{ name: 'Target', displayName: 'Goals', component: Target, category: 'business' },
+	{ name: 'MapPin', displayName: 'Location', component: MapPin, category: 'business' },
 
 	// Content & Media
 	{ name: 'BookOpen', displayName: 'Guides', component: BookOpen, category: 'content' },
+	{ name: 'FileText', displayName: 'Document', component: FileText, category: 'content' },
+	{ name: 'PencilLine', displayName: 'Edit', component: PencilLine, category: 'content' },
 	{ name: 'Camera', displayName: 'Photos', component: Camera, category: 'content' },
 	{ name: 'Music', displayName: 'Audio', component: Music, category: 'content' },
 	{ name: 'Video', displayName: 'Videos', component: Video, category: 'content' },
@@ -84,7 +116,7 @@ export const availableIcons: IconData[] = [
 	{ name: 'Database', displayName: 'Data', component: Database, category: 'files' },
 	{ name: 'Download', displayName: 'Downloads', component: Download, category: 'files' },
 	{ name: 'Upload', displayName: 'Uploads', component: Upload, category: 'files' },
-	{ name: 'PencilLine', displayName: 'PencilLine', component: PencilLine, category: 'files'},
+
 	// Technical & Tools
 	{ name: 'Server', displayName: 'Technical', component: Server, category: 'technical' },
 	{ name: 'Wrench', displayName: 'Maintenance', component: Wrench, category: 'technical' },
@@ -99,9 +131,7 @@ export const availableIcons: IconData[] = [
 	{ name: 'Trophy', displayName: 'Success', component: Trophy, category: 'general' },
 	{ name: 'Flag', displayName: 'Important', component: Flag, category: 'general' },
 	{ name: 'Hash', displayName: 'Hash', component: Hash, category: 'general' },
-	{ name: 'Eye', displayName: 'View', component: Eye, category: 'general'}
-
-
+	{ name: 'Eye', displayName: 'View', component: Eye, category: 'general' },
 ];
 
 // Create icon map for quick lookups

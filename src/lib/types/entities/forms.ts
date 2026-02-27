@@ -234,7 +234,19 @@ export interface FormFieldGroup {
 	id?: string;
 	title?: string;
 	description?: string;
+	/**
+	 * Lucide icon name from the registry (e.g. 'User', 'Shield', 'CreditCard').
+	 * Drives the colored icon badge in the card header.
+	 */
 	icon?: string;
+	/**
+	 * Accent color for the icon badge and collapsible text.
+	 * Accepts any Tailwind color name used in the design system:
+	 * 'indigo' | 'violet' | 'emerald' | 'rose' | 'amber' | 'blue' | 'slate' |
+	 * 'cyan' | 'purple' | 'teal' | 'red' | 'pink'
+	 * If omitted the color is inferred from the icon name.
+	 */
+	color?: string;
 	collapsible?: boolean;
 	collapsed?: boolean;
 	className?: string;

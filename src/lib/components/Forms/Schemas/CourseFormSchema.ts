@@ -219,8 +219,8 @@ const courseGroups: EntityGroupConfig[] = [
 		id: 'basic',
 		title: 'Terminal Details',
 		description: 'Basic information about your terminal',
-		icon: '📝',
-		variant: 'default',
+		icon: 'BookOpen',
+		variant: 'card',
 		collapsible: false,
 		variants: {
 			embedded: true
@@ -231,7 +231,7 @@ const courseGroups: EntityGroupConfig[] = [
 		title: 'Organization',
 		description: 'Labels and categories for organization',
 		icon: '🗂️',
-		variant: 'default',
+		variant: 'card',
 		collapsible: true,
 		variants: {
 			embedded: true

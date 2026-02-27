@@ -195,7 +195,7 @@ const userFormGroup: EntityGroupConfig[] = [
 		id: 'basic',
 		title: 'Basic Information',
 		description: 'Basic user account information',
-		icon: '📝',
+		icon: 'User',
 		variant: 'card',
 		variants: { standard: true, embedded: true }
 	},
@@ -203,10 +203,10 @@ const userFormGroup: EntityGroupConfig[] = [
 		id: 'address',
 		title: 'Address Information',
 		description: 'Basic user account information',
-		icon: '📝',
+		icon: 'Mail',
 		collapsed: true,
 		collapsible: true,
-		variant: 'default',
+		variant: 'card',
 		variants: { embedded: true }
 	},
 	{
@@ -224,7 +224,7 @@ const userFormGroup: EntityGroupConfig[] = [
 		title: 'Consent Informationa',
 		description: 'Basic user account information',
 		icon: '📝',
-		variant: 'default',
+		variant: 'card',
 		collapsed: true,
 		collapsible: true,
 		variants: { embedded: true }

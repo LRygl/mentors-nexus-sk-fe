@@ -377,7 +377,7 @@
 		</div>
 
 		<!-- Step Indicator -->
-		<div class="w-3xl flex items-center mb-10 overflow-x-auto pb-2">
+		<div class="w-3xl flex m-auto items-center mb-10 overflow-x-auto pb-2">
 			{#each steps as step, i}
 				<button
 					onclick={() => goToStep(step.key)}
